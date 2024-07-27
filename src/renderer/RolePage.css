@@ -8,6 +8,10 @@
     /* Stretch child items to fill the container's height */
 }
 
+.rolepage-hello {
+  margin-top: 10px;
+}
+
 .rolepage-header {
   display: flex;
   justify-content: flex-start;
@@ -21,9 +25,8 @@
 .rolepage-title {
   font-size: 2em;
     /* Adjust the size as needed */
-    font-weight: bold;
+    font-weight: light;
     /* Adjust the weight as needed */
-    color: #000000;
     /* Adjust the color as needed */
     margin-left: 15px;
     margin-bottom: 10px;
@@ -32,10 +35,12 @@
 }
 
 .scroll-view {
-  height: 70vh;
+  height: 85vh;
   /* Adjust the height as needed */
   overflow-y: auto;
   scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scroll-behavior: smooth;
   /* border: 1px solid #ccc; */
   /* Optional: Add a border for better visibility */
   /* padding: 10px; */
@@ -43,14 +48,14 @@
 }
 /* WebKit browsers (Chrome, Safari) */
 .scroll-view::-webkit-scrollbar {
-  width: 12px;
+  width: 8px;
   /* Width of the scrollbar */
 }
 
 .scroll-view::-webkit-scrollbar-track {
   background: #f1f1f1;
   /* Background of the scrollbar track */
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .scroll-view::-webkit-scrollbar-thumb {
@@ -63,6 +68,26 @@
 .scroll-view::-webkit-scrollbar-thumb:hover {
   background: #555;
   /* Color of the scrollbar thumb when hovered */
+}
+.scroll-view::-webkit-scrollbar-track {
+  background: transparent;
+  /* Make the track transparent */
+}
+
+.dashboard-item-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  margin: 20px;
+  margin-right: 50px;
+  margin-left: 25px;
+  height: 60px;
+  /* border: 1px solid #ccc; */
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .menu-box {
@@ -84,7 +109,6 @@
 
 .menu-box li {
   margin: 10px 0;
-  color: black;
 }
 
 .menu-section-container {
@@ -140,3 +164,4 @@ flex-direction: column;
   margin: 15px ;
   cursor: pointer;
 }
+

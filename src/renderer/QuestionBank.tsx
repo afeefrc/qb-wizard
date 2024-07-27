@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AppContext } from './AppContext';
 import './ToolbarPage.css'; // Import the CSS file for styling
 
 function QuestionBank() {
@@ -7,6 +8,9 @@ function QuestionBank() {
   const handleBackClick = () => {
     navigate(-1);
   };
+
+  const appContext = useContext(AppContext);
+  const { questions, handleDeleteQuestion } = appContext || {};
 
   return (
     <div>
@@ -26,17 +30,22 @@ function QuestionBank() {
           <div className="rolepage-hello">
             <h3>Dash board</h3>
             <div className="scroll-view">
+              <ul>
+                {questions?.map((item) => (
+                  <li key={item.id}>
+                    {item.questionText}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDeleteQuestion && handleDeleteQuestion(item.id)
+                      }
+                    >
+                      Delete
+                    </button>
+                  </li>
+                ))}
+              </ul>
               {/* Add your scrollable content here */}
-              <p>Content 1</p>
-              <p>Content 2</p>
-              <p>Content 3</p>
-              <p>Content 4</p>
-              <p>Content 5</p>
-              <p>Content 6</p>
-              <p>Content 7</p>
-              <p>Content 8</p>
-              <p>Content 9</p>
-              <p>Content 10</p>
             </div>
           </div>
         </div>

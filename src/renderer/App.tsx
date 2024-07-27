@@ -6,7 +6,8 @@ import {
   Route,
   useNavigate,
 } from 'react-router-dom';
-import icon from '../../assets/icon.svg';
+// import icon from '../../assets/icon.svg';
+import logo from '../../assets/logo.svg';
 import './App.css';
 import Examiner from './Examiner';
 import ReviewPanel from './ReviewPanel';
@@ -65,12 +66,12 @@ function Hello() {
   return (
     <div>
       <div className="Hello">
-        <img width="80" alt="icon" src={icon} />
+        <img width="100" alt="icon" src={logo} />
       </div>
       <div className="Hello">
-        <h1 className="centered-heading">
-          Welcome to Question Bank Management Suit
-        </h1>
+        <div className="centered-heading">
+          Welcome to Question Bank Management Suite
+        </div>
       </div>
       <div className="Hello">
         <div className="icon-button-container">
@@ -171,10 +172,10 @@ function Hello() {
         </button>
       </div>
       <div>
-        <button type="button" className="role-button" onClick={addItem}>
+        {/* <button type="button" className="role-button" onClick={addItem}>
           db test button
-        </button>
-        <ul>
+        </button> */}
+        {/* <ul>
           {questions?.map((item) => (
             <li key={item.id}>
               {item.questionText}
@@ -188,7 +189,7 @@ function Hello() {
               </button>
             </li>
           ))}
-        </ul>
+        </ul> */}
       </div>
     </div>
   );

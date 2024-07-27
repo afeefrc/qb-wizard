@@ -5,7 +5,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 body {
   position: relative;
-  color: white;
+  color: #002C58;
   height: 100vh;
   background: linear-gradient(
     200.96deg,
@@ -52,6 +52,7 @@ body.demo-mode::before {
 
 button {
   background-color: white;
+  color: #002C58;
   /* padding: 10px; */
   border-radius: 50px;
   /* border-color: black;
@@ -62,7 +63,7 @@ button {
   font-weight: 600;
   /* box-shadow: 0px 8px 28px -6px rgba(24, 39, 75, 0.12),
     0px 18px 88px -4px rgba(24, 39, 75, 0.14); */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: all ease-in 0.1s;
   cursor: pointer;
   opacity: 0.75;
@@ -116,7 +117,8 @@ a:hover {
     /* Adjust the size as needed */
     height: 60px;
     /* Adjust the size as needed */
-    margin: 20px 30px;
+    margin: 5px 30px;
+    margin-top: 20px;
     cursor: pointer;
     padding: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -144,7 +146,8 @@ a:hover {
 
 .centered-heading {
   text-align: center;
-  margin: 20 auto;
+  font-size: 2rem;
+  /* margin: 20 auto; */
   width: 100%;
 }
 

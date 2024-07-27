@@ -1,7 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MenuColumn from './MenuColumn';
+import { trgInchargeMenuContent as menuItems } from './SampleData'; // Import the sample data
+import DashBoard from './Dashboard';
 import './RolePage.css'; // Import the CSS file for styling
+
+const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
 
 function TrgIncharge() {
   const navigate = useNavigate();
@@ -9,40 +13,10 @@ function TrgIncharge() {
     navigate(-1);
   };
 
-  const menuItems = [
-    {
-      id: 'item1',
-      title: 'View Question Banks',
-      buttons: [
-        {
-          id: 'btn1',
-          label: 'ADC',
-          onClick: () => console.log('Button 1 clicked'),
-        },
-        {
-          id: 'btn2',
-          label: 'ACC',
-          onClick: () => console.log('Button 2 clicked'),
-        },
-      ],
-    },
-    {
-      id: 'item2',
-      title: 'Create review panel',
-      buttons: [
-        {
-          id: 'btn3',
-          label: 'ADC',
-          onClick: () => console.log('Button 3 clicked'),
-        },
-        {
-          id: 'btn4',
-          label: 'ACC',
-          onClick: () => console.log('Button 4 clicked'),
-        },
-      ],
-    },
-  ];
+  const handleButtonClick = (buttonId: string, menuItemId: number) => {
+    console.log(`Button clicked: ${buttonId} and menu item: ${menuItemId}`);
+    // Add your logic here for handling button clicks
+  };
 
   return (
     <div>
@@ -56,24 +30,12 @@ function TrgIncharge() {
       </div>
       <div className="rolepage-container">
         <div className="menu-box">
-          <MenuColumn menuItems={menuItems} />
+          <MenuColumn menuItems={menuItems} onButtonClick={handleButtonClick} />
         </div>
         <div className="content-box">
           <div className="rolepage-hello">
-            <h3>Dash board</h3>
-            <div className="scroll-view">
-              {/* Add your scrollable content here */}
-              <p>Content 1</p>
-              <p>Content 2</p>
-              <p>Content 3</p>
-              <p>Content 4</p>
-              <p>Content 5</p>
-              <p>Content 6</p>
-              <p>Content 7</p>
-              <p>Content 8</p>
-              <p>Content 9</p>
-              <p>Content 10</p>
-            </div>
+            <DashBoard contentList={contentList} />
+            {/* Pass the content  list as a prop */}
           </div>
         </div>
       </div>

@@ -10,8 +10,8 @@ const schema = {
   id: { type: 'string', default: () => uuidv4() },
   unitName: {
     type: 'enum',
-    values: ['Unit1', 'Unit2', 'Unit3'],
-    default: 'Unit1',
+    values: ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'],
+    default: 'ADC',
   },
   marks: {
     type: 'number',
