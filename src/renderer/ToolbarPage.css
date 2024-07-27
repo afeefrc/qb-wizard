@@ -1,0 +1,11 @@
+.toolbar-content-box {
+  flex: 1;
+  /* padding: 5px; */
+  margin: 0px 20px;
+  padding: 10px 20px;
+  border-radius: 15px;;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  background-color: white;
+  color: #000;
+  overflow-y: auto;
+}

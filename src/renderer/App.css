@@ -2,40 +2,82 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 body {
   position: relative;
   color: white;
   height: 100vh;
   background: linear-gradient(
     200.96deg,
-    #fedc2a -29.09%,
+    #e7ab9e -29.09%,
+    #d66c6a 51.77%,
+    #d2382a 129.35%
+    /* #fedc2a -29.09%,
     #dd5789 51.77%,
-    #7a2c9e 129.35%
+    #7a2c9e 129.35% */
   );
-  font-family: sans-serif;
+  font-family:Roboto,'Open Sans', 'Helvetica Neue', sans-serif;
+  font-weight: 100;
   overflow-y: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+
+/* .home-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+} */
+
+body.demo-mode::before {
+  content: '-- Demo mode --';
+  position: absolute;
+  top: 10%;
+  left: 75%;
+  transform: translate(-50%, -50%);
+  font-size: 4rem;
+  /* Adjust the size as needed */
+  color: rgba(0, 0, 0, 0.4);
+  /* Light color for watermark effect */
+  white-space: nowrap;
+  pointer-events: none;
+  /* Ensure it doesn't interfere with other elements */
+  z-index: 0;
+  /* Ensure it stays behind other content */
+}
+
 button {
   background-color: white;
-  padding: 10px 20px;
-  border-radius: 10px;
+  /* padding: 10px; */
+  border-radius: 50px;
+  /* border-color: black;
+  border-width: 1px; */
   border: none;
   appearance: none;
-  font-size: 1.3rem;
-  box-shadow: 0px 8px 28px -6px rgba(24, 39, 75, 0.12),
-    0px 18px 88px -4px rgba(24, 39, 75, 0.14);
+  font-size: 1rem;
+  font-weight: 600;
+  /* box-shadow: 0px 8px 28px -6px rgba(24, 39, 75, 0.12),
+    0px 18px 88px -4px rgba(24, 39, 75, 0.14); */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: all ease-in 0.1s;
   cursor: pointer;
-  opacity: 0.9;
+  opacity: 0.75;
 }
 
 button:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
   opacity: 1;
+}
+
+.role-button {
+  padding: 20px 10px;
+  width: 100px;
+  height: 100px;
+  margin: 20px 30px;
 }
 
 li {
@@ -53,10 +95,62 @@ a:hover {
   opacity: 1;
   text-decoration: none;
 }
+.icon-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.icon-button {
+  display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* border: 1px solid black; */
+    border: none;
+    background-color: 'white';
+    opacity: 0.6;
+      /* Default opacity */
+    border-radius: 50%;
+    width: 60px;
+    /* Adjust the size as needed */
+    height: 60px;
+    /* Adjust the size as needed */
+    margin: 20px 30px;
+    cursor: pointer;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      /* Added shadow */
+}
+
+.icon-button:hover {
+  transition: opacity 0.3s ease;
+  /* Smooth transition */
+  background-color: rgba(255, 255, 255, 1);
+  /* Adjust the opacity as needed */
+}
+
+.icon-button.active {
+  opacity: 1;
+  /* Adjust the opacity as needed */
+}
+
+.icon-button-text {
+  margin-top: 10px;
+  /* Adjust the spacing as needed */
+  font-size: 12px;
+  /* Adjust the font size as needed */
+}
+
+.centered-heading {
+  text-align: center;
+  margin: 20 auto;
+  width: 100%;
+}
 
 .Hello {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 20px 0;
+  margin: 20px 0px;
 }
