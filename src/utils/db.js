@@ -44,7 +44,19 @@ const schema = {
 const settingsSchema = {
   theme: { type: 'string', default: 'light' },
   notificationsEnabled: { type: 'boolean', default: true },
-  stationName: { type: 'string', default: '' },
+  stationName: {
+    type: 'object',
+    properties: {
+      code: { type: 'string', default: '' },
+      name: { type: 'string', default: '' },
+      city: { type: 'string', default: '' },
+    },
+    default: {
+      code: '',
+      name: '',
+      city: '',
+    },
+  },
   unitsApplicable: { type: 'array', default: [] },
 };
 
@@ -147,6 +159,19 @@ export async function saveSetting(settings) {
   const store = tx.objectStore(SETTINGS_STORE_NAME);
 
   const promises = Object.entries(validatedSettings).map(([key, value]) => {
+    if (key === 'stationName' && typeof value === 'object') {
+      // Handle nested properties for stationName
+      const nestedPromises = Object.entries(value).map(([subKey, subValue]) => {
+        const nestedKey = `${key}.${subKey}`;
+        return store.get(nestedKey).then((existingEntry) => {
+          if (existingEntry !== undefined) {
+            return store.put({ id: nestedKey, value: subValue });
+          }
+          return store.add({ id: nestedKey, value: subValue });
+        });
+      });
+      return Promise.all(nestedPromises);
+    }
     return store.get(key).then((existingEntry) => {
       if (existingEntry !== undefined) {
         return store.put({ id: key, value });
@@ -155,7 +180,7 @@ export async function saveSetting(settings) {
     });
   });
 
-  await Promise.all(promises);
+  await Promise.all(promises.flat());
 
   await tx.done;
 }
@@ -164,6 +189,18 @@ export async function getSetting(key) {
   const db = await initDB();
   const tx = db.transaction(SETTINGS_STORE_NAME, 'readonly');
   const store = tx.objectStore(SETTINGS_STORE_NAME);
+
+  if (key === 'stationName') {
+    const code = await store.get('stationName.code');
+    const name = await store.get('stationName.name');
+    const city = await store.get('stationName.city');
+    await tx.done;
+    return {
+      code: code ? code.value : '',
+      name: name ? name.value : '',
+      city: city ? city.value : '',
+    };
+  }
   const setting = await store.get(key);
   await tx.done;
   return setting ? setting.value : null;
@@ -175,8 +212,19 @@ export async function getAllSettings() {
   const store = tx.objectStore(SETTINGS_STORE_NAME);
   const settings = await store.getAll();
   await tx.done;
-  return settings.reduce((acc, { id, value }) => {
-    acc[id] = value;
+
+  const result = settings.reduce((acc, { id, value }) => {
+    const [mainKey, subKey] = id.split('.');
+    if (subKey) {
+      if (!acc[mainKey]) {
+        acc[mainKey] = {};
+      }
+      acc[mainKey][subKey] = value;
+    } else {
+      acc[id] = value;
+    }
     return acc;
   }, {});
+
+  return result;
 }

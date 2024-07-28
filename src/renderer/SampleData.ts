@@ -9,6 +9,24 @@ const units = [
   },
 ];
 
+export const stations = [
+  {
+    code: 'VOBL',
+    name: 'Kempegowda International Airport',
+    city: 'Bangalore',
+  },
+  {
+    code: 'VIDP',
+    name: 'Station Two Name',
+    city: 'City Two',
+  },
+  {
+    code: 'VABB',
+    name: 'Station Three Name',
+    city: 'City Three',
+  },
+];
+
 export const reviewPanelMenuContent = [
   {
     id: 1,
@@ -43,12 +61,17 @@ export const examinerMenuContent = [
 export const trgInchargeMenuContent = [
   {
     id: 1,
-    title: 'View Question Banks',
+    title: 'Question Banks',
     buttons: units,
   },
   {
     id: 2,
-    title: 'Create review panel',
+    title: 'Review Panel',
+    buttons: units,
+  },
+  {
+    id: 3,
+    title: 'Question Papers',
     buttons: units,
   },
 ];

@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import MenuColumn from './MenuColumn';
 import { trgInchargeMenuContent as menuItems } from './SampleData'; // Import the sample data
 import DashBoard from './Dashboard';
-import EditUnits from './EditUnits';
+import ListOfExaminers from './ListOfExaminers';
+import StationSettings from './StationSettings';
 import './RolePage.css'; // Import the CSS file for styling
 
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
 
 function TrgIncharge() {
-  const [isEditUnits, setIsEditUnits] = useState(false);
+  const [isEditStationSettings, setIsEditStationSettings] = useState(false);
+  const [showListOfExaminers, setShowListOfExaminers] = useState(false);
 
   const navigate = useNavigate();
   const handleBackClick = () => {
@@ -19,6 +21,26 @@ function TrgIncharge() {
   const handleButtonClick = (buttonId: string, menuItemId: number) => {
     console.log(`Button clicked: ${buttonId} and menu item: ${menuItemId}`);
     // Add your logic here for handling button clicks
+  };
+
+  const handleStationSettingsBtn = () => {
+    setIsEditStationSettings(!isEditStationSettings);
+    setShowListOfExaminers(false);
+  };
+
+  const handleListOfExaminersBtn = () => {
+    setIsEditStationSettings(false);
+    setShowListOfExaminers(!showListOfExaminers);
+  };
+
+  const renderContent = () => {
+    if (showListOfExaminers) {
+      return <ListOfExaminers />;
+    }
+    if (isEditStationSettings) {
+      return <StationSettings />;
+    }
+    return <DashBoard contentList={contentList} />;
   };
 
   return (
@@ -35,19 +57,30 @@ function TrgIncharge() {
         <div className="menu-box">
           <MenuColumn menuItems={menuItems} onButtonClick={handleButtonClick} />
           {/* Settings buttons below */}
-          <div>settings</div>
-          <button type="button" onClick={() => setIsEditUnits(!isEditUnits)}>
-            Edit Units
-          </button>
+          <div className="menu-section-title">Settings</div>
+          <div className="menu-section-container">
+            <div className="menu-btn-container">
+              <button
+                type="button"
+                className="menu-buttons"
+                onClick={handleListOfExaminersBtn}
+              >
+                List of Examiners
+              </button>
+            </div>
+            <div className="menu-btn-container">
+              <button
+                type="button"
+                className="menu-buttons"
+                onClick={handleStationSettingsBtn}
+              >
+                Station Settings
+              </button>
+            </div>
+          </div>
         </div>
         <div className="content-box">
-          <div className="rolepage-hello">
-            {isEditUnits ? (
-              <EditUnits />
-            ) : (
-              <DashBoard contentList={contentList} />
-            )}
-          </div>
+          <div className="rolepage-hello">{renderContent()}</div>
         </div>
       </div>
     </div>
