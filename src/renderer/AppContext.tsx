@@ -5,12 +5,21 @@ import React, {
   useMemo,
   ReactNode,
 } from 'react';
-import { getQuestions, addQuestion, deleteQuestion } from '../utils/db';
+import {
+  getQuestions,
+  addQuestion,
+  deleteQuestion,
+  // getSetting,
+  getAllSettings,
+  saveSetting,
+} from '../utils/db';
 
 interface AppContextProps {
   questions: any[];
+  settings: any;
   handleAddQuestion: (newQuestion: any) => Promise<void>;
   handleDeleteQuestion: (id: number) => Promise<void>;
+  handleSaveSetting: (newSettings: any) => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -21,6 +30,7 @@ interface AppProviderProps {
 
 export function AppProvider({ children }: AppProviderProps) {
   const [questions, setQuestions] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -28,6 +38,18 @@ export function AppProvider({ children }: AppProviderProps) {
       setQuestions(allQuestions);
     };
     fetchQuestions();
+  }, []);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const appSettings = await getAllSettings();
+        setSettings(appSettings);
+      } catch (error) {
+        console.error('Failed to fetch settings', error);
+      }
+    };
+    fetchSettings();
   }, []);
 
   const handleAddQuestion = async (newQuestion: any) => {
@@ -42,13 +64,21 @@ export function AppProvider({ children }: AppProviderProps) {
     setQuestions(allQuestions);
   };
 
+  const handleSaveSetting = async (newSettings: any) => {
+    await saveSetting(newSettings);
+    const appSettings = await getAllSettings();
+    setSettings(appSettings);
+  };
+
   const contextValue = useMemo(
     () => ({
       questions,
+      settings,
       handleAddQuestion,
       handleDeleteQuestion,
+      handleSaveSetting,
     }),
-    [questions],
+    [questions, settings],
   );
 
   return (
