@@ -47,7 +47,10 @@ export const examinerListSchema = {
   id: { type: 'string', default: () => uuidv4() },
   examinerName: { type: 'string', default: '' },
   examinerEmpId: { type: 'number', default: 0 },
+  examinerDesignation: { type: 'string', default: '' },
   examinerUnits: { type: 'array', default: [] },
-  examinerComments: { type: 'string', default: '' },
-  examinerIsReviewed: { type: 'boolean', default: false },
+  examinerValidity: { type: 'date', default: null },
+  isIncharge: { type: 'boolean', default: false },
+  createdAt: { type: 'date', default: () => new Date() },
+  updatedAt: { type: 'date', default: () => new Date() },
 };

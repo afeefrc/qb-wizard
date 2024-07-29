@@ -1,13 +1,13 @@
 // src/utils/db.js
 import { openDB } from 'idb';
-import { v4 as uuidv4 } from 'uuid';
-import { questionsSchema, settingsSchema } from './schema';
+// import { v4 as uuidv4 } from 'uuid';
+import { questionsSchema, settingsSchema, examinerListSchema } from './schema';
 
 const DB_NAME = 'my-database';
 const DB_VERSION = 1;
 const QUESTION_STORE_NAME = 'question-bank';
 const SETTINGS_STORE_NAME = 'app-settings';
-
+const EXAMINER_STORE_NAME = 'examiner-list';
 
 export const initDB = async () => {
   return openDB(DB_NAME, DB_VERSION, {
@@ -20,6 +20,13 @@ export const initDB = async () => {
       }
       if (!db.objectStoreNames.contains(SETTINGS_STORE_NAME)) {
         db.createObjectStore(SETTINGS_STORE_NAME, { keyPath: 'id' });
+      }
+      // Create examiner-list if it doesn't exist
+      if (!db.objectStoreNames.contains(EXAMINER_STORE_NAME)) {
+        db.createObjectStore(EXAMINER_STORE_NAME, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
       }
     },
   });
@@ -40,7 +47,7 @@ const validateAndSetDefaults = (item) => {
   );
 };
 
-//for the settings store
+// for the settings store
 const validateAndSetDefaultsForSettings = (settings) => {
   return Object.entries(settingsSchema).reduce(
     (validatedSettings, [key, field]) => {
@@ -55,11 +62,33 @@ const validateAndSetDefaultsForSettings = (settings) => {
   );
 };
 
+// Function to validate and set defaults for examiner items
+const validateAndSetDefaultsForExaminer = (item) => {
+  const validatedItem = { ...examinerListSchema, ...item };
+  Object.keys(examinerListSchema).forEach((key) => {
+    if (validatedItem[key] === undefined) {
+      validatedItem[key] = examinerListSchema[key].default;
+    }
+  });
+  return validatedItem;
+};
+
+// const removeUncloneableProperties = (item) => {
+//   const cloneableItem = {};
+//   Object.entries(item).forEach(([key, value]) => {
+//     if (typeof value !== 'function') {
+//       cloneableItem[key] = value;
+//     }
+//   });
+//   return cloneableItem;
+// };
+
+// Function to remove uncloneable properties
 const removeUncloneableProperties = (item) => {
-  const cloneableItem = {};
-  Object.entries(item).forEach(([key, value]) => {
-    if (typeof value !== 'function') {
-      cloneableItem[key] = value;
+  const cloneableItem = { ...item };
+  Object.keys(cloneableItem).forEach((key) => {
+    if (typeof cloneableItem[key] === 'function') {
+      cloneableItem[key] = cloneableItem[key]();
     }
   });
   return cloneableItem;
@@ -169,4 +198,56 @@ export async function getAllSettings() {
   return result;
 }
 
+// Add a new examiner
+export const addExaminer = async (item) => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(EXAMINER_STORE_NAME);
+  const validatedItem = validateAndSetDefaults(item);
+  const cloneableItem = removeUncloneableProperties(validatedItem);
+  await store.add(cloneableItem);
+  await tx.done;
+};
 
+// Get an examiner by ID
+export const getExaminer = async (id) => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_STORE_NAME, 'readonly');
+  const store = tx.objectStore(EXAMINER_STORE_NAME);
+  return store.get(id);
+};
+
+// Get all examiners
+export const getAllExaminers = async () => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_STORE_NAME, 'readonly');
+  const store = tx.objectStore(EXAMINER_STORE_NAME);
+  return store.getAll();
+};
+
+// Delete an examiner by ID
+export const deleteExaminer = async (id) => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(EXAMINER_STORE_NAME);
+  await store.delete(id);
+  await tx.done;
+};
+
+// Update an examiner by ID
+export const updateExaminer = async (id, updatedItem) => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(EXAMINER_STORE_NAME);
+  const existingItem = await store.get(id);
+  if (!existingItem) {
+    throw new Error('Examiner not found');
+  }
+  const updatedExaminer = {
+    ...existingItem,
+    ...updatedItem,
+    updatedAt: new Date(),
+  };
+  await store.put(updatedExaminer);
+  await tx.done;
+};

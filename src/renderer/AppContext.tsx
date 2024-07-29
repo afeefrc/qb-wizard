@@ -12,14 +12,23 @@ import {
   // getSetting,
   getAllSettings,
   saveSetting,
+  addExaminer,
+  getExaminer,
+  getAllExaminers,
+  deleteExaminer,
+  updateExaminer,
 } from '../models';
 
 interface AppContextProps {
   questions: any[];
   settings: any;
+  examiners: any[];
   handleAddQuestion: (newQuestion: any) => Promise<void>;
   handleDeleteQuestion: (id: number) => Promise<void>;
   handleSaveSetting: (newSettings: any) => Promise<void>;
+  handleAddExaminer: (newExaminer: any) => Promise<void>;
+  handleDeleteExaminer: (id: number) => Promise<void>;
+  handleUpdateExaminer: (id: number, updatedExaminer: any) => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -31,6 +40,7 @@ interface AppProviderProps {
 export function AppProvider({ children }: AppProviderProps) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
+  const [examiners, setExaminers] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -50,6 +60,18 @@ export function AppProvider({ children }: AppProviderProps) {
       }
     };
     fetchSettings();
+  }, []);
+
+  useEffect(() => {
+    const fetchExaminers = async () => {
+      try {
+        const allExaminers = await getAllExaminers();
+        setExaminers(allExaminers);
+      } catch (error) {
+        console.error('Failed to fetch examiners', error);
+      }
+    };
+    fetchExaminers();
   }, []);
 
   const handleAddQuestion = async (newQuestion: any) => {
@@ -78,11 +100,15 @@ export function AppProvider({ children }: AppProviderProps) {
     () => ({
       questions,
       settings,
+      examiners,
       handleAddQuestion,
       handleDeleteQuestion,
       handleSaveSetting,
+      handleAddExaminer: addExaminer,
+      handleDeleteExaminer: deleteExaminer,
+      handleUpdateExaminer: updateExaminer,
     }),
-    [questions, settings],
+    [questions, settings, examiners],
   );
 
   return (
