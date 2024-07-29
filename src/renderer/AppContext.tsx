@@ -12,7 +12,7 @@ import {
   // getSetting,
   getAllSettings,
   saveSetting,
-} from '../utils/db';
+} from '../models';
 
 interface AppContextProps {
   questions: any[];
@@ -65,6 +65,10 @@ export function AppProvider({ children }: AppProviderProps) {
   };
 
   const handleSaveSetting = async (newSettings: any) => {
+    // console.log({
+    //   stationName: { code: 'VOBL', name: 'KIA Bengaluru', city: 'bengaluru' },
+    //   unitsApplicable: ['ADC', 'ACC'],
+    // });
     await saveSetting(newSettings);
     const appSettings = await getAllSettings();
     setSettings(appSettings);

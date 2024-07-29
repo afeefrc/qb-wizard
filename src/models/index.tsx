@@ -1,64 +1,13 @@
 // src/utils/db.js
 import { openDB } from 'idb';
 import { v4 as uuidv4 } from 'uuid';
+import { questionsSchema, settingsSchema } from './schema';
 
 const DB_NAME = 'my-database';
 const DB_VERSION = 1;
 const QUESTION_STORE_NAME = 'question-bank';
 const SETTINGS_STORE_NAME = 'app-settings';
 
-const schema = {
-  id: { type: 'string', default: () => uuidv4() },
-  unitName: {
-    type: 'enum',
-    values: ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'],
-    default: 'ADC',
-  },
-  marks: {
-    type: 'number',
-    default: 1,
-    validate: (value) => Number.isInteger(value) && value > 0,
-  },
-  questionType: { type: 'string', default: '' },
-  questionText: { type: 'string', default: '' },
-  trueAnswer: { type: 'boolean', default: true },
-  answerText: { type: 'string', default: '' },
-  keyValuePairs: { type: 'object', default: {} },
-  image: { type: 'blob', default: null },
-  linkedQuestion: { type: 'array', default: [] },
-  mandatory: { type: 'boolean', default: false },
-  difficultyLevel: {
-    type: 'enum',
-    values: ['Easy', 'Medium', 'Hard'],
-    default: 'Easy',
-  },
-  moduleNumber: {
-    type: 'number',
-    default: 1,
-    validate: (value) => [0, 1, 2, 3, 4, 5].includes(value),
-  },
-  comments: { type: 'string', default: '' },
-  isReviewed: { type: 'boolean', default: false },
-};
-
-const settingsSchema = {
-  theme: { type: 'string', default: 'light' },
-  notificationsEnabled: { type: 'boolean', default: true },
-  stationName: {
-    type: 'object',
-    properties: {
-      code: { type: 'string', default: '' },
-      name: { type: 'string', default: '' },
-      city: { type: 'string', default: '' },
-    },
-    default: {
-      code: '',
-      name: '',
-      city: '',
-    },
-  },
-  unitsApplicable: { type: 'array', default: [] },
-};
 
 export const initDB = async () => {
   return openDB(DB_NAME, DB_VERSION, {
@@ -76,17 +25,22 @@ export const initDB = async () => {
   });
 };
 
+// for the question-bank store
 const validateAndSetDefaults = (item) => {
-  return Object.entries(schema).reduce((validatedItem, [key, field]) => {
-    const value = item[key] === undefined ? field.default : item[key];
-    if (field.validate && !field.validate(value)) {
-      throw new Error(`Invalid value for ${key}: ${value}`);
-    }
-    validatedItem[key] = value;
-    return validatedItem;
-  }, {});
+  return Object.entries(questionsSchema).reduce(
+    (validatedItem, [key, field]) => {
+      const value = item[key] === undefined ? field.default : item[key];
+      if (field.validate && !field.validate(value)) {
+        throw new Error(`Invalid value for ${key}: ${value}`);
+      }
+      validatedItem[key] = value;
+      return validatedItem;
+    },
+    {},
+  );
 };
 
+//for the settings store
 const validateAndSetDefaultsForSettings = (settings) => {
   return Object.entries(settingsSchema).reduce(
     (validatedSettings, [key, field]) => {
@@ -151,7 +105,8 @@ export const handleImageUpload = async (file) => {
   });
 };
 
-// Operations for app-settings
+//Operations for app-settings
+
 export async function saveSetting(settings) {
   const validatedSettings = validateAndSetDefaultsForSettings(settings);
   const db = await initDB();
@@ -159,19 +114,6 @@ export async function saveSetting(settings) {
   const store = tx.objectStore(SETTINGS_STORE_NAME);
 
   const promises = Object.entries(validatedSettings).map(([key, value]) => {
-    if (key === 'stationName' && typeof value === 'object') {
-      // Handle nested properties for stationName
-      const nestedPromises = Object.entries(value).map(([subKey, subValue]) => {
-        const nestedKey = `${key}.${subKey}`;
-        return store.get(nestedKey).then((existingEntry) => {
-          if (existingEntry !== undefined) {
-            return store.put({ id: nestedKey, value: subValue });
-          }
-          return store.add({ id: nestedKey, value: subValue });
-        });
-      });
-      return Promise.all(nestedPromises);
-    }
     return store.get(key).then((existingEntry) => {
       if (existingEntry !== undefined) {
         return store.put({ id: key, value });
@@ -180,7 +122,7 @@ export async function saveSetting(settings) {
     });
   });
 
-  await Promise.all(promises.flat());
+  await Promise.all(promises);
 
   await tx.done;
 }
@@ -190,20 +132,19 @@ export async function getSetting(key) {
   const tx = db.transaction(SETTINGS_STORE_NAME, 'readonly');
   const store = tx.objectStore(SETTINGS_STORE_NAME);
 
-  if (key === 'stationName') {
-    const code = await store.get('stationName.code');
-    const name = await store.get('stationName.name');
-    const city = await store.get('stationName.city');
-    await tx.done;
-    return {
-      code: code ? code.value : '',
-      name: name ? name.value : '',
-      city: city ? city.value : '',
-    };
-  }
   const setting = await store.get(key);
   await tx.done;
-  return setting ? setting.value : null;
+
+  if (setting !== undefined) {
+    return setting.value;
+  }
+
+  // Return default value from schema if setting is not found
+  if (settingsSchema[key]) {
+    return settingsSchema[key].default;
+  }
+
+  return null;
 }
 
 export async function getAllSettings() {
@@ -214,17 +155,18 @@ export async function getAllSettings() {
   await tx.done;
 
   const result = settings.reduce((acc, { id, value }) => {
-    const [mainKey, subKey] = id.split('.');
-    if (subKey) {
-      if (!acc[mainKey]) {
-        acc[mainKey] = {};
-      }
-      acc[mainKey][subKey] = value;
-    } else {
-      acc[id] = value;
-    }
+    acc[id] = value;
     return acc;
   }, {});
 
+  // Ensure all settings from the schema are present with default values if not found
+  Object.keys(settingsSchema).forEach((key) => {
+    if (!Object.prototype.hasOwnProperty.call(result, key)) {
+      result[key] = settingsSchema[key].default;
+    }
+  });
+
   return result;
 }
+
+

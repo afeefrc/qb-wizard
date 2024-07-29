@@ -231,7 +231,7 @@ flex-direction: column;
   padding-bottom: 2px;
   padding-top: 10px;
   font-weight:100;
-  margin: 10px;
+  margin-left: 10px;
   text-align: flex-start;
   width: 97%;
   color: rgb(0, 44, 88, 0.75);
@@ -241,13 +241,13 @@ flex-direction: column;
 .station-settings-horizontal-container {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  /* align-items: space-evenly; */
   justify-content: space-between;
   padding: 10px;
   margin: 10px;
   width: 95%;
 }
-.station-settings-stationName{
+.station-settings-stationCode{
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -260,29 +260,70 @@ flex-direction: column;
   /* margin: 10px; */
   /* width: 95%; */
 }
+.station-settings-stationName{
+ font-size: small;
+  font-weight: 500;
+  /* margin-left: 10px; */
+}
+.station-settings-units-container {
+  height: 40vh;
+  min-width: 275px;
+  /* Adjust the height as needed */
+  overflow-y: auto;
+}
+.station-settings-units-container::-webkit-scrollbar {
+  width: 8px;
+  /* Width of the scrollbar */
+}
+
+.station-settings-units-container::-webkit-scrollbar-track {
+  background: transparent;
+  /* Make the track transparent */
+  border-radius: 4px;
+  margin: 15px;
+}
+
+.station-settings-units-container::-webkit-scrollbar-thumb {
+  background: #a3a1a1;
+  /* Color of the scrollbar thumb */
+  border-radius: 6px;
+  /* Rounded corners for the scrollbar thumb */
+}
+
+.station-settings-units-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+  /* Color of the scrollbar thumb when hovered */
+}
+
 .station-settings-unit-list {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  width: 200px;
+  /* width: 200px; */
   padding: 10px;
+  margin-right: 10px;
   margin-bottom: 20px;
   border-radius: 10px;
   border:   0.5px solid rgba(0, 44, 88, 0.25);
 }
+.station-settings-edit-container {
+  display: flex;
+  flex-direction: column;
+  /* background-color: #002c5849; */
+}
 .station-settings-btn-container{
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 10px;
-  margin: 10px;
-  width: 95%;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 5px;
+  /* margin: 10px; */
+  /* width: 95%; */
 }
 .station-settings-buttons {
-  padding: 8px;
-  margin: 10px;
+  padding: 8px 10px;
+  /* margin-right: 10px; */
   font-size: 15px;
   font-weight: 400;
   box-shadow: none;
@@ -290,7 +331,95 @@ flex-direction: column;
   border-radius: 10px;
   border: none;
   color: #002C58;
-  width: 100px;
+  /* width: 100px; */
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+.station-settings-buttons:hover {
+  background-color: #002C58;
+  color: #ffffff;
+  /* Change background color and text color on hover */
+}
+
+.station-settings-select {
+  width: 100%;
+  padding: 8px;
+  font-size: 15px;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  /* background-color: #faf9f9; */
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.station-settings-select:hover {
+  border-color: #888;
+}
+
+.station-settings-select:focus {
+  border-color: #555;
+  /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); */
+  outline: none;
+}
+
+.station-settings-select option {
+  padding: 8px;
+  background-color: #fff;
+  color: #333;
+}
+
+
+.unit-options-container {
+  display: flex;
+  /* width: 150px; */
+  margin: 10px 0px;
+  flex-direction: column;
+
+  gap: 10px;
+  /* background-color: #0a0a0a1f; */
+  border-radius: 10px;
+  padding: 3px 10px;
+  border: 1px solid #ccc;
+}
+
+.unit-options-container label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.unit-options-container input[type="checkbox"] {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
 
+.unit-options-container input[type="checkbox"]:checked {
+  background-color: #002C58;
+  border-color: #002C58;
+}
+
+.unit-options-container input[type="checkbox"]:hover {
+  border-color: #888;
+}
+
+
+.edit-text {
+  color: 002C58;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: 100 ;
+  font-size: 16px;
+  font-style: italic;
+  padding: 10px;
+  transition: color 0.3s ease;
+}
+
+.edit-text:hover {
+  color: darkblue;
+  cursor: pointer;
+}
