@@ -204,25 +204,45 @@ flex-direction: column;
   cursor: pointer;
 }
 
-.station-settings{
+.body-content-card {
   display: flex;
-  height: 80vh;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: space-between;
   justify-content: flex-start;
   padding: 10px;
+  /* margin: 20px; */
+  height: 80vh;
   /* border: 1px solid #ccc; */
   border-radius: 10px;
   background-color: #f9f9f9;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.body-content-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-right: 40px  ;
+  margin-top: 10px;
+}
+
+.body-content-close-button {
+  display: flex;
+  justify-content: center;
+  padding: 5px 10px;
+  width: 100px;
+  color: darkred;
+  box-shadow: none;
+  background-color: rgba(189, 185, 181, 0.397);
+  border-radius: 10px;
+}
+
 .station-settings-form {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 10px;
-  margin: 10px;
+  padding: 0px 10px;
+  margin: 0px 10px;
   width: 95%;
 }
 
@@ -422,4 +442,13 @@ flex-direction: column;
 .edit-text:hover {
   color: darkblue;
   cursor: pointer;
+}
+
+.ant-picker-header-super-prev-btn,
+.ant-picker-header-prev-btn,
+.ant-picker-month-btn,
+.ant-picker-year-btn,
+.ant-picker-header-next-btn,
+.ant-picker-header-super-next-btn {
+  box-shadow: none;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import './RolePage.css';
+import '../RolePage.css';
 
 interface DashBoardProps {
   contentList: string[];

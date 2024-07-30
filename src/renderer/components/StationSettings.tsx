@@ -1,9 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { useForm, Resolver } from 'react-hook-form';
 import { AppContext } from '../context/AppContext';
-import { stations } from '../SampleData';
+import { stations, unitOptions } from '../SampleData';
 
-const unitOptions = ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'];
+// const unitOptions = ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'];
 // const stationOptions = ['VOBL', 'Station2', 'Station3']; // Example station options
 
 interface FormData {
@@ -84,7 +84,7 @@ function StationSettings() {
   });
 
   return (
-    <div className="station-settings">
+    <div>
       <form onSubmit={onSubmitStation} className="station-settings-form">
         <div className="station-settings-title">ATS Station Name</div>
         <div className="station-settings-horizontal-container">

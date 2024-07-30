@@ -5,7 +5,8 @@ import { trgInchargeMenuContent as menuItems } from './SampleData'; // Import th
 import DashBoard from './components/DashBoard';
 import ListOfExaminers from './components/ListOfExaminers';
 import StationSettings from './components/StationSettings';
-import './RolePage.css'; // Import the CSS file for styling
+import './RolePage.css';
+import BodyContentCard from './components/BodyContentCard';
 
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
 
@@ -33,12 +34,25 @@ function TrgIncharge() {
     setShowListOfExaminers(!showListOfExaminers);
   };
 
+  const handleClose = () => {
+    setIsEditStationSettings(false);
+    setShowListOfExaminers(false);
+  };
+
   const renderContent = () => {
     if (showListOfExaminers) {
-      return <ListOfExaminers />;
+      return (
+        <BodyContentCard onClose={handleClose}>
+          <ListOfExaminers />
+        </BodyContentCard>
+      );
     }
     if (isEditStationSettings) {
-      return <StationSettings />;
+      return (
+        <BodyContentCard onClose={handleClose}>
+          <StationSettings />
+        </BodyContentCard>
+      );
     }
     return <DashBoard contentList={contentList} />;
   };

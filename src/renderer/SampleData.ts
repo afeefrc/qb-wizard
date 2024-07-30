@@ -9,6 +9,9 @@ const units = [
   },
 ];
 
+export const unitOptions = ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'];
+export const designationList = ['JGM', 'DGM', 'AGM', 'SM', 'MGR', 'AM', 'JE'];
+
 export const stations = [
   {
     code: 'VOBL',
