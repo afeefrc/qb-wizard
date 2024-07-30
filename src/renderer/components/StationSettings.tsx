@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { useForm, Resolver } from 'react-hook-form';
-import { AppContext } from './AppContext';
-import { stations } from './SampleData';
+import { AppContext } from '../context/AppContext';
+import { stations } from '../SampleData';
 
 const unitOptions = ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'];
 // const stationOptions = ['VOBL', 'Station2', 'Station3']; // Example station options

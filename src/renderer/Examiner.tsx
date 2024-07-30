@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import MenuColumn from './MenuColumn';
+import MenuColumn from './components/MenuColumn';
 import { examinerMenuContent as menuItems } from './SampleData'; // Import the sample data
-import DashBoard from './Dashboard';
+import DashBoard from './components/DashBoard';
 import './RolePage.css'; // Import the CSS file for styling
 
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data

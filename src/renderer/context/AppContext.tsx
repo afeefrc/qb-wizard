@@ -17,7 +17,7 @@ import {
   getAllExaminers,
   deleteExaminer,
   updateExaminer,
-} from '../models';
+} from '../../models';
 
 interface AppContextProps {
   questions: any[];

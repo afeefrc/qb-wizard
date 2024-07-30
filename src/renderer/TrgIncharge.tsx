@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MenuColumn from './MenuColumn';
+import MenuColumn from './components/MenuColumn';
 import { trgInchargeMenuContent as menuItems } from './SampleData'; // Import the sample data
-import DashBoard from './Dashboard';
-import ListOfExaminers from './ListOfExaminers';
-import StationSettings from './StationSettings';
+import DashBoard from './components/DashBoard';
+import ListOfExaminers from './components/ListOfExaminers';
+import StationSettings from './components/StationSettings';
 import './RolePage.css'; // Import the CSS file for styling
 
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data

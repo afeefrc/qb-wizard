@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import MenuColumn from './MenuColumn';
-import DashBoard from './Dashboard';
+import MenuColumn from './components/MenuColumn';
+import DashBoard from './components/DashBoard';
 import { reviewPanelMenuContent as menuItems } from './SampleData'; // Import the sample data
 import './RolePage.css'; // Import the CSS file for styling
 
