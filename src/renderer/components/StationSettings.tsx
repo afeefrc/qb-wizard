@@ -1,7 +1,8 @@
 import React, { useContext, useState } from 'react';
 import { useForm, Resolver } from 'react-hook-form';
+import { Card, List, Avatar } from 'antd';
 import { AppContext } from '../context/AppContext';
-import { stations, unitOptions } from '../SampleData';
+import { stations, unitOptions, getUnitNameById } from '../SampleData';
 
 // const unitOptions = ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'];
 // const stationOptions = ['VOBL', 'Station2', 'Station3']; // Example station options
@@ -56,6 +57,9 @@ function StationSettings() {
     },
   });
 
+  const title = `Units applicable to ${settings?.stationCode}`;
+  const unitList = settings?.unitsApplicable || [];
+
   const { register: registerUnits, handleSubmit: handleSubmitUnits } = useForm({
     defaultValues: {
       unitsApplicable: settings?.unitsApplicable || [],
@@ -85,99 +89,135 @@ function StationSettings() {
 
   return (
     <div>
-      <form onSubmit={onSubmitStation} className="station-settings-form">
-        <div className="station-settings-title">ATS Station Name</div>
-        <div className="station-settings-horizontal-container">
-          <div className="station-settings-stationCode">
-            {settings?.stationCode}
-            <div className="station-settings-stationName">
-              {settings?.stationName}
+      <Card title="ATS station name" style={{ margin: 10 }}>
+        <form onSubmit={onSubmitStation} className="station-settings-form">
+          {/* <div className="station-settings-title">ATS Station Name</div> */}
+          <div className="station-settings-horizontal-container">
+            <div className="station-settings-stationCode">
+              {settings?.stationCode}
               <div className="station-settings-stationName">
-                {settings?.stationCity}
+                {settings?.stationName}
+                <div className="station-settings-stationName">
+                  {settings?.stationCity}
+                </div>
               </div>
             </div>
+            <div className="station-settings-edit-container">
+              {isEditingStn ? (
+                <div>
+                  <div className="station-settings-btn-container">
+                    <input
+                      type="submit"
+                      value="Save Station"
+                      className="station-settings-buttons"
+                    />
+                  </div>
+                  <select
+                    {...register('stationCode')}
+                    className="station-settings-select"
+                  >
+                    <option value="">Select Station</option>
+                    {stations.map((station) => (
+                      <option key={station.code} value={station.code}>
+                        {station.code} , {station.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors?.stationCode && <p>{errors.stationCode.message}</p>}
+                </div>
+              ) : (
+                <div
+                  className="edit-text"
+                  onClick={() => setIsEditingStn(true)}
+                >
+                  Click to edit
+                </div>
+              )}
+            </div>
           </div>
-          <div className="station-settings-edit-container">
-            {isEditingStn ? (
+        </form>
+      </Card>
+
+      <Card title={title} style={{ margin: 10 }}>
+        <form onSubmit={onSubmitUnits} className="station-settings-form">
+          {/* <div className="station-settings-title">
+          Units applicable to {settings?.stationCode}
+        </div> */}
+          <div className="station-settings-horizontal-container">
+            <div className="station-settings-units-container">
+              {/* <ul>
+                {settings?.unitsApplicable?.length > 0 ? (
+                  settings.unitsApplicable.map((unit, index) => (
+                    <li key={index} className="station-settings-unit-list">
+                      {unit}
+                    </li>
+                  ))
+                ) : (
+                  <li className="station-settings-unit-list">
+                    No units Selected. Pls add applicable units to the station.
+                  </li>
+                )}
+              </ul> */}
+              <List
+                size="large"
+                // header={<div>Header</div>}
+                // footer={<div>Footer</div>}
+                bordered={false}
+                dataSource={unitList}
+                renderItem={(item) => (
+                  <List.Item>
+                    {/* <List.Item.Meta  title={item} /> */}
+                    <Avatar
+                      shape="square"
+                      style={{
+                        backgroundColor: 'lightcoral',
+                        verticalAlign: 'middle',
+                      }}
+                      size="large"
+                      gap={4}
+                    >
+                      {item as ReactNode}
+                    </Avatar>
+                    <div className="station-settings-unit-list">
+                      {getUnitNameById(item)}
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </div>
+            {isEditingUnits ? (
               <div>
                 <div className="station-settings-btn-container">
                   <input
                     type="submit"
-                    value="Save Station"
+                    value="Save Units"
                     className="station-settings-buttons"
                   />
                 </div>
-                <select
-                  {...register('stationCode')}
-                  className="station-settings-select"
-                >
-                  <option value="">Select Station</option>
-                  {stations.map((station) => (
-                    <option key={station.code} value={station.code}>
-                      {station.code} , {station.name}
-                    </option>
-                  ))}
-                </select>
-                {errors?.stationCode && <p>{errors.stationCode.message}</p>}
+                {unitOptions.map((unit) => (
+                  <div key={unit} className="unit-options-container">
+                    <label>
+                      <input
+                        type="checkbox"
+                        {...registerUnits('unitsApplicable')}
+                        value={unit}
+                      />
+                      {unit}
+                    </label>
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="edit-text" onClick={() => setIsEditingStn(true)}>
+              <div
+                className="edit-text"
+                onClick={() => setIsEditingUnits(true)}
+              >
                 Click to edit
               </div>
             )}
           </div>
-        </div>
-      </form>
-
-      <form onSubmit={onSubmitUnits} className="station-settings-form">
-        <div className="station-settings-title">
-          Units applicable to {settings?.stationCode}
-        </div>
-        <div className="station-settings-horizontal-container">
-          <div className="station-settings-units-container">
-            <ul>
-              {settings?.unitsApplicable?.length > 0 ? (
-                settings.unitsApplicable.map((unit, index) => (
-                  <li key={index} className="station-settings-unit-list">
-                    {unit}
-                  </li>
-                ))
-              ) : (
-                <li className="station-settings-unit-list">
-                  No units Selected. Pls add applicable units to the station.
-                </li>
-              )}
-            </ul>
-          </div>
-          {isEditingUnits ? (
-            <div>
-              <div className="station-settings-btn-container">
-                <input
-                  type="submit"
-                  value="Save Units"
-                  className="station-settings-buttons"
-                />
-              </div>
-              {unitOptions.map((unit) => (
-                <div key={unit} className="unit-options-container">
-                  <label>
-                    <input
-                      type="checkbox"
-                      {...registerUnits('unitsApplicable')}
-                      value={unit}
-                    />
-                    {unit}
-                  </label>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="edit-text" onClick={() => setIsEditingUnits(true)}>
-              Click to edit
-            </div>
-          )}
-        </div>
-      </form>
+        </form>
+      </Card>
     </div>
   );
 }

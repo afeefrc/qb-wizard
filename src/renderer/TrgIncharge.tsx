@@ -42,14 +42,14 @@ function TrgIncharge() {
   const renderContent = () => {
     if (showListOfExaminers) {
       return (
-        <BodyContentCard onClose={handleClose}>
+        <BodyContentCard onClose={handleClose} title="List of Examiners">
           <ListOfExaminers />
         </BodyContentCard>
       );
     }
     if (isEditStationSettings) {
       return (
-        <BodyContentCard onClose={handleClose}>
+        <BodyContentCard onClose={handleClose} title="Station Settings">
           <StationSettings />
         </BodyContentCard>
       );

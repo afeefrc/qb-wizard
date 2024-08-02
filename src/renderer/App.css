@@ -7,15 +7,16 @@ body {
   position: relative;
   color: #002C58;
   height: 100vh;
-  background: linear-gradient(
+  /* background: linear-gradient(
     200.96deg,
     #e7ab9e -29.09%,
     #d66c6a 51.77%,
-    #d2382a 129.35%
+    #d2382a 129.35% */
     /* #fedc2a -29.09%,
     #dd5789 51.77%,
     #7a2c9e 129.35% */
-  );
+  /* ); */
+  /* background: rgba(135, 172, 163, 0.15) ; */
   font-family:Roboto,'Open Sans', 'Helvetica Neue', sans-serif;
   font-weight: 100;
   overflow-y: hidden;

@@ -1,0 +1,44 @@
+/* src/components/CustomButton.css */
+.custom-button {
+  background-color: rgba(189, 185, 181, 0.397);
+  border: solid 0.1px #002C58;
+  /* color: rgb(0, 0, 0); */
+  padding: 8px 10px;
+  text-align: center;
+  justify-content: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 400;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: none;
+  transition: background-color 0.3s ease;
+}
+
+.custom-button:hover {
+  background-color: #002C58;
+  color: white;
+  /* Darker background on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* Add shadow on hover */
+}
+
+.custom-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.custom-button-close {
+  background-color: rgba(184, 23, 23, 0.1);
+  color: rgb(184, 24, 24);
+  border: solid 0.1px rgb(184, 23, 23);
+}
+
+.custom-button-close:hover {
+  background-color: rgba(184, 23, 23, 1);
+  color: rgb(255, 255, 255);
+}
+
+

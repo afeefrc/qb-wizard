@@ -1,0 +1,54 @@
+.fade-enter {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 500ms, transform 500ms;
+}
+
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 500ms, transform 500ms;
+}
+
+/* .card-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 1s ease, transform 0.3s ease;
+}
+
+.card-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+} */
+
+.card-transition-enter {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.card-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.card-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}

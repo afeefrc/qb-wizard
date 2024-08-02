@@ -211,21 +211,33 @@ flex-direction: column;
   justify-content: flex-start;
   padding: 10px;
   /* margin: 20px; */
-  height: 80vh;
+  /* height: 80vh; */
   /* border: 1px solid #ccc; */
   border-radius: 10px;
   background-color: #f9f9f9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
 }
 
 .body-content-button-container {
   display: flex;
-  justify-content: flex-end;
-  margin-right: 40px  ;
-  margin-top: 10px;
+  justify-content: space-between ;
+  align-items: flex-end;
+  margin: 0px 10px;
+  margin-bottom: 5px;
+  margin-left: 15px;
+  border-bottom: #95b9ddb9 0.5px solid;
 }
 
-.body-content-close-button {
+.body-content-container-title {
+  font-size: 1.2em;;
+  padding-bottom: 2px;
+  font-weight: 500;
+  text-align: flex-start;
+  color: rgb(0, 44, 88, 0.75);
+  /* border-bottom: #95b9ddb9 0.5px solid; */
+}
+
+/* .body-content-close-button {
   display: flex;
   justify-content: center;
   padding: 5px 10px;
@@ -234,7 +246,7 @@ flex-direction: column;
   box-shadow: none;
   background-color: rgba(189, 185, 181, 0.397);
   border-radius: 10px;
-}
+} */
 
 .station-settings-form {
   display: flex;
@@ -264,7 +276,6 @@ flex-direction: column;
   /* align-items: space-evenly; */
   justify-content: space-between;
   padding: 10px;
-  margin: 10px;
   width: 95%;
 }
 .station-settings-stationCode{
@@ -272,7 +283,8 @@ flex-direction: column;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding-left: 40px;
+  padding-left: 20px;
+  margin-left: 10px;
   padding-right: 15px;
   font-size: 2em;
   /* border-right: rgba(0, 44, 88,0.25) 0.5px solid; */
@@ -286,10 +298,14 @@ flex-direction: column;
   /* margin-left: 10px; */
 }
 .station-settings-units-container {
-  height: 40vh;
-  min-width: 275px;
+  height: 30vh;
+  /* min-width: 275px; */
   /* Adjust the height as needed */
+  width: 75%;
   overflow-y: auto;
+  margin-left: 10px;
+  position: relative;
+    /* Ensure the container is positioned relative for pseudo-elements */
 }
 .station-settings-units-container::-webkit-scrollbar {
   width: 8px;
@@ -304,7 +320,7 @@ flex-direction: column;
 }
 
 .station-settings-units-container::-webkit-scrollbar-thumb {
-  background: #a3a1a1;
+  background: #a3a1a17e;
   /* Color of the scrollbar thumb */
   border-radius: 6px;
   /* Rounded corners for the scrollbar thumb */
@@ -320,12 +336,9 @@ flex-direction: column;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  /* width: 200px; */
-  padding: 10px;
-  margin-right: 10px;
-  margin-bottom: 20px;
-  border-radius: 10px;
-  border:   0.5px solid rgba(0, 44, 88, 0.25);
+  padding: 0px 20px;
+  width: 95%;
+
 }
 .station-settings-edit-container {
   display: flex;
@@ -395,7 +408,6 @@ flex-direction: column;
   /* width: 150px; */
   margin: 10px 0px;
   flex-direction: column;
-
   gap: 10px;
   /* background-color: #0a0a0a1f; */
   border-radius: 10px;
@@ -433,10 +445,10 @@ flex-direction: column;
   cursor: pointer;
   text-decoration: underline;
   font-weight: 100 ;
-  font-size: 16px;
+  /* font-size: 16px; */
   font-style: italic;
-  padding: 10px;
   transition: color 0.3s ease;
+  height: 20px;
 }
 
 .edit-text:hover {
@@ -444,11 +456,52 @@ flex-direction: column;
   cursor: pointer;
 }
 
+
+.examiner-list-container {
+  height: 70vh;
+  /* min-width: 275px; */
+  /* Adjust the height as needed */
+  /* width: 75%; */
+  overflow-y: auto;
+  margin-left: 10px;
+  position: relative;
+  /* Ensure the container is positioned relative for pseudo-elements */
+}
+
+.examiner-list-container::-webkit-scrollbar {
+  width: 8px;
+  /* Width of the scrollbar */
+}
+
+.examiner-list-container::-webkit-scrollbar-track {
+  background: transparent;
+  /* Make the track transparent */
+  border-radius: 4px;
+  margin: 15px;
+}
+
+.examiner-list-container::-webkit-scrollbar-thumb {
+  background: #a3a1a17e;
+  /* Color of the scrollbar thumb */
+  border-radius: 6px;
+  /* Rounded corners for the scrollbar thumb */
+}
+
+.examiner-list-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+  /* Color of the scrollbar thumb when hovered */
+}
+
 .ant-picker-header-super-prev-btn,
 .ant-picker-header-prev-btn,
 .ant-picker-month-btn,
 .ant-picker-year-btn,
 .ant-picker-header-next-btn,
-.ant-picker-header-super-next-btn {
+.ant-picker-header-super-next-btn,
+.ant-drawer-close,
+.ant-alert-close-icon {
   box-shadow: none;
 }
+
+
+

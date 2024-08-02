@@ -9,6 +9,10 @@ const QUESTION_STORE_NAME = 'question-bank';
 const SETTINGS_STORE_NAME = 'app-settings';
 const EXAMINER_STORE_NAME = 'examiner-list';
 
+type ExaminerItem = {
+  [key: string]: any;
+};
+
 export const initDB = async () => {
   return openDB(DB_NAME, DB_VERSION, {
     upgrade(db) {
@@ -23,9 +27,13 @@ export const initDB = async () => {
       }
       // Create examiner-list if it doesn't exist
       if (!db.objectStoreNames.contains(EXAMINER_STORE_NAME)) {
-        db.createObjectStore(EXAMINER_STORE_NAME, {
+        const examinerStore = db.createObjectStore(EXAMINER_STORE_NAME, {
           keyPath: 'id',
           autoIncrement: true,
+        });
+        // Create an index on examinerEmpId with unique constraint
+        examinerStore.createIndex('examinerEmpId', 'examinerEmpId', {
+          unique: true,
         });
       }
     },
@@ -62,15 +70,42 @@ const validateAndSetDefaultsForSettings = (settings) => {
   );
 };
 
-// Function to validate and set defaults for examiner items
-const validateAndSetDefaultsForExaminer = (item) => {
-  const validatedItem = { ...examinerListSchema, ...item };
-  Object.keys(examinerListSchema).forEach((key) => {
-    if (validatedItem[key] === undefined) {
-      validatedItem[key] = examinerListSchema[key].default;
-    }
-  });
-  return validatedItem;
+/// Function to validate and set defaults for examiner items
+const validateAndSetDefaultsForExaminer = (
+  item: ExaminerItem,
+): ExaminerItem => {
+  try {
+    const validatedItem = { ...item };
+
+    Object.keys(examinerListSchema).forEach((key) => {
+      const schema = examinerListSchema[key];
+      if (validatedItem[key] === undefined) {
+        validatedItem[key] =
+          typeof schema.default === 'function'
+            ? schema.default()
+            : schema.default;
+      } else if (key === 'examinerUnits' && Array.isArray(validatedItem[key])) {
+        validatedItem[key] = validatedItem[key].map((unitItem) => {
+          const validatedUnitItem = { ...unitItem };
+          Object.keys(schema.items?.properties || {}).forEach((unitKey) => {
+            if (validatedUnitItem[unitKey] === undefined) {
+              validatedUnitItem[unitKey] =
+                schema.items?.properties[unitKey].default;
+            }
+          });
+          return validatedUnitItem;
+        });
+      }
+    });
+
+    return validatedItem;
+  } catch (error) {
+    console.error(
+      'Error validating and setting defaults for examiner item:',
+      error,
+    );
+    return item; // Return the original item in case of error
+  }
 };
 
 // const removeUncloneableProperties = (item) => {
@@ -198,15 +233,52 @@ export async function getAllSettings() {
   return result;
 }
 
+// Function to check if examinerEmpId is unique
+const isExaminerEmpIdUnique = async (
+  examinerEmpId: number,
+): Promise<boolean> => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_STORE_NAME, 'readonly');
+  const store = tx.objectStore(EXAMINER_STORE_NAME);
+  const index = store.index('examinerEmpId');
+  const result = await index.get(examinerEmpId);
+  await tx.done;
+  return !result; // If result is null, the id is unique
+};
+
 // Add a new examiner
 export const addExaminer = async (item) => {
-  const db = await initDB();
-  const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
-  const store = tx.objectStore(EXAMINER_STORE_NAME);
-  const validatedItem = validateAndSetDefaults(item);
-  const cloneableItem = removeUncloneableProperties(validatedItem);
-  await store.add(cloneableItem);
-  await tx.done;
+  try {
+    // Check if examinerEmpId is unique before proceeding
+    const isUnique = await isExaminerEmpIdUnique(item.examinerEmpId);
+    if (!isUnique) {
+      return 'Examiner with the same employee Id already exists. Edit or delete the existing examiner.';
+    }
+
+    const db = await initDB();
+    const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(EXAMINER_STORE_NAME);
+    const validatedItem = validateAndSetDefaultsForExaminer(item);
+    const cloneableItem = removeUncloneableProperties(validatedItem);
+    // Check for uniqueness of examinerEmpId
+    // const isUnique = await isExaminerEmpIdUnique(cloneableItem.examinerEmpId);
+    // console.log('isUnique:', isUnique);
+    // if (!isUnique) {
+    //   return 'Examiner with the same employee Id already exists. Edit or delete the existing examiner.';
+    // }
+
+    await store.add(cloneableItem);
+    await tx.done;
+    return 'Examiner added successfully';
+  } catch (error) {
+    if (error.name === 'ConstraintError') {
+      return 'Examiner with the same employee Id already exists. Edit or delete the existing examiner.';
+    }
+    if (error.name === 'AbortError') {
+      return 'Transaction aborted. Please try again.';
+    }
+    return `Error: ${error.message}`;
+  }
 };
 
 // Get an examiner by ID
@@ -214,7 +286,8 @@ export const getExaminer = async (id) => {
   const db = await initDB();
   const tx = db.transaction(EXAMINER_STORE_NAME, 'readonly');
   const store = tx.objectStore(EXAMINER_STORE_NAME);
-  return store.get(id);
+  const examiner = await store.get(id);
+  return examiner ? validateAndSetDefaultsForExaminer(examiner) : null;
 };
 
 // Get all examiners
@@ -222,16 +295,22 @@ export const getAllExaminers = async () => {
   const db = await initDB();
   const tx = db.transaction(EXAMINER_STORE_NAME, 'readonly');
   const store = tx.objectStore(EXAMINER_STORE_NAME);
-  return store.getAll();
+  const examiners = await store.getAll();
+  return examiners.map(validateAndSetDefaultsForExaminer);
 };
 
 // Delete an examiner by ID
 export const deleteExaminer = async (id) => {
-  const db = await initDB();
-  const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
-  const store = tx.objectStore(EXAMINER_STORE_NAME);
-  await store.delete(id);
-  await tx.done;
+  try {
+    const db = await initDB();
+    const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(EXAMINER_STORE_NAME);
+    await store.delete(id);
+    await tx.done;
+    console.log(`Examiner with ID ${id} deleted successfully.`);
+  } catch (error) {
+    console.error(`Failed to delete examiner with ID ${id}:`, error);
+  }
 };
 
 // Update an examiner by ID
@@ -248,6 +327,7 @@ export const updateExaminer = async (id, updatedItem) => {
     ...updatedItem,
     updatedAt: new Date(),
   };
-  await store.put(updatedExaminer);
+  const validatedExaminer = validateAndSetDefaultsForExaminer(updatedExaminer);
+  await store.put(validatedExaminer);
   await tx.done;
 };

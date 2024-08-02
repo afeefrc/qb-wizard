@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   ReactNode,
+  useCallback,
 } from 'react';
 import {
   getQuestions,
@@ -62,17 +63,53 @@ export function AppProvider({ children }: AppProviderProps) {
     fetchSettings();
   }, []);
 
+  const fetchExaminers = async () => {
+    try {
+      const allExaminers = await getAllExaminers();
+      setExaminers(allExaminers);
+    } catch (error) {
+      console.error('Failed to fetch examiners', error);
+    }
+  };
   useEffect(() => {
-    const fetchExaminers = async () => {
+    fetchExaminers();
+  }, []);
+
+  // const handleAddExaminer = async (newExaminers) => {
+  //   // Assuming you have a function to add examiners to the backend
+  //   await addExaminer(newExaminers);
+  //   fetchExaminers(); // Fetch the updated list of examiners
+  // };
+
+  const handleAddExaminer = useCallback(
+    async (newExaminer: any) => {
       try {
+        const result = await addExaminer(newExaminer);
+        if (
+          result ===
+          'Examiner with the same employee Id already exists. Edit or delete the existing examiner.'
+        ) {
+          console.error(result);
+          return result;
+        }
         const allExaminers = await getAllExaminers();
         setExaminers(allExaminers);
       } catch (error) {
-        console.error('Failed to fetch examiners', error);
+        console.error('Failed to add examiner:', error);
       }
-    };
+    },
+    [setExaminers],
+  );
+
+  const handleDeleteExaminer = async (id: number) => {
+    await deleteExaminer(id);
     fetchExaminers();
-  }, []);
+  };
+
+  const handleUpdateExaminer = async (id: number, updatedExaminer: any) => {
+    await updateExaminer(id, updatedExaminer);
+    fetchExaminers();
+  };
 
   const handleAddQuestion = async (newQuestion: any) => {
     await addQuestion(newQuestion);
@@ -104,11 +141,18 @@ export function AppProvider({ children }: AppProviderProps) {
       handleAddQuestion,
       handleDeleteQuestion,
       handleSaveSetting,
-      handleAddExaminer: addExaminer,
-      handleDeleteExaminer: deleteExaminer,
-      handleUpdateExaminer: updateExaminer,
+      handleAddExaminer,
+      handleDeleteExaminer,
+      handleUpdateExaminer,
     }),
-    [questions, settings, examiners],
+    [
+      questions,
+      settings,
+      examiners,
+      handleAddExaminer,
+      handleDeleteExaminer,
+      handleUpdateExaminer,
+    ],
   );
 
   return (
