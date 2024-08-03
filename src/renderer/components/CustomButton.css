@@ -18,11 +18,21 @@
 }
 
 .custom-button:hover {
+  transform: scale(1.07);
   background-color: #002C58;
   color: white;
   /* Darker background on hover */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   /* Add shadow on hover */
+}
+
+.custom-button-active {
+  transform: scale(1);
+  background-color: #002C58;
+  color: white;
+  /* Darker background on active */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* Add shadow on active */
 }
 
 .custom-button:disabled {

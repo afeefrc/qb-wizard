@@ -503,5 +503,23 @@ flex-direction: column;
   box-shadow: none;
 }
 
+.create-review-panel-header{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: medium;
+  padding: 10px 0px;
+  margin: 0px 20px;
+  margin-bottom: 10px;
+  /* border-bottom: 0.5px solid rgba(0, 0, 0, 0.1); */
+}
 
+.crate-review-panel-unitname {
+  padding: 0px 20px;
+  font-size: 36px;
+  color: #002C58;
+  border-radius: 10px;
+  background-color: rgba(0, 44, 88, 0.1);
+}
 

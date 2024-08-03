@@ -93,3 +93,28 @@ export const trgInchargeMenuContent = [
     buttons: units,
   },
 ];
+
+export const trgInchargeMenuContentCopy = [
+  {
+    key: 'qb',
+    label: 'View Question Banks',
+    children: [units[0].label, units[1].id],
+  },
+  {
+    key: 'rp',
+    label: 'Create Review Panel',
+    children: [units[0].label, units[1].id],
+  },
+  {
+    key: 'qp',
+    label: 'Assign Examiner to prepare Question Paper',
+    children: [units[0].label, units[1].id],
+  },
+];
+
+export const trgInchargeAccordionTitles = [
+  'View Question Banks',
+  'View Question Papers',
+  'Create Review Panel',
+  'Assign Examiner to prepare Question Paper',
+];

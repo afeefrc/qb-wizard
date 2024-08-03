@@ -5,7 +5,7 @@ import './CustomButton.css'; // Import CSS for styling
 interface CustomButtonProps {
   onClick: () => void;
   children: React.ReactNode;
-  type?: 'button' | 'submit' | 'reset' | 'close';
+  type?: 'button' | 'active' | 'submit' | 'reset' | 'close';
   className?: string;
   disabled?: boolean;
   style?: React.CSSProperties;

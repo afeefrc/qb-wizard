@@ -64,3 +64,38 @@ export const examinerListSchema = {
   createdAt: { type: 'date', default: () => new Date() },
   updatedAt: { type: 'date', default: () => new Date() },
 };
+
+export const reviewPanelSchema = {
+  id: { type: 'string', default: () => uuidv4() },
+  title: { type: 'string', default: '' },
+  description: { type: 'string', default: '' },
+  assigned_to: { type: 'array', default: [] }, // This should reference examinerListSchema entries
+  chairman: {
+    type: 'string',
+    default: '',
+    validate: (value, context) =>
+      !context.assigned_to.length || context.assigned_to.includes(value), // Ensure chairman is in assigned_to or empty if assigned_to is empty
+  },
+  status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'draft', 'submitted', 'approved', 'rejected'
+  content: { type: 'array', default: [] },
+  comments_initiate: { type: 'string', default: '' },
+  comments_submit: { type: 'string', default: '' },
+  comments_approval: { type: 'string', default: '' },
+  comments_forward: { type: 'string', default: '' },
+  createdAt: { type: 'date', default: () => new Date() },
+  updatedAt: { type: 'date', default: () => new Date() },
+};
+
+export const validateAndSetDefaultsForReviewPanel = (item) => {
+  return Object.entries(reviewPanelSchema).reduce(
+    (validatedItem, [key, field]) => {
+      const value = item[key] === undefined ? field.default : item[key];
+      if (field.validate && !field.validate(value)) {
+        throw new Error(`Invalid value for ${key}: ${value}`);
+      }
+      validatedItem[key] = value;
+      return validatedItem;
+    },
+    {},
+  );
+};

@@ -1,13 +1,20 @@
 // src/utils/db.js
 import { openDB } from 'idb';
 // import { v4 as uuidv4 } from 'uuid';
-import { questionsSchema, settingsSchema, examinerListSchema } from './schema';
+import {
+  questionsSchema,
+  settingsSchema,
+  examinerListSchema,
+  reviewPanelSchema,
+  validateAndSetDefaultsForReviewPanel,
+} from './schema';
 
 const DB_NAME = 'my-database';
 const DB_VERSION = 1;
 const QUESTION_STORE_NAME = 'question-bank';
 const SETTINGS_STORE_NAME = 'app-settings';
 const EXAMINER_STORE_NAME = 'examiner-list';
+const REVIEW_PANEL_STORE = 'review-panel';
 
 type ExaminerItem = {
   [key: string]: any;
@@ -34,6 +41,12 @@ export const initDB = async () => {
         // Create an index on examinerEmpId with unique constraint
         examinerStore.createIndex('examinerEmpId', 'examinerEmpId', {
           unique: true,
+        });
+      }
+      if (!db.objectStoreNames.contains(REVIEW_PANEL_STORE)) {
+        db.createObjectStore(REVIEW_PANEL_STORE, {
+          keyPath: 'id',
+          autoIncrement: true,
         });
       }
     },
@@ -107,16 +120,6 @@ const validateAndSetDefaultsForExaminer = (
     return item; // Return the original item in case of error
   }
 };
-
-// const removeUncloneableProperties = (item) => {
-//   const cloneableItem = {};
-//   Object.entries(item).forEach(([key, value]) => {
-//     if (typeof value !== 'function') {
-//       cloneableItem[key] = value;
-//     }
-//   });
-//   return cloneableItem;
-// };
 
 // Function to remove uncloneable properties
 const removeUncloneableProperties = (item) => {
@@ -233,6 +236,8 @@ export async function getAllSettings() {
   return result;
 }
 
+// Operations for examiner-list
+
 // Function to check if examinerEmpId is unique
 const isExaminerEmpIdUnique = async (
   examinerEmpId: number,
@@ -330,4 +335,30 @@ export const updateExaminer = async (id, updatedItem) => {
   const validatedExaminer = validateAndSetDefaultsForExaminer(updatedExaminer);
   await store.put(validatedExaminer);
   await tx.done;
+};
+
+// Operations for review-panel
+
+export const addReviewPanel = async (data) => {
+  try {
+    const validatedData = validateAndSetDefaultsForReviewPanel(data);
+
+    const db = await initDB();
+    const tx = db.transaction(REVIEW_PANEL_STORE, 'readwrite');
+    const store = tx.objectStore(REVIEW_PANEL_STORE);
+
+    await store.add(validatedData);
+    await tx.done;
+  } catch (error) {
+    throw new Error(`Failed to add review panel: ${error.message}`);
+  }
+};
+
+// Get all review panels
+export const getAllReviewPanels = async () => {
+  const db = await initDB();
+  const tx = db.transaction(REVIEW_PANEL_STORE, 'readonly');
+  const store = tx.objectStore(REVIEW_PANEL_STORE);
+  const reviewPanels = await store.getAll();
+  return reviewPanels.map(validateAndSetDefaultsForReviewPanel);
 };

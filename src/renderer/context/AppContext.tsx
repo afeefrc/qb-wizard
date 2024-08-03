@@ -12,12 +12,14 @@ import {
   deleteQuestion,
   // getSetting,
   getAllSettings,
+  getAllReviewPanels,
   saveSetting,
   addExaminer,
   getExaminer,
   getAllExaminers,
   deleteExaminer,
   updateExaminer,
+  addReviewPanel,
 } from '../../models';
 
 interface AppContextProps {
@@ -42,6 +44,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [examiners, setExaminers] = useState<any[]>([]);
+  const [reviewPanels, setReviewPanels] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -73,6 +76,19 @@ export function AppProvider({ children }: AppProviderProps) {
   };
   useEffect(() => {
     fetchExaminers();
+  }, []);
+
+  useEffect(() => {
+    const fetchReviewPanels = async () => {
+      try {
+        const allReviewPanels = await getAllReviewPanels();
+        setReviewPanels(allReviewPanels);
+      } catch (error) {
+        console.error('Failed to fetch review panels', error);
+        setReviewPanels([]); // Set an empty array when there are no items in the database
+      }
+    };
+    fetchReviewPanels();
   }, []);
 
   // const handleAddExaminer = async (newExaminers) => {
@@ -133,22 +149,31 @@ export function AppProvider({ children }: AppProviderProps) {
     setSettings(appSettings);
   };
 
+  const handleAddReviewPanel = async (newReviewPanel: any) => {
+    await addReviewPanel(newReviewPanel);
+    const allReviewPanels = await getAllReviewPanels();
+    setReviewPanels(allReviewPanels);
+  };
+
   const contextValue = useMemo(
     () => ({
       questions,
       settings,
       examiners,
+      reviewPanels,
       handleAddQuestion,
       handleDeleteQuestion,
       handleSaveSetting,
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,
+      handleAddReviewPanel,
     }),
     [
       questions,
       settings,
       examiners,
+      reviewPanels,
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,
