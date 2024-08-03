@@ -67,17 +67,18 @@ export const examinerListSchema = {
 
 export const reviewPanelSchema = {
   id: { type: 'string', default: () => uuidv4() },
-  title: { type: 'string', default: '' },
+  unit: { type: 'string', default: '' }, // Possible values: 'ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'
   description: { type: 'string', default: '' },
-  assigned_to: { type: 'array', default: [] }, // This should reference examinerListSchema entries
+  members: { type: 'array', default: [] }, // This should reference examinerListSchema entries
   chairman: {
     type: 'string',
     default: '',
-    validate: (value, context) =>
-      !context.assigned_to.length || context.assigned_to.includes(value), // Ensure chairman is in assigned_to or empty if assigned_to is empty
+    // validate: (value, context) =>
+    //   !context.members.length || context.members.includes(value), // Ensure chairman is in members or empty if members is empty
   },
-  status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'draft', 'submitted', 'approved', 'rejected'
+  status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'in process', 'submitted', 'approved', 'rejected'
   content: { type: 'array', default: [] },
+  deadline: { type: 'date', default: null },
   comments_initiate: { type: 'string', default: '' },
   comments_submit: { type: 'string', default: '' },
   comments_approval: { type: 'string', default: '' },
@@ -87,6 +88,7 @@ export const reviewPanelSchema = {
 };
 
 export const validateAndSetDefaultsForReviewPanel = (item) => {
+  console.log('item to validate', item);
   return Object.entries(reviewPanelSchema).reduce(
     (validatedItem, [key, field]) => {
       const value = item[key] === undefined ? field.default : item[key];
@@ -94,8 +96,30 @@ export const validateAndSetDefaultsForReviewPanel = (item) => {
         throw new Error(`Invalid value for ${key}: ${value}`);
       }
       validatedItem[key] = value;
+      console.log('validatedItem', validatedItem);
       return validatedItem;
     },
     {},
   );
 };
+
+// export const validateAndSetDefaultsForReviewPanel = (item) => {
+//   console.log('item to validate', item);
+//   return Object.entries(reviewPanelSchema).reduce(
+//     (validatedItem, [key, field]) => {
+//       const value =
+//         item[key] === undefined
+//           ? typeof field.default === 'function'
+//             ? field.default()
+//             : field.default
+//           : item[key];
+//       if (field.validate && !field.validate(value)) {
+//         throw new Error(`Invalid value for ${key}: ${value}`);
+//       }
+//       validatedItem[key] = value;
+//       console.log('validatedItem', validatedItem);
+//       return validatedItem;
+//     },
+//     {},
+//   );
+// };

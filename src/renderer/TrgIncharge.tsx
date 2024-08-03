@@ -16,18 +16,18 @@ function TrgIncharge() {
   // const [showListOfExaminers, setShowListOfExaminers] = useState(false);
   const [BtnPressed, setBtnPressed] = useState<{
     MenuId?: number;
-    BtnId?: number;
+    BtnName?: string;
   }>({});
 
-  console.log(BtnPressed);
+  console.log('BtnPressed', BtnPressed);
 
   const navigate = useNavigate();
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleButtonClick = (menuId: number, btnId: number) => {
-    setBtnPressed({ MenuId: menuId, BtnId: btnId });
+  const handleButtonClick = (MenuId: number, BtnName: string) => {
+    setBtnPressed({ MenuId: MenuId, BtnName: BtnName });
   };
 
   const handleClose = () => {
@@ -36,26 +36,38 @@ function TrgIncharge() {
 
   const renderContent = () => {
     const contentMap = {
-      '0-0': {
-        title: 'Update title here',
-        component: <div />,
+      '0': {
+        title: 'View Question Banks',
+        component: <div>Build component here {BtnPressed.BtnName}</div>,
       },
-      '2-0': {
+      '1': {
+        title: 'View Question Papers',
+        component: <div>Build component here {BtnPressed.BtnName}</div>,
+      },
+      '2': {
         title: 'Create Review Panel',
-        component: <CreateReviewPanel unit="ADC" close={handleClose} />,
+        component: (
+          <CreateReviewPanel unit={BtnPressed.BtnName} close={handleClose} />
+        ),
       },
-      '4-0': {
-        title: 'List of Examiners',
-        component: <ListOfExaminers />,
+      '3': {
+        title: 'Assign examiner to prepare Question Paper',
+        component: <div>Build component here {BtnPressed.BtnName}</div>,
       },
-      '4-1': {
-        title: 'Station Settings',
-        component: <StationSettings />,
-      },
+      '4': (() => {
+        if (BtnPressed.BtnName === 'examiner-list') {
+          return { component: <ListOfExaminers />, title: 'List of Examiners' };
+        }
+        if (BtnPressed.BtnName === 'station-settings') {
+          return { component: <StationSettings />, title: 'List of Examiners' };
+        }
+        return null;
+      })(),
       // Add more mappings as needed
     };
 
-    const key = `${BtnPressed.MenuId}-${BtnPressed.BtnId}`;
+    // const key = `${BtnPressed.MenuId}-${BtnPressed.BtnName}`;
+    const key = `${BtnPressed.MenuId}`;
     const content = contentMap[key];
 
     if (content) {

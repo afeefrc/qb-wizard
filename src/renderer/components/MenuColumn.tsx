@@ -22,8 +22,8 @@ import { AppContext } from '../context/AppContext';
 // }
 
 interface MenuColumnProps {
-  BtnPressed: { MenuId?: number; BtnId?: number };
-  handleButtonClick: (menuItemId: number, buttonId: number) => void;
+  BtnPressed: { MenuId?: number; BtnName?: string };
+  handleButtonClick: (menuItemId: number, BtnName: string) => void;
 }
 
 const items: CollapseProps['items'] = trgInchargeMenuContentCopy;
@@ -55,11 +55,12 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
             {units.map((unit, unitIndex) => (
               <div key={unitIndex}>
                 <CustomButton
-                  onClick={() => handleButtonClick(index, unitIndex)}
+                  onClick={() => {
+                    handleButtonClick(index, unit);
+                  }}
                   style={buttonStyle}
                   type={
-                    BtnPressed.MenuId === index &&
-                    BtnPressed.BtnId === unitIndex
+                    BtnPressed.MenuId === index && BtnPressed.BtnName === unit
                       ? 'active'
                       : 'button'
                   }
@@ -79,13 +80,13 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
         children: (
           <div>
             <CustomButton
-              onClick={() => handleButtonClick(4, 0)} // hardcoded menuId 4 for settings, buttonId 0 for List of Examiners
+              onClick={() => handleButtonClick(4, 'examiner-list')} // hardcoded menuId 4 for settings, buttonId 0 for List of Examiners
               style={buttonStyle}
             >
               List of Examiners
             </CustomButton>
             <CustomButton
-              onClick={() => handleButtonClick(4, 1)} // hardcoded menuId 4 for settings, buttonId 1 for Station Settings
+              onClick={() => handleButtonClick(4, 'station-settings')} // hardcoded menuId 4 for settings, buttonId 1 for Station Settings
               style={buttonStyle}
             >
               Station Settings

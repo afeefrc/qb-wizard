@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Select,
-  DatePicker,
-  Space,
-  Checkbox,
-  Radio,
-  Upload,
-  message,
-  Switch,
-} from 'antd';
+import { Card, Form, Input, Button, Select, DatePicker, Space } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 
 import { AppContext } from '../../context/AppContext';
@@ -42,11 +29,10 @@ const formItemLayoutWithOutLabel = {
 
 function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
   const appContext = React.useContext(AppContext);
-  const { settings, reviewPanels, handleAddReviewPanel, examiners } =
-    appContext || {};
+  const { handleAddReviewPanel, examiners } = appContext || {};
   const [form] = Form.useForm();
   const [selectedValues, setSelectedValues] = useState([]);
-  const [chairman, setChairman] = useState('');
+  // const [chairman, setChairman] = useState('');
 
   const handleSelectChange = (value, index) => {
     const newSelectedValues = [...selectedValues];
@@ -68,7 +54,15 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
   };
 
   const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-    console.log('Success:', values);
+    const content = {
+      unit: unit,
+      members: [values.chairman, ...values.names],
+      chairman: values.chairman,
+      status: 'initiated',
+      comments_initiate: values.comments || '',
+      deadline: values.date || null,
+    };
+    handleAddReviewPanel(content);
     form.resetFields();
     close();
   };
@@ -83,8 +77,8 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
     <div style={{ margin: '20px' }}>
       <Card title={''}>
         <div className="create-review-panel-header">
-          Create question bank review panel for {unit}
           <div className="crate-review-panel-unitname">{unit}</div>
+          Create question bank review panel for {unit}
         </div>
         <Form
           form={form}
@@ -242,9 +236,6 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
           </Form.Item>
         </Form>
       </Card>
-      {reviewPanels.map((panel, index) => (
-        <Card key={index}>{panel}</Card>
-      ))}
     </div>
   );
 }

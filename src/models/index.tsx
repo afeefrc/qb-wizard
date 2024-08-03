@@ -347,7 +347,7 @@ export const addReviewPanel = async (data) => {
     const tx = db.transaction(REVIEW_PANEL_STORE, 'readwrite');
     const store = tx.objectStore(REVIEW_PANEL_STORE);
 
-    await store.add(validatedData);
+    await store.add(removeUncloneableProperties(validatedData));
     await tx.done;
   } catch (error) {
     throw new Error(`Failed to add review panel: ${error.message}`);
