@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Form, Input, Button, Select, DatePicker, Space } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 import { AppContext } from '../../context/AppContext';
 
@@ -27,12 +28,34 @@ const formItemLayoutWithOutLabel = {
   },
 };
 
-function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
+function CreateReviewPanel({
+  unit = '',
+  close,
+  editValues, //bring in the content if editing. if null it means we are creating a new panel
+  // setEditBtnPressed, //set the edit button to true/false
+}: CreateReviewPanelProps) {
   const appContext = React.useContext(AppContext);
-  const { handleAddReviewPanel, examiners } = appContext || {};
+  const { handleAddReviewPanel, handleUpdateReviewPanel, examiners } =
+    appContext || {};
   const [form] = Form.useForm();
   const [selectedValues, setSelectedValues] = useState([]);
   // const [chairman, setChairman] = useState('');
+
+  useEffect(() => {
+    if (editValues) {
+      console.log('editValues', editValues);
+      const data = {
+        unit: editValues.unit,
+        chairman: editValues.chairman,
+        names: editValues.members.filter(
+          (member) => member !== editValues.chairman,
+        ),
+        comments: editValues.comments_initiate,
+        date: dayjs(editValues.deadline),
+      };
+      form.setFieldsValue(data);
+    }
+  }, [editValues, form]);
 
   const handleSelectChange = (value, index) => {
     const newSelectedValues = [...selectedValues];
@@ -60,7 +83,7 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
       chairman: values.chairman,
       status: 'initiated',
       comments_initiate: values.comments || '',
-      deadline: values.date || null,
+      deadline: values.date?.toDate() || null,
     };
     handleAddReviewPanel(content);
     form.resetFields();
@@ -73,12 +96,33 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
     console.log('Failed:', errorInfo);
   };
 
+  const handleUpdateBtn = () => {
+    const formValues = form.getFieldsValue();
+    const content = {
+      unit: unit,
+      members: [formValues.chairman, ...formValues.names],
+      chairman: formValues.chairman,
+      status: editValues.status || 'initiated',
+      comments_initiate: formValues.comments || '',
+      deadline: formValues.date?.toDate() || null,
+    };
+    handleUpdateReviewPanel(editValues.id, content);
+    form.resetFields();
+    close();
+  };
+
+  const handleCancelBtn = () => {
+    form.resetFields();
+    close();
+  };
+
   return (
-    <div style={{ margin: '20px' }}>
+    <div style={{ margin: '10px 20px' }}>
       <Card title={''}>
         <div className="create-review-panel-header">
-          <div className="crate-review-panel-unitname">{unit}</div>
-          Create question bank review panel for {unit}
+          <div className="create-review-panel-unitname">{unit}</div>
+          {editValues ? 'Edit ' : 'Create '}
+          question bank review panel for {unit}
         </div>
         <Form
           form={form}
@@ -150,10 +194,6 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
                       ]}
                       noStyle
                     >
-                      {/* <Input
-                        placeholder="Select Panel Member"
-                        style={{ width: '60%' }}
-                      /> */}
                       <Select
                         showSearch
                         placeholder="Search examiner"
@@ -187,29 +227,11 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
                   >
                     Add Panel Member
                   </Button>
-                  {/* <Button
-                    type="dashed"
-                    onClick={() => {
-                      add('The head item', 0);
-                    }}
-                    style={{ width: '60%', marginTop: '20px' }}
-                    icon={<PlusOutlined />}
-                  >
-                    Add field at head
-                  </Button> */}
                   <Form.ErrorList errors={errors} />
                 </Form.Item>
               </>
             )}
           </Form.List>
-
-          {/* <Form.Item
-            label="Title"
-            name="title"
-            rules={[{ required: true, message: 'Please enter the title' }]}
-          >
-            <Input />
-          </Form.Item> */}
           <Form.Item
             label="Comments"
             name="comments"
@@ -228,10 +250,27 @@ function CreateReviewPanel({ unit = '', close }: CreateReviewPanelProps) {
           </Form.Item>
           <Form.Item style={{ display: 'flex', justifyContent: 'center' }}>
             <Space>
-              <Button type="primary" htmlType="submit">
+              {editValues === undefined ? (
+                <>
+                  <Button type="primary" htmlType="submit">
+                    Create
+                  </Button>
+                  <Button htmlType="reset">Reset</Button>
+                </>
+              ) : (
+                <>
+                  <Button type="primary" onClick={handleUpdateBtn}>
+                    Update
+                  </Button>
+                  <Button htmlType="button" onClick={handleCancelBtn}>
+                    Cancel
+                  </Button>
+                </>
+              )}
+              {/* <Button type="primary" htmlType="submit">
                 Create
               </Button>
-              <Button htmlType="reset">Reset</Button>
+              <Button htmlType="reset">Reset</Button> */}
             </Space>
           </Form.Item>
         </Form>

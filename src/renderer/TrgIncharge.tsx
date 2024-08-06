@@ -97,28 +97,6 @@ function TrgIncharge() {
             BtnPressed={BtnPressed}
             handleButtonClick={handleButtonClick}
           />
-          {/* Settings buttons below */}
-          {/* <div className="menu-section-title">Settings</div>
-          <div className="menu-section-container">
-            <div className="menu-btn-container">
-              <button
-                type="button"
-                className="menu-buttons"
-                onClick={handleListOfExaminersBtn}
-              >
-                List of Examiners
-              </button>
-            </div>
-            <div className="menu-btn-container">
-              <button
-                type="button"
-                className="menu-buttons"
-                onClick={handleStationSettingsBtn}
-              >
-                Station Settings
-              </button>
-            </div>
-          </div> */}
         </div>
         <div className="content-box">
           <div className="rolepage-hello">{renderContent()}</div>

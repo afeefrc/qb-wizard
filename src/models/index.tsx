@@ -362,3 +362,37 @@ export const getAllReviewPanels = async () => {
   const reviewPanels = await store.getAll();
   return reviewPanels.map(validateAndSetDefaultsForReviewPanel);
 };
+
+// Delete a review panel by ID
+export const deleteReviewPanel = async (id) => {
+  try {
+    const db = await initDB();
+    const tx = db.transaction(REVIEW_PANEL_STORE, 'readwrite');
+    const store = tx.objectStore(REVIEW_PANEL_STORE);
+    await store.delete(id);
+    await tx.done;
+    console.log(`Review panel with ID ${id} deleted successfully.`);
+  } catch (error) {
+    console.error(`Failed to delete review panel with ID ${id}:`, error);
+  }
+};
+
+// Update a review panel by ID
+export const updateReviewPanel = async (id, updatedData) => {
+  const db = await initDB();
+  const tx = db.transaction(REVIEW_PANEL_STORE, 'readwrite');
+  const store = tx.objectStore(REVIEW_PANEL_STORE);
+  const existingData = await store.get(id);
+  if (!existingData) {
+    throw new Error('Review panel not found');
+  }
+  const updatedReviewPanel = {
+    ...existingData,
+    ...updatedData,
+    updatedAt: new Date(),
+  };
+  const validatedReviewPanel =
+    validateAndSetDefaultsForReviewPanel(updatedReviewPanel);
+  await store.put(validatedReviewPanel);
+  await tx.done;
+};

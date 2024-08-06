@@ -20,6 +20,8 @@ import {
   deleteExaminer,
   updateExaminer,
   addReviewPanel,
+  deleteReviewPanel,
+  updateReviewPanel,
 } from '../../models';
 
 interface AppContextProps {
@@ -155,6 +157,21 @@ export function AppProvider({ children }: AppProviderProps) {
     setReviewPanels(allReviewPanels);
   };
 
+  const handleDeleteReviewPanel = async (id: number) => {
+    await deleteReviewPanel(id);
+    const allReviewPanels = await getAllReviewPanels();
+    setReviewPanels(allReviewPanels);
+  };
+
+  const handleUpdateReviewPanel = async (
+    id: number,
+    updatedReviewPanel: any,
+  ) => {
+    await updateReviewPanel(id, updatedReviewPanel);
+    const allReviewPanels = await getAllReviewPanels();
+    setReviewPanels(allReviewPanels);
+  };
+
   const contextValue = useMemo(
     () => ({
       questions,
@@ -168,6 +185,8 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeleteExaminer,
       handleUpdateExaminer,
       handleAddReviewPanel,
+      handleDeleteReviewPanel,
+      handleUpdateReviewPanel,
     }),
     [
       questions,
@@ -177,6 +196,8 @@ export function AppProvider({ children }: AppProviderProps) {
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,
+      handleDeleteReviewPanel,
+      handleUpdateReviewPanel,
     ],
   );
 

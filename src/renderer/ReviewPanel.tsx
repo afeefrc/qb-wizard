@@ -31,7 +31,7 @@ function ReviewPanel() {
       </div>
       <div className="rolepage-container">
         <div className="menu-box">
-          <MenuColumn menuItems={menuItems} onButtonClick={handleButtonClick} />
+          {/* <MenuColumn menuItems={menuItems} onButtonClick={handleButtonClick} /> */}
         </div>
         <div className="content-box">
           <div className="rolepage-hello">
