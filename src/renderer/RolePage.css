@@ -541,3 +541,6 @@ flex-direction: column;
   background-color: #002C58 !important;
   color: white !important;
 }
+.ant-menu-submenu-arrow {
+  color: #002C58 !important;
+}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MenuColumn from './components/MenuColumn';
+import MenuList from './components/MenuAntd';
 import { trgInchargeMenuContent as menuItems } from './SampleData'; // Import the sample data
 import DashBoard from './components/DashBoard';
 import ListOfExaminers from './components/ListOfExaminers';
@@ -99,6 +100,7 @@ function TrgIncharge() {
             BtnPressed={BtnPressed}
             handleButtonClick={handleButtonClick}
           />
+          <MenuList />
         </div>
         <div className="content-box">
           <div className="rolepage-hello">{renderContent()}</div>
