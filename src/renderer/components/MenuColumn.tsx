@@ -32,7 +32,7 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
   const appContext = useContext(AppContext);
   const { settings } = appContext || {};
 
-  const generateMenuItems = () => {
+  const generateMenuItems = () => {  
     const units = settings?.unitsApplicable || [];
 
     const style = {
@@ -72,7 +72,7 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
           </div>
         ),
         style,
-        extra: <AuditOutlined style={{ color: 'rgba(0, 0, 0, 0.1)' }} />,
+        extra: <AuditOutlined style={{ color: 'rgba(0, 0, 0, 0.3)' }} />,
       }))
       .concat({
         key: (trgInchargeAccordionTitles.length + 1).toString(),
@@ -94,7 +94,7 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
           </div>
         ),
         style,
-        extra: <SettingOutlined style={{ color: 'rgba(0, 0, 0, 0.1)' }} />,
+        extra: <SettingOutlined style={{ color: 'rgba(0, 0, 0, 0.3)' }} />,
       });
   };
 
@@ -109,11 +109,12 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
   return (
     <ul>
       <Collapse
-        accordion
+        // accordion
         ghost
         items={generateMenuItems()}
         defaultActiveKey={['1']}
         onChange={onCollapseChange}
+        size="large"
       />
       {/* {menuItems.map((menuItem) => (
         // <MenuItem key={item.id} title={item.title} buttons={item.buttons} />

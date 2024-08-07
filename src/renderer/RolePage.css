@@ -91,7 +91,7 @@
 }
 
 .menu-box {
-  width: 240px;
+  width: 250px;
   /* height: 200px; */
   background-color: rgb(255, 255, 255);
   padding: 20px;
@@ -108,7 +108,7 @@
 }
 
 .menu-box::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
   /* Width of the scrollbar */
 }
 .menu-box::-webkit-scrollbar-track {
@@ -118,13 +118,13 @@
   margin: 15px;
 }
 .menu-box::-webkit-scrollbar-thumb {
-  background: #a3a1a1;
+  background: #a3a1a188;
   /* Color of the scrollbar thumb */
   border-radius: 6px;
   /* Rounded corners for the scrollbar thumb */
 }
 .menu-box::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #a3a1a1;
   /* Color of the scrollbar thumb when hovered */
 }
 .menu-box::-webkit-scrollbar-track {
@@ -525,3 +525,19 @@ flex-direction: column;
   /* background-color: rgba(0, 44, 88, 0.1); */
 }
 
+
+/* .ant-menu-title-content {
+  color: #002C58 !important;
+} */
+
+/* .ant-menu-submenu-arrow {
+  background-color: #002C58;
+}  */
+.ant-menu-submenu-selected {
+  color: #002C58 !important;
+}
+
+.ant-menu-item-selected {
+  background-color: #002C58 !important;
+  color: white !important;
+}
