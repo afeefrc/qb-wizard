@@ -8,6 +8,7 @@ import StationSettings from './components/StationSettings';
 import './RolePage.css';
 import BodyContentCard from './components/BodyContentCard';
 import CreateReviewPanel from './components/trgInchargeTasks/createReviewPanel';
+import { useUser } from './context/UserContext';
 
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
 
@@ -25,6 +26,7 @@ function TrgIncharge() {
   const handleBackClick = () => {
     navigate(-1);
   };
+  const { user } = useUser();
 
   const handleButtonClick = (MenuId: number, BtnName: string) => {
     setBtnPressed({ MenuId: MenuId, BtnName: BtnName });

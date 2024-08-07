@@ -3,6 +3,7 @@ import { Card, Avatar } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { AppContext } from '../context/AppContext';
+import { useUser } from '../context/UserContext';
 import CreateReviewPanel from './trgInchargeTasks/createReviewPanel';
 
 interface CardProps {
@@ -17,6 +18,7 @@ function DashboardCard({ content, onClick }: CardProps) {
   const { examiners, handleDeleteReviewPanel } = appContext || {};
 
   const [editBtnPressed, setEditBtnPressed] = useState(false);
+  const { user } = useUser();
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter') {
@@ -117,22 +119,24 @@ function DashboardCard({ content, onClick }: CardProps) {
             )}
           </Card>
         </div>
-        <div style={{}}>
-          <Avatar
-            size="small"
-            icon={<EditOutlined />}
-            style={{ margin: '10px 0px' }}
-            onClick={() => setEditBtnPressed(!editBtnPressed)}
-          />
-          <Avatar
-            size="small"
-            icon={<DeleteOutlined />}
-            style={{ margin: '10px 0px', cursor: 'pointer' }}
-            onClick={() => handleDeleteReviewPanel(content.id)}
-          />
-          {/* <div>Edit</div> */}
-          {/* <div>Delete</div> */}
-        </div>
+        {user && user.role === 'trg-incharge' && (
+          <div style={{}}>
+            <Avatar
+              size="small"
+              icon={<EditOutlined />}
+              style={{ margin: '10px 0px' }}
+              onClick={() => setEditBtnPressed(!editBtnPressed)}
+            />
+            <Avatar
+              size="small"
+              icon={<DeleteOutlined />}
+              style={{ margin: '10px 0px', cursor: 'pointer' }}
+              onClick={() => handleDeleteReviewPanel(content.id)}
+            />
+            {/* <div>Edit</div> */}
+            {/* <div>Delete</div> */}
+          </div>
+        )}
       </div>
     </div>
   );

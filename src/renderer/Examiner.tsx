@@ -4,6 +4,7 @@ import MenuColumn from './components/MenuColumn';
 import { examinerMenuContent as menuItems } from './SampleData'; // Import the sample data
 import DashBoard from './components/DashBoard';
 import './RolePage.css'; // Import the CSS file for styling
+import { useUser } from './context/UserContext';
 
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
 
@@ -12,6 +13,8 @@ function Examiner() {
   const handleBackClick = () => {
     navigate(-1);
   };
+
+  const { user } = useUser();
 
   const handleButtonClick = (buttonId: string, menuItemId: number) => {
     console.log(`Button clicked: ${buttonId} and menu item: ${menuItemId}`);

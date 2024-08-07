@@ -4,6 +4,7 @@ import MenuColumn from './components/MenuColumn';
 import DashBoard from './components/DashBoard';
 import { reviewPanelMenuContent as menuItems } from './SampleData'; // Import the sample data
 import './RolePage.css'; // Import the CSS file for styling
+import { useUser } from './context/UserContext';
 
 // const menuItems = reviewPanelMenuContent;
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
@@ -13,6 +14,8 @@ function ReviewPanel() {
   const handleBackClick = () => {
     navigate(-1);
   };
+
+  const { user } = useUser();
 
   const handleButtonClick = (buttonId: string, menuItemId: number) => {
     console.log(`Button clicked: ${buttonId} and menu item: ${menuItemId}`);

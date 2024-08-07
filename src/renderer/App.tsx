@@ -14,6 +14,7 @@ import ReviewPanel from './ReviewPanel';
 import TrgIncharge from './TrgIncharge';
 import { AppProvider, AppContext } from './context/AppContext';
 import { DemoModeProvider, useDemoMode } from './context/DemoModeContext';
+import { UserProvider, useUser } from './context/UserContext';
 import QuestionBank from './QuestionBank';
 import QuestionPapers from './QuestionPapers';
 import Feedbacks from './Feedbacks';
@@ -25,6 +26,7 @@ function Hello() {
   const appContext = useContext(AppContext);
   const { questions, handleAddQuestion, handleDeleteQuestion } =
     appContext || {};
+  const { setUser } = useUser();
 
   const addItem = () => {
     const newItem = {
@@ -60,7 +62,11 @@ function Hello() {
   //   setIsDemoMode(!isDemoMode);
   // };
   const navigate = useNavigate();
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (
+    path: string,
+    user: { id: string; name: string; role: string },
+  ) => {
+    setUser(user);
     navigate(path);
   };
   return (
@@ -152,21 +158,39 @@ function Hello() {
         <button
           type="button"
           className="role-button"
-          onClick={() => handleNavigation('/examiner')}
+          onClick={() =>
+            handleNavigation('/examiner', {
+              id: '1',
+              name: 'examiner',
+              role: 'examiner',
+            })
+          }
         >
           Examiner
         </button>
         <button
           type="button"
           className="role-button"
-          onClick={() => handleNavigation('/review-panel')}
+          onClick={() =>
+            handleNavigation('/review-panel', {
+              id: '2',
+              name: 'review-panel',
+              role: 'review-panel',
+            })
+          }
         >
           Review Panel
         </button>
         <button
           type="button"
           className="role-button"
-          onClick={() => handleNavigation('/trg-incharge')}
+          onClick={() =>
+            handleNavigation('/trg-incharge', {
+              id: '3',
+              name: 'trg-incharge',
+              role: 'trg-incharge',
+            })
+          }
         >
           Trg in-charge
         </button>
@@ -199,18 +223,20 @@ export default function App() {
   return (
     <AppProvider>
       <DemoModeProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Hello />} />
-            <Route path="/examiner" element={<Examiner />} />
-            <Route path="/review-panel" element={<ReviewPanel />} />
-            <Route path="/trg-incharge" element={<TrgIncharge />} />
-            <Route path="/question-bank" element={<QuestionBank />} />
-            <Route path="/question-papers" element={<QuestionPapers />} />
-            <Route path="/feedbacks" element={<Feedbacks />} />
-            <Route path="/activity-logs" element={<ActivityLogs />} />
-          </Routes>
-        </Router>
+        <UserProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Hello />} />
+              <Route path="/examiner" element={<Examiner />} />
+              <Route path="/review-panel" element={<ReviewPanel />} />
+              <Route path="/trg-incharge" element={<TrgIncharge />} />
+              <Route path="/question-bank" element={<QuestionBank />} />
+              <Route path="/question-papers" element={<QuestionPapers />} />
+              <Route path="/feedbacks" element={<Feedbacks />} />
+              <Route path="/activity-logs" element={<ActivityLogs />} />
+            </Routes>
+          </Router>
+        </UserProvider>
       </DemoModeProvider>
     </AppProvider>
   );

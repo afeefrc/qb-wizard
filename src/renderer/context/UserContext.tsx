@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface User {
-  // id: string;
-  // name: string;
+  id: string;
+  name: string;
   role: string;
-  unit: string;
 }
 
 interface UserContextType {
