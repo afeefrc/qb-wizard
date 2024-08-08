@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MenuColumn from './components/MenuColumn';
 import DashBoard from './components/DashBoard';
 import { reviewPanelMenuContent as menuItems } from './SampleData'; // Import the sample data
+import BodyContentCard from './components/BodyContentCard';
 import MenuList from './components/MenuAntd';
 import './RolePage.css'; // Import the CSS file for styling
 import { useUser } from './context/UserContext';
@@ -15,12 +16,77 @@ function ReviewPanel() {
   const handleBackClick = () => {
     navigate(-1);
   };
+  const [BtnPressed, setBtnPressed] = useState<{
+    MenuItem?: string;
+    BtnName?: string;
+  }>({ MenuItem: 'dashboard', BtnName: 'dashboard' }); // Initialize the BtnPressed state
 
   const { user } = useUser();
 
-  const handleButtonClick = (buttonId: string, menuItemId: number) => {
-    console.log(`Button clicked: ${buttonId} and menu item: ${menuItemId}`);
-    // Add your logic here for handling button clicks
+  const reviewPanelMenuTitles = [
+    'View Question Banks',
+    'Comments and Feedbacks',
+    'Change logs',
+    // 'Group',
+  ];
+
+  const handleButtonClick = (MenuItem: string, BtnName: string) => {
+    setBtnPressed({ MenuItem: MenuItem, BtnName: BtnName });
+  };
+
+  const handleClose = () => {
+    setBtnPressed({ MenuItem: 'dashboard', BtnName: 'dashboard' });
+  };
+
+  const renderContent = (menuTitles: string[] = []) => {
+    const contentMap = {
+      '0': {
+        title: menuTitles[0],
+        component: <div>Build component here {BtnPressed.BtnName}</div>,
+      },
+      '1': {
+        title: menuTitles[1],
+        component: <div>Build component here {BtnPressed.BtnName}</div>,
+      },
+      '2': {
+        title: menuTitles[2],
+        component: <div>Build component here {BtnPressed.BtnName}</div>,
+      },
+      // '3': {
+      //   title: 'Assign examiner to prepare Question Paper',
+      //   component: <div>Build component here {BtnPressed.BtnName}</div>,
+      // },
+      // 'settings': (() => {
+      //   if (BtnPressed.BtnName === 'examiner-list') {
+      //     return {
+      //       component: <ListOfExaminers />,
+      //       title: 'List of Examiners',
+      //     };
+      //   }
+      //   if (BtnPressed.BtnName === 'station-settings') {
+      //     return {
+      //       component: <StationSettings />,
+      //       title: 'List of Examiners',
+      //     };
+      //   }
+      //   return null;
+      // })(),
+      // Add more mappings as needed
+    };
+
+    // const key = `${BtnPressed.MenuId}-${BtnPressed.BtnName}`;
+    const key = `${BtnPressed.MenuItem}`;
+    const content = contentMap[key];
+
+    if (content) {
+      return (
+        <BodyContentCard onClose={handleClose} title={content.title}>
+          {content.component}
+        </BodyContentCard>
+      );
+    }
+
+    return <DashBoard />;
   };
 
   return (
@@ -36,11 +102,18 @@ function ReviewPanel() {
       <div className="rolepage-container">
         <div className="menu-box">
           {/* <MenuColumn BtnPressed={} handleButtonClick={} /> */}
-          <MenuList />
+          <MenuList
+            BtnPressed={BtnPressed}
+            handleButtonClick={handleButtonClick}
+            menuTitles={reviewPanelMenuTitles}
+          />
         </div>
         <div className="content-box">
           <div className="rolepage-hello">
-            <DashBoard />
+            <div className="rolepage-hello">
+              {renderContent(reviewPanelMenuTitles)}
+            </div>
+            {/* <DashBoard /> */}
             {/* Pass the contentList prop */}
           </div>
         </div>

@@ -4,11 +4,11 @@ import '../RolePage.css';
 import { AppContext } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 
-interface DashBoardProps {
-  contentList: string[];
-}
+// interface DashBoardProps {
+//   contentList: string[];
+// }
 
-function DashBoard({ contentList }: DashBoardProps) {
+function DashBoard() {
   const appContext = React.useContext(AppContext);
   const { reviewPanels } = appContext || {};
   const { user } = useUser();

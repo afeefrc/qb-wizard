@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   AppstoreOutlined,
   MailOutlined,
@@ -10,28 +10,76 @@ import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
 import { AppContext } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
+import BodyContentCard from './BodyContentCard';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
-const reviewPanelMenuTitles = [
-  'View Question Banks',
-  'Comments and Feedbacks',
-  'Change logs',
-  // 'Group',
-];
+interface MenuColumnProps {
+  BtnPressed: { MenuItem?: string; BtnName?: string };
+  handleButtonClick: (menuItem: string, BtnName: string) => void;
+  menuTitles: string[];
+}
 
-const trgInchargeMenuTitles = [
-  'View Question Banks',
-  'View Question Papers',
-  'Create Review Panel',
-  'Assign Examiner to prepare Question Paper',
-];
+// const renderContent = (selectedKeys: string[]) => {
+//   const selectedKey = selectedKeys[0];
+//   const contentMap = {
+//     '0': {
+//       title: 'View Question Banks',
+//       component: <div>Build component here {selectedKey}</div>,
+//     },
+//     '1': {
+//       title: 'View Question Papers',
+//       component: <div>Build component here {BtnPressed.BtnName}</div>,
+//     },
+//     '2': {
+//       title: 'Create Review Panel',
+//       component: (
+//         <CreateReviewPanel unit={BtnPressed.BtnName} close={handleClose} />
+//       ),
+//     },
+//     '3': {
+//       title: 'Assign examiner to prepare Question Paper',
+//       component: <div>Build component here {BtnPressed.BtnName}</div>,
+//     },
+//     '4': (() => {
+//       if (BtnPressed.BtnName === 'examiner-list') {
+//         return { component: <ListOfExaminers />, title: 'List of Examiners' };
+//       }
+//       if (BtnPressed.BtnName === 'station-settings') {
+//         return { component: <StationSettings />, title: 'List of Examiners' };
+//       }
+//       return null;
+//     })(),
+//     // Add more mappings as needed
+//   };
 
-const examinerMenuTitles = [
-  'Generate Question Paper',
-  'Previous Question Papers',
-  'View Question Bank',
-];
+//   // const key = `${BtnPressed.MenuId}-${BtnPressed.BtnName}`;
+//   const key = `${BtnPressed.MenuId}`;
+//   const content = contentMap[key];
+
+//   if (content) {
+//     return (
+//       <BodyContentCard onClose={handleClose} title={content.title}>
+//         {content.component}
+//       </BodyContentCard>
+//     );
+//   }
+
+//   return <DashBoard contentList={contentList} />;
+// };
+
+// const renderContent = (selectedKeys: string[]) => {
+//   // console.log('selectedKeys', selectedKeys[0]);
+//   // if (selectedKeys[0] === 'dashboard') {
+//   //   console.log('Dashboard');
+//   // }
+//   if (content) {
+//       return (
+//         <BodyContentCard onClose={handleClose} title={content.title}>
+//           {content.component}
+//         </BodyContentCard>
+//       );
+// };
 
 // const getMenuItems = (units) => {
 //   const items: MenuItem[] = reviewPanelMenuTitles.map((title, index) => {
@@ -122,25 +170,30 @@ const examinerMenuTitles = [
 // ];
 
 // eslint-disable-next-line react/function-component-definition
-const MenuList: React.FC = () => {
+function MenuList({
+  BtnPressed,
+  handleButtonClick,
+  menuTitles = [],
+}: MenuColumnProps) {
   const appContext = useContext(AppContext);
   const { settings } = appContext || {};
   const { user } = useUser();
   const units = settings?.unitsApplicable || [];
   const [selectedKeys, setSelectedKeys] = useState(['dashboard']);
 
-  const menuTitles =
-    // eslint-disable-next-line no-nested-ternary
-    user?.role === 'trg-incharge'
-      ? trgInchargeMenuTitles
-      : user?.role === 'review-panel'
-        ? reviewPanelMenuTitles
-        : examinerMenuTitles;
-
   const onClick: MenuProps['onClick'] = (e) => {
-    console.log('click ', e.key);
-    setSelectedKeys([e.key]);
+    const { key } = e;
+    setSelectedKeys([key]);
+    const [menuItem, btnName] = key.split('-');
+    handleButtonClick(menuItem, btnName || 'dashboard');
   };
+
+  // useEffect to watch BtnPressed and set selectedKeys to ['dashboard'] if BtnPressed.MenuItem is 'dashboard'
+  useEffect(() => {
+    if (BtnPressed.MenuItem === 'dashboard') {
+      setSelectedKeys(['dashboard']);
+    }
+  }, [BtnPressed]);
 
   return (
     <div>
@@ -177,7 +230,7 @@ const MenuList: React.FC = () => {
                 ),
               children: units.map((unit) => ({
                 // key: `${index}${unit}`,
-                key: `${index}${unit}`,
+                key: `${index}-${unit}`,
                 label: unit,
               })),
             },
@@ -199,8 +252,8 @@ const MenuList: React.FC = () => {
               label: <span style={{ color: '#002C58' }}>Settings</span>,
               icon: <TableOutlined style={{ color: '#002C58' }} />,
               children: [
-                { key: 'examiner-list', label: 'List of Examiners' },
-                { key: 'station-settings', label: 'Station Settings' },
+                { key: 'settings-examinerList', label: 'List of Examiners' },
+                { key: 'settings-stationSettings', label: 'Station Settings' },
               ],
             },
             {
@@ -211,6 +264,6 @@ const MenuList: React.FC = () => {
       )}
     </div>
   );
-};
+}
 
 export default MenuList;

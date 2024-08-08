@@ -13,13 +13,20 @@ import { useUser } from './context/UserContext';
 
 const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
 
+const trgInchargeMenuTitles = [
+  'View Question Banks',
+  'View Question Papers',
+  'Create Review Panel',
+  'Assign Examiner to prepare Question Paper',
+];
+
 function TrgIncharge() {
   // const [isEditStationSettings, setIsEditStationSettings] = useState(false);
   // const [showListOfExaminers, setShowListOfExaminers] = useState(false);
   const [BtnPressed, setBtnPressed] = useState<{
-    MenuId?: number;
+    MenuItem?: string;
     BtnName?: string;
-  }>({});
+  }>({ MenuItem: 'dashboard', BtnName: 'dashboard' });
 
   console.log('BtnPressed', BtnPressed);
 
@@ -29,40 +36,40 @@ function TrgIncharge() {
   };
   const { user } = useUser();
 
-  const handleButtonClick = (MenuId: number, BtnName: string) => {
-    setBtnPressed({ MenuId: MenuId, BtnName: BtnName });
+  const handleButtonClick = (MenuItem: string, BtnName: string) => {
+    setBtnPressed({ MenuItem, BtnName });
   };
 
   const handleClose = () => {
-    setBtnPressed({});
+    setBtnPressed({ MenuItem: 'dashboard', BtnName: 'dashboard' });
   };
 
-  const renderContent = () => {
+  const renderContent = (menuTitles: string[] = []) => {
     const contentMap = {
       '0': {
-        title: 'View Question Banks',
+        title: menuTitles[0],
         component: <div>Build component here {BtnPressed.BtnName}</div>,
       },
       '1': {
-        title: 'View Question Papers',
+        title: menuTitles[1],
         component: <div>Build component here {BtnPressed.BtnName}</div>,
       },
       '2': {
-        title: 'Create Review Panel',
+        title: menuTitles[2],
         component: (
           <CreateReviewPanel unit={BtnPressed.BtnName} close={handleClose} />
         ),
       },
       '3': {
-        title: 'Assign examiner to prepare Question Paper',
+        title: menuTitles[3],
         component: <div>Build component here {BtnPressed.BtnName}</div>,
       },
-      '4': (() => {
-        if (BtnPressed.BtnName === 'examiner-list') {
+      settings: (() => {
+        if (BtnPressed.BtnName === 'examinerList') {
           return { component: <ListOfExaminers />, title: 'List of Examiners' };
         }
-        if (BtnPressed.BtnName === 'station-settings') {
-          return { component: <StationSettings />, title: 'List of Examiners' };
+        if (BtnPressed.BtnName === 'stationSettings') {
+          return { component: <StationSettings />, title: 'Station Settings' };
         }
         return null;
       })(),
@@ -70,7 +77,7 @@ function TrgIncharge() {
     };
 
     // const key = `${BtnPressed.MenuId}-${BtnPressed.BtnName}`;
-    const key = `${BtnPressed.MenuId}`;
+    const key = `${BtnPressed.MenuItem}`;
     const content = contentMap[key];
 
     if (content) {
@@ -81,7 +88,7 @@ function TrgIncharge() {
       );
     }
 
-    return <DashBoard contentList={contentList} />;
+    return <DashBoard />;
   };
 
   return (
@@ -96,14 +103,16 @@ function TrgIncharge() {
       </div>
       <div className="rolepage-container">
         <div className="menu-box">
-          <MenuColumn
+          <MenuList
             BtnPressed={BtnPressed}
             handleButtonClick={handleButtonClick}
+            menuTitles={trgInchargeMenuTitles}
           />
-          <MenuList />
         </div>
         <div className="content-box">
-          <div className="rolepage-hello">{renderContent()}</div>
+          <div className="rolepage-hello">
+            {renderContent(trgInchargeMenuTitles)}
+          </div>
         </div>
       </div>
     </div>
