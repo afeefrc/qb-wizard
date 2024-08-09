@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function ActivityLogs() {
+function ActivityLogsPage() {
   const navigate = useNavigate();
   const handleBackClick = () => {
     navigate(-1);
@@ -13,10 +13,10 @@ function ActivityLogs() {
         <button type="button" onClick={handleBackClick}>
           Home
         </button>
-        <h1>Welcome to ActivityLogs</h1>
+        <h1>Welcome to ActivityLogsPage</h1>
       </div>
     </div>
   );
 }
 
-export default ActivityLogs;
+export default ActivityLogsPage;

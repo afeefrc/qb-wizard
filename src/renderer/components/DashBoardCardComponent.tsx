@@ -1,24 +1,42 @@
 import React, { useState } from 'react';
-import { Card, Avatar } from 'antd';
+import { Card, Avatar, Tag } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { AppContext } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import CreateReviewPanel from './trgInchargeTasks/createReviewPanel';
+import ExaminerAssignment from './trgInchargeTasks/AssignExaminer';
 
 interface CardProps {
   content: {
     [key: string]: any;
   };
   onClick: () => void;
+  cardType: string;
 }
 
-function DashboardCard({ content, onClick }: CardProps) {
+function DashboardCard({ content, onClick, cardType }: CardProps) {
   const appContext = React.useContext(AppContext);
-  const { examiners, handleDeleteReviewPanel } = appContext || {};
+  const { examiners, handleDeleteReviewPanel, handleDeleteExaminerAssignment } =
+    appContext || {};
 
   const [editBtnPressed, setEditBtnPressed] = useState(false);
   const { user } = useUser();
+
+  let title = '';
+  let memberTitle = '';
+  switch (cardType) {
+    case 'reviewPanel':
+      title = 'Question Bank review panel';
+      memberTitle = 'Panel members';
+      break;
+    case 'questionPaperAssignment':
+      title = 'Question Paper Assignment';
+      memberTitle = 'Examiner';
+      break;
+    default:
+      break;
+  }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter') {
@@ -27,9 +45,24 @@ function DashboardCard({ content, onClick }: CardProps) {
   };
   // console.log('examiners', examiners);
 
-  const matchingExaminers = examiners.filter((examiner: any) =>
-    content.members.includes(examiner.id),
-  );
+  const handleDeleteBtn = () => {
+    if (cardType === 'reviewPanel') {
+      handleDeleteReviewPanel(content.id);
+    } else if (cardType === 'questionPaperAssignment') {
+      handleDeleteExaminerAssignment(content.id);
+    }
+  };
+
+  let matchingExaminers;
+  if (cardType === 'reviewPanel') {
+    matchingExaminers = examiners.filter((examiner: any) =>
+      content.members.includes(examiner.id),
+    );
+  } else if (cardType === 'questionPaperAssignment') {
+    matchingExaminers = examiners.filter((examiner: any) =>
+      content.examiner.includes(examiner.id),
+    );
+  }
 
   return (
     <div>
@@ -57,9 +90,10 @@ function DashboardCard({ content, onClick }: CardProps) {
             size="small"
             style={{
               // display: 'flex',
-              margin: '20px',
+              margin: '15px',
               backgroundColor: '#f0f0f0',
               // justifyContent: 'center',
+              minHeight: '125px',
             }}
           >
             <div
@@ -72,8 +106,18 @@ function DashboardCard({ content, onClick }: CardProps) {
             >
               <div className="create-review-panel-unitname">{content.unit}</div>
               <div style={{ width: '60%' }}>
-                <div>Question Bank review panel</div>
-                <div>Status: {content.status}</div>
+                <div
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: '400',
+                    paddingBottom: '5px',
+                  }}
+                >
+                  {title}
+                </div>
+                <div>
+                  Status: <Tag color="geekblue">{content.status}</Tag>
+                </div>
                 {content.deadline && (
                   <div>
                     Deadline: {dayjs(content.deadline).format('DD-MM-YYYY')}
@@ -83,8 +127,22 @@ function DashboardCard({ content, onClick }: CardProps) {
                   <div>Comments: {content.comments_initiate}</div>
                 )}
               </div>
-              <ul style={{ minWidth: '35%' }}>
-                <div>Panel members:</div>
+
+              <ul
+                style={{
+                  minWidth: '35%',
+                  margin: '5px 0px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '400',
+                    paddingBottom: '2px',
+                  }}
+                >
+                  {memberTitle} :
+                </div>
                 {matchingExaminers
                   .sort((a: any, b: any) =>
                     // eslint-disable-next-line no-nested-ternary
@@ -103,7 +161,7 @@ function DashboardCard({ content, onClick }: CardProps) {
                   ))}
               </ul>
             </div>
-            {editBtnPressed && (
+            {editBtnPressed && cardType === 'reviewPanel' && (
               <div
                 onClick={(e) => e.stopPropagation()}
                 style={{ cursor: 'default' }}
@@ -115,6 +173,27 @@ function DashboardCard({ content, onClick }: CardProps) {
                   }}
                   editValues={content}
                 />
+              </div>
+            )}
+            {editBtnPressed && cardType === 'questionPaperAssignment' && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{ cursor: 'default' }}
+              >
+                <ExaminerAssignment
+                  unit={content.unit}
+                  close={() => {
+                    setEditBtnPressed(false);
+                  }}
+                  editValues={content}
+                />
+                {/* <CreateQuestionPaperAssignment
+                  unit={content.unit}
+                  close={() => {
+                    setEditBtnPressed(false);
+                  }}
+                  editValues={content}
+                /> */}
               </div>
             )}
           </Card>
@@ -131,7 +210,7 @@ function DashboardCard({ content, onClick }: CardProps) {
               size="small"
               icon={<DeleteOutlined />}
               style={{ margin: '10px 0px', cursor: 'pointer' }}
-              onClick={() => handleDeleteReviewPanel(content.id)}
+              onClick={handleDeleteBtn}
             />
             {/* <div>Edit</div> */}
             {/* <div>Delete</div> */}

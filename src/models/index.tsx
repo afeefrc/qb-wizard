@@ -7,6 +7,7 @@ import {
   examinerListSchema,
   reviewPanelSchema,
   validateAndSetDefaultsForReviewPanel,
+  validateAndSetDefaultsForExaminerAssignment,
 } from './schema';
 
 const DB_NAME = 'my-database';
@@ -15,6 +16,7 @@ const QUESTION_STORE_NAME = 'question-bank';
 const SETTINGS_STORE_NAME = 'app-settings';
 const EXAMINER_STORE_NAME = 'examiner-list';
 const REVIEW_PANEL_STORE = 'review-panel';
+const EXAMINER_ASSIGNMENT_STORE = 'examiner-assignment';
 
 type ExaminerItem = {
   [key: string]: any;
@@ -45,6 +47,12 @@ export const initDB = async () => {
       }
       if (!db.objectStoreNames.contains(REVIEW_PANEL_STORE)) {
         db.createObjectStore(REVIEW_PANEL_STORE, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+      }
+      if (!db.objectStoreNames.contains(EXAMINER_ASSIGNMENT_STORE)) {
+        db.createObjectStore(EXAMINER_ASSIGNMENT_STORE, {
           keyPath: 'id',
           autoIncrement: true,
         });
@@ -394,5 +402,64 @@ export const updateReviewPanel = async (id, updatedData) => {
   const validatedReviewPanel =
     validateAndSetDefaultsForReviewPanel(updatedReviewPanel);
   await store.put(validatedReviewPanel);
+  await tx.done;
+};
+
+// Operations for examiner-assignment
+export const addExaminerAssignment = async (data) => {
+  try {
+    const validatedData = validateAndSetDefaultsForExaminerAssignment(data);
+
+    const db = await initDB();
+    const tx = db.transaction(EXAMINER_ASSIGNMENT_STORE, 'readwrite');
+    const store = tx.objectStore(EXAMINER_ASSIGNMENT_STORE);
+
+    await store.add(removeUncloneableProperties(validatedData));
+    await tx.done;
+  } catch (error) {
+    throw new Error(`Failed to add examiner assignment: ${error.message}`);
+  }
+};
+
+// Get all examiner assignments
+export const getAllExaminerAssignments = async () => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_ASSIGNMENT_STORE, 'readonly');
+  const store = tx.objectStore(EXAMINER_ASSIGNMENT_STORE);
+  const examinerAssignments = await store.getAll();
+  return examinerAssignments.map(validateAndSetDefaultsForExaminerAssignment);
+};
+
+// Delete an examiner assignment by ID
+export const deleteExaminerAssignment = async (id) => {
+  try {
+    const db = await initDB();
+    const tx = db.transaction(EXAMINER_ASSIGNMENT_STORE, 'readwrite');
+    const store = tx.objectStore(EXAMINER_ASSIGNMENT_STORE);
+    await store.delete(id);
+    await tx.done;
+    console.log(`Examiner assignment with ID ${id} deleted successfully.`);
+  } catch (error) {
+    console.error(`Failed to delete examiner assignment with ID ${id}:`, error);
+  }
+};
+
+// Update an examiner assignment by ID
+export const updateExaminerAssignment = async (id, updatedData) => {
+  const db = await initDB();
+  const tx = db.transaction(EXAMINER_ASSIGNMENT_STORE, 'readwrite');
+  const store = tx.objectStore(EXAMINER_ASSIGNMENT_STORE);
+  const existingData = await store.get(id);
+  if (!existingData) {
+    throw new Error('Examiner assignment not found');
+  }
+  const updatedExaminerAssignment = {
+    ...existingData,
+    ...updatedData,
+    updatedAt: new Date(),
+  };
+  const validatedExaminerAssignment =
+    validateAndSetDefaultsForExaminerAssignment(updatedExaminerAssignment);
+  await store.put(validatedExaminerAssignment);
   await tx.done;
 };

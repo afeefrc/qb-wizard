@@ -32,7 +32,7 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
   const appContext = useContext(AppContext);
   const { settings } = appContext || {};
 
-  const generateMenuItems = () => {  
+  const generateMenuItems = () => { 
     const units = settings?.unitsApplicable || [];
 
     const style = {

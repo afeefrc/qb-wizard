@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MenuColumn from './components/MenuColumn';
 import MenuList from './components/MenuAntd';
-import { trgInchargeMenuContent as menuItems } from './SampleData'; // Import the sample data
+import { Empty } from 'antd';
 import DashBoard from './components/DashBoard';
 import ListOfExaminers from './components/ListOfExaminers';
 import StationSettings from './components/StationSettings';
 import './RolePage.css';
 import BodyContentCard from './components/BodyContentCard';
 import CreateReviewPanel from './components/trgInchargeTasks/createReviewPanel';
-import { useUser } from './context/UserContext';
-
-const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
+import ExaminerAssignment from './components/trgInchargeTasks/AssignExaminer';
+import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
+// import { useUser } from './context/UserContext';
 
 const trgInchargeMenuTitles = [
   'View Question Banks',
@@ -34,7 +33,7 @@ function TrgIncharge() {
   const handleBackClick = () => {
     navigate(-1);
   };
-  const { user } = useUser();
+  // const { user } = useUser();
 
   const handleButtonClick = (MenuItem: string, BtnName: string) => {
     setBtnPressed({ MenuItem, BtnName });
@@ -48,11 +47,15 @@ function TrgIncharge() {
     const contentMap = {
       '0': {
         title: menuTitles[0],
-        component: <div>Build component here {BtnPressed.BtnName}</div>,
+        component: (
+          <Empty description={`Under development ${BtnPressed.BtnName}`} />
+        ),
       },
       '1': {
         title: menuTitles[1],
-        component: <div>Build component here {BtnPressed.BtnName}</div>,
+        component: (
+          <Empty description={`Under development ${BtnPressed.BtnName}`} />
+        ),
       },
       '2': {
         title: menuTitles[2],
@@ -62,7 +65,9 @@ function TrgIncharge() {
       },
       '3': {
         title: menuTitles[3],
-        component: <div>Build component here {BtnPressed.BtnName}</div>,
+        component: (
+          <ExaminerAssignment unit={BtnPressed.BtnName} close={handleClose} />
+        ),
       },
       settings: (() => {
         if (BtnPressed.BtnName === 'examinerList') {
@@ -70,6 +75,23 @@ function TrgIncharge() {
         }
         if (BtnPressed.BtnName === 'stationSettings') {
           return { component: <StationSettings />, title: 'Station Settings' };
+        }
+        return null;
+      })(),
+      informations: (() => {
+        if (BtnPressed.BtnName === 'logs') {
+          return {
+            component: <ActivityLogs />,
+            title: 'Activity logs',
+          };
+        }
+        if (BtnPressed.BtnName === 'reports') {
+          return {
+            component: (
+              <Empty description={`Under development ${BtnPressed.BtnName}`} />
+            ),
+            title: 'reports',
+          };
         }
         return null;
       })(),

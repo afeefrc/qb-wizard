@@ -22,6 +22,10 @@ import {
   addReviewPanel,
   deleteReviewPanel,
   updateReviewPanel,
+  addExaminerAssignment,
+  deleteExaminerAssignment,
+  updateExaminerAssignment,
+  getAllExaminerAssignments,
 } from '../../models';
 
 interface AppContextProps {
@@ -34,6 +38,13 @@ interface AppContextProps {
   handleAddExaminer: (newExaminer: any) => Promise<void>;
   handleDeleteExaminer: (id: number) => Promise<void>;
   handleUpdateExaminer: (id: number, updatedExaminer: any) => Promise<void>;
+  handleAddReviewPanel: (newReviewPanel: any) => Promise<void>;
+  handleDeleteReviewPanel: (id: number) => Promise<void>;
+  handleUpdateReviewPanel: (
+    id: number,
+    updatedReviewPanel: any,
+  ) => Promise<void>;
+  handleAddExaminerAssignment: (newExaminerAssignment: any) => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -47,6 +58,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [settings, setSettings] = useState<any>(null);
   const [examiners, setExaminers] = useState<any[]>([]);
   const [reviewPanels, setReviewPanels] = useState<any[]>([]);
+  const [examinerAssignments, setExaminerAssignments] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -91,6 +103,19 @@ export function AppProvider({ children }: AppProviderProps) {
       }
     };
     fetchReviewPanels();
+  }, []);
+
+  useEffect(() => {
+    const fetchExaminerAssignments = async () => {
+      try {
+        const allExaminerAssignments = await getAllExaminerAssignments();
+        setExaminerAssignments(allExaminerAssignments);
+      } catch (error) {
+        console.error('Failed to fetch examiner assignments', error);
+        setExaminerAssignments([]); // Set an empty array when there are no items in the database
+      }
+    };
+    fetchExaminerAssignments();
   }, []);
 
   // const handleAddExaminer = async (newExaminers) => {
@@ -172,12 +197,35 @@ export function AppProvider({ children }: AppProviderProps) {
     setReviewPanels(allReviewPanels);
   };
 
+  // Examiner assignments
+  const handleAddExaminerAssignment = async (newExaminerAssignment: any) => {
+    await addExaminerAssignment(newExaminerAssignment);
+    const allExaminerAssignments = await getAllExaminerAssignments();
+    setExaminerAssignments(allExaminerAssignments);
+  };
+
+  const handleDeleteExaminerAssignment = async (id: number) => {
+    await deleteExaminerAssignment(id);
+    const allExaminerAssignments = await getAllExaminerAssignments();
+    setExaminerAssignments(allExaminerAssignments);
+  };
+
+  const handleUpdateExaminerAssignment = async (
+    id: number,
+    updatedExaminerAssignment: any,
+  ) => {
+    await updateExaminerAssignment(id, updatedExaminerAssignment);
+    const allExaminerAssignments = await getAllExaminerAssignments();
+    setExaminerAssignments(allExaminerAssignments);
+  };
+
   const contextValue = useMemo(
     () => ({
       questions,
       settings,
       examiners,
       reviewPanels,
+      examinerAssignments,
       handleAddQuestion,
       handleDeleteQuestion,
       handleSaveSetting,
@@ -187,17 +235,28 @@ export function AppProvider({ children }: AppProviderProps) {
       handleAddReviewPanel,
       handleDeleteReviewPanel,
       handleUpdateReviewPanel,
+      handleAddExaminerAssignment,
+      handleDeleteExaminerAssignment,
+      handleUpdateExaminerAssignment,
     }),
     [
       questions,
       settings,
       examiners,
       reviewPanels,
+      examinerAssignments,
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,
       handleDeleteReviewPanel,
       handleUpdateReviewPanel,
+      handleAddQuestion,
+      handleDeleteQuestion,
+      handleSaveSetting,
+      handleAddReviewPanel,
+      handleAddExaminerAssignment,
+      handleDeleteExaminerAssignment,
+      handleUpdateExaminerAssignment,
     ],
   );
 

@@ -80,6 +80,14 @@ button:hover {
   width: 100px;
   height: 100px;
   margin: 20px 30px;
+  background-color: rgba(0, 44, 88, 0.25);
+}
+.role-button:hover {
+  transition: opacity 0.3s ease;
+    /* Smooth transition */
+    color: white;
+    background-color: rgba(0, 44, 88, 1);
+    /* Adjust the opacity as needed */
 }
 
 li {
@@ -110,7 +118,7 @@ a:hover {
     justify-content: center;
     /* border: 1px solid black; */
     border: none;
-    background-color: 'white';
+    background-color: rgba(0, 44, 88, 0.25);
     opacity: 0.6;
       /* Default opacity */
     border-radius: 50%;
@@ -129,7 +137,7 @@ a:hover {
 .icon-button:hover {
   transition: opacity 0.3s ease;
   /* Smooth transition */
-  background-color: rgba(255, 255, 255, 1);
+  background-color: rgba(0, 44, 88, 1);
   /* Adjust the opacity as needed */
 }
 

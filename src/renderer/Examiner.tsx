@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MenuColumn from './components/MenuColumn';
+import { Empty } from 'antd';
 import MenuList from './components/MenuAntd';
-import { examinerMenuContent as menuItems } from './SampleData'; // Import the sample data
 import BodyContentCard from './components/BodyContentCard';
 import DashBoard from './components/DashBoard';
 import './RolePage.css'; // Import the CSS file for styling
 import { useUser } from './context/UserContext';
-
-const contentList = Array.from({ length: 3 }, (_, i) => `Content ${i + 1}`); // sample data
 
 function Examiner() {
   const navigate = useNavigate();
@@ -41,15 +38,21 @@ function Examiner() {
     const contentMap = {
       '0': {
         title: menuTitles[0],
-        component: <div>Build component here {BtnPressed.BtnName}</div>,
+        component: (
+          <Empty description={`Under development ${BtnPressed.BtnName}`} />
+        ),
       },
       '1': {
         title: menuTitles[1],
-        component: <div>Build component here {BtnPressed.BtnName}</div>,
+        component: (
+          <Empty description={`Under development ${BtnPressed.BtnName}`} />
+        ),
       },
       '2': {
         title: menuTitles[2],
-        component: <div>Build component here {BtnPressed.BtnName}</div>,
+        component: (
+          <Empty description={`Under development ${BtnPressed.BtnName}`} />
+        ),
       },
       // '3': {
       //   title: 'Assign examiner to prepare Question Paper',

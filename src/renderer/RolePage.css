@@ -544,3 +544,7 @@ flex-direction: column;
 .ant-menu-submenu-arrow {
   color: #002C58 !important;
 }
+
+.ant-menu-submenu-title {
+  height: 45px  !important;
+}

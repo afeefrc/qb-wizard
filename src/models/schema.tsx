@@ -123,3 +123,37 @@ export const validateAndSetDefaultsForReviewPanel = (item) => {
 //     {},
 //   );
 // };
+
+export const examinerAssignmentSchema = {
+  id: { type: 'string', default: () => uuidv4() },
+  unit: { type: 'string', default: '' }, // Possible values: 'ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'
+  description: { type: 'string', default: '' },
+  examiner: { type: 'string', default: '' },
+  examiner_invigilator: { type: 'string', default: '' },
+  examiner_evaluation: { type: 'string', default: '' },
+  status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'in process', 'submitted', 'approved', 'rejected'
+  content: { type: 'array', default: [] },
+  deadline: { type: 'date', default: null },
+  comments_initiate: { type: 'string', default: '' },
+  comments_submit: { type: 'string', default: '' },
+  comments_approval: { type: 'string', default: '' },
+  comments_forward: { type: 'string', default: '' },
+  createdAt: { type: 'date', default: () => new Date() },
+  updatedAt: { type: 'date', default: () => new Date() },
+};
+
+export const validateAndSetDefaultsForExaminerAssignment = (item) => {
+  console.log('item to validate', item);
+  return Object.entries(examinerAssignmentSchema).reduce(
+    (validatedItem, [key, field]) => {
+      const value = item[key] === undefined ? field.default : item[key];
+      if (field.validate && !field.validate(value)) {
+        throw new Error(`Invalid value for ${key}: ${value}`);
+      }
+      validatedItem[key] = value;
+      console.log('validatedItem', validatedItem);
+      return validatedItem;
+    },
+    {},
+  );
+};

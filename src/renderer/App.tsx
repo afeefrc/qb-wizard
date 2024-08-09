@@ -7,7 +7,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 // import icon from '../../assets/icon.svg';
-import logo from '../../assets/logo.svg';
+import logo from '../../assets/logo2.svg';
 import './App.css';
 import Examiner from './Examiner';
 import ReviewPanel from './ReviewPanel';
@@ -18,7 +18,9 @@ import { UserProvider, useUser } from './context/UserContext';
 import QuestionBank from './QuestionBank';
 import QuestionPapers from './QuestionPapers';
 import Feedbacks from './Feedbacks';
-import ActivityLogs from './ActivityLogs';
+import ActivityLogs from './ActivityLogsPage';
+import ReviewProcessPage from './ReviewProcessPage';
+import QuestionPaperProcessPage from './QuestionPaperProcessPage';
 
 function Hello() {
   // db test button case
@@ -234,6 +236,11 @@ export default function App() {
               <Route path="/question-papers" element={<QuestionPapers />} />
               <Route path="/feedbacks" element={<Feedbacks />} />
               <Route path="/activity-logs" element={<ActivityLogs />} />
+              <Route path="/review-process" element={<ReviewProcessPage />} />
+              <Route
+                path="/examiner-process"
+                element={<QuestionPaperProcessPage />}
+              />
             </Routes>
           </Router>
         </UserProvider>
