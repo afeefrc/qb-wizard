@@ -16,8 +16,8 @@ function DashBoard() {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  const handleNavigation = (path: string, state: any) => {
-    navigate(path, state);
+  const handleNavigation = (path: string, state: { unit: string, renderContent: any }) => {
+    navigate(path, { state });
   };
 
   console.log('examinerAssignments', examinerAssignments);
@@ -66,10 +66,10 @@ function DashBoard() {
             <DashboardCard
               key={index}
               content={renderContent}
-              onClick={(unit) => {
-                console.log(`card clicked ${unit}`);
+              onClick={() => {
+                console.log(`card clicked ${renderContent.unit}`);
                 if (user?.role === 'review-panel') {
-                  handleNavigation('/review-process', { unit });
+                  handleNavigation('/review-process', { unit: renderContent.unit, renderContent });
                 }
               }}
               cardType={'reviewPanel'}
