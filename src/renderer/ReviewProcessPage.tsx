@@ -48,7 +48,7 @@ function ReviewProcessPage(): React.ReactElement {
   const state = location.state as LocationState;
 
   const appContext = React.useContext(AppContext);
-  const { examiners } = appContext || {};
+  const { examiners, syllabusSections } = appContext || {};
   const matchingChairman = examiners.find(
     (examiner: any) => examiner.id === state.renderContent.chairman,
   );
@@ -57,6 +57,8 @@ function ReviewProcessPage(): React.ReactElement {
       state.renderContent.members.includes(examiner.id) &&
       examiner.id !== state.renderContent.chairman,
   );
+
+  console.log('syllabusSections', syllabusSections);
 
   useEffect(() => {
     console.log('Location object:', location);
@@ -125,7 +127,19 @@ function ReviewProcessPage(): React.ReactElement {
                     .join(' , ')}
                 </div>
                 <div>Description: {state.renderContent.description}</div>
-                <div>Deadline: {state.renderContent.deadline}</div>
+                <div>
+                  Deadline:{' '}
+                  {state.renderContent.deadline
+                    ? state.renderContent.deadline
+                        .toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                        })
+                        .split('/')
+                        .join('-')
+                    : 'N/A'}
+                </div>
                 <div>
                   Status:{' '}
                   {<Tag color="processing">{state.renderContent.status}</Tag>}

@@ -26,6 +26,11 @@ import {
   deleteExaminerAssignment,
   updateExaminerAssignment,
   getAllExaminerAssignments,
+  addSyllabusSection,
+  getSyllabusSection,
+  getAllSyllabusSections,
+  deleteSyllabusSection,
+  updateSyllabusSection,
 } from '../../models';
 
 interface AppContextProps {
@@ -45,6 +50,8 @@ interface AppContextProps {
     updatedReviewPanel: any,
   ) => Promise<void>;
   handleAddExaminerAssignment: (newExaminerAssignment: any) => Promise<void>;
+  handleAddSyllabusSection: (newSyllabusSection: any) => Promise<void>;
+  syllabusSections: any[];
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -59,6 +66,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [examiners, setExaminers] = useState<any[]>([]);
   const [reviewPanels, setReviewPanels] = useState<any[]>([]);
   const [examinerAssignments, setExaminerAssignments] = useState<any[]>([]);
+  const [syllabusSections, setSyllabusSections] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -116,6 +124,14 @@ export function AppProvider({ children }: AppProviderProps) {
       }
     };
     fetchExaminerAssignments();
+  }, []);
+
+  useEffect(() => {
+    const fetchSyllabusSections = async () => {
+      const allSyllabusSections = await getAllSyllabusSections();
+      setSyllabusSections(allSyllabusSections);
+    };
+    fetchSyllabusSections();
   }, []);
 
   // const handleAddExaminer = async (newExaminers) => {
@@ -219,6 +235,13 @@ export function AppProvider({ children }: AppProviderProps) {
     setExaminerAssignments(allExaminerAssignments);
   };
 
+  // Syllabus sections
+  const handleAddSyllabusSection = async (newSyllabusSection: any) => {
+    await addSyllabusSection(newSyllabusSection);
+    const allSyllabusSections = await getAllSyllabusSections();
+    setSyllabusSections(allSyllabusSections);
+  };
+
   const contextValue = useMemo(
     () => ({
       questions,
@@ -226,6 +249,7 @@ export function AppProvider({ children }: AppProviderProps) {
       examiners,
       reviewPanels,
       examinerAssignments,
+      syllabusSections,
       handleAddQuestion,
       handleDeleteQuestion,
       handleSaveSetting,
@@ -238,6 +262,7 @@ export function AppProvider({ children }: AppProviderProps) {
       handleAddExaminerAssignment,
       handleDeleteExaminerAssignment,
       handleUpdateExaminerAssignment,
+      handleAddSyllabusSection,
     }),
     [
       questions,
@@ -245,6 +270,7 @@ export function AppProvider({ children }: AppProviderProps) {
       examiners,
       reviewPanels,
       examinerAssignments,
+      syllabusSections,
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,
@@ -257,6 +283,7 @@ export function AppProvider({ children }: AppProviderProps) {
       handleAddExaminerAssignment,
       handleDeleteExaminerAssignment,
       handleUpdateExaminerAssignment,
+      handleAddSyllabusSection,
     ],
   );
 

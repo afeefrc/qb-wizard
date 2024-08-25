@@ -87,43 +87,6 @@ export const reviewPanelSchema = {
   updatedAt: { type: 'date', default: () => new Date() },
 };
 
-export const validateAndSetDefaultsForReviewPanel = (item) => {
-  console.log('item to validate', item);
-  return Object.entries(reviewPanelSchema).reduce(
-    (validatedItem, [key, field]) => {
-      const value = item[key] === undefined ? field.default : item[key];
-      if (field.validate && !field.validate(value)) {
-        throw new Error(`Invalid value for ${key}: ${value}`);
-      }
-      validatedItem[key] = value;
-      console.log('validatedItem', validatedItem);
-      return validatedItem;
-    },
-    {},
-  );
-};
-
-// export const validateAndSetDefaultsForReviewPanel = (item) => {
-//   console.log('item to validate', item);
-//   return Object.entries(reviewPanelSchema).reduce(
-//     (validatedItem, [key, field]) => {
-//       const value =
-//         item[key] === undefined
-//           ? typeof field.default === 'function'
-//             ? field.default()
-//             : field.default
-//           : item[key];
-//       if (field.validate && !field.validate(value)) {
-//         throw new Error(`Invalid value for ${key}: ${value}`);
-//       }
-//       validatedItem[key] = value;
-//       console.log('validatedItem', validatedItem);
-//       return validatedItem;
-//     },
-//     {},
-//   );
-// };
-
 export const examinerAssignmentSchema = {
   id: { type: 'string', default: () => uuidv4() },
   unit: { type: 'string', default: '' }, // Possible values: 'ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'
@@ -142,18 +105,30 @@ export const examinerAssignmentSchema = {
   updatedAt: { type: 'date', default: () => new Date() },
 };
 
-export const validateAndSetDefaultsForExaminerAssignment = (item) => {
-  console.log('item to validate', item);
-  return Object.entries(examinerAssignmentSchema).reduce(
-    (validatedItem, [key, field]) => {
-      const value = item[key] === undefined ? field.default : item[key];
-      if (field.validate && !field.validate(value)) {
-        throw new Error(`Invalid value for ${key}: ${value}`);
-      }
-      validatedItem[key] = value;
-      console.log('validatedItem', validatedItem);
-      return validatedItem;
-    },
-    {},
-  );
+export const syllabusSectionSchema = {
+  id: { type: 'string', default: () => uuidv4() },
+  serialNumber: {
+    type: 'number',
+    default: 0,
+    validate: (value) => Number.isInteger(value) && value >= 0,
+  },
+  unitName: { type: 'string', default: '' },
+  title: { type: 'string', default: '' },
+  minWeightage: {
+    type: 'number',
+    default: 0,
+    validate: (value) => Number.isInteger(value) && value >= 0,
+  },
+  maxWeightage: {
+    type: 'number',
+    default: 100,
+    validate: (value) => Number.isInteger(value) && value >= 0,
+  },
+  questionsCount: {
+    type: 'number',
+    default: 0,
+    validate: (value) => Number.isInteger(value) && value >= 0,
+  },
+  createdAt: { type: 'date', default: () => new Date() },
+  updatedAt: { type: 'date', default: () => new Date() },
 };
