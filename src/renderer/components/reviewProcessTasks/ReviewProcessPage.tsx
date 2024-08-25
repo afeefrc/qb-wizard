@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Empty, Modal, Button, Tabs, Card, Button, Tag } from 'antd';
 import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
-import { AppContext } from './context/AppContext';
+import SyllabusSectionList from './SyllabusSectionList';
+import { AppContext } from '../../context/AppContext';
 
 interface LocationState {
   unit: string;
@@ -20,27 +21,6 @@ interface LocationState {
 const onChange = (key: string) => {
   console.log(key);
 };
-
-const items: TabsProps['items'] = [
-  {
-    key: '1',
-    label: 'Syllabus and weightage',
-    children: 'Content of Tab Pane 1',
-    icon: <AndroidOutlined />,
-  },
-  {
-    key: '2',
-    label: 'Question Bank',
-    children: 'Content of Tab Pane 2',
-    icon: <AndroidOutlined />,
-  },
-  // {
-  //   key: '3',
-  //   label: 'Tab 3',
-  //   children: 'Content of Tab Pane 3',
-  //   icon: <AndroidOutlined />,
-  // },
-];
 
 function ReviewProcessPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -83,6 +63,21 @@ function ReviewProcessPage(): React.ReactElement {
     setIsModalOpen(false);
     navigate(-1);
   };
+
+  const items: TabsProps['items'] = [
+    {
+      key: '1',
+      label: 'Syllabus and weightage',
+      children: <SyllabusSectionList unitName={state.unit} />,
+      icon: <AndroidOutlined />,
+    },
+    {
+      key: '2',
+      label: 'Question Bank',
+      children: 'Content of Tab Pane 2',
+      icon: <AndroidOutlined />,
+    },
+  ];
 
   return (
     <div

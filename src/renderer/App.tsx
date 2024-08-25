@@ -19,7 +19,7 @@ import QuestionBank from './QuestionBank';
 import QuestionPapers from './QuestionPapers';
 import Feedbacks from './Feedbacks';
 import ActivityLogs from './ActivityLogsPage';
-import ReviewProcessPage from './ReviewProcessPage';
+import ReviewProcessPage from './components/reviewProcessTasks/ReviewProcessPage';
 import QuestionPaperProcessPage from './QuestionPaperProcessPage';
 
 function Hello() {

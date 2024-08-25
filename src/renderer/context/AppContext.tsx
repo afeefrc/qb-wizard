@@ -51,7 +51,12 @@ interface AppContextProps {
   ) => Promise<void>;
   handleAddExaminerAssignment: (newExaminerAssignment: any) => Promise<void>;
   handleAddSyllabusSection: (newSyllabusSection: any) => Promise<void>;
+  handleUpdateSyllabusSection: (
+    id: number,
+    updatedSyllabusSection: any,
+  ) => Promise<void>;
   syllabusSections: any[];
+  handleDeleteSyllabusSection: (id: number) => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -242,6 +247,21 @@ export function AppProvider({ children }: AppProviderProps) {
     setSyllabusSections(allSyllabusSections);
   };
 
+  const handleUpdateSyllabusSection = async (
+    id: number,
+    updatedSyllabusSection: any,
+  ) => {
+    await updateSyllabusSection(id, updatedSyllabusSection);
+    const allSyllabusSections = await getAllSyllabusSections();
+    setSyllabusSections(allSyllabusSections);
+  };
+
+  const handleDeleteSyllabusSection = async (id: number) => {
+    await deleteSyllabusSection(id);
+    const allSyllabusSections = await getAllSyllabusSections();
+    setSyllabusSections(allSyllabusSections);
+  };
+
   const contextValue = useMemo(
     () => ({
       questions,
@@ -263,6 +283,8 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeleteExaminerAssignment,
       handleUpdateExaminerAssignment,
       handleAddSyllabusSection,
+      handleUpdateSyllabusSection,
+      handleDeleteSyllabusSection,
     }),
     [
       questions,
@@ -284,6 +306,8 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeleteExaminerAssignment,
       handleUpdateExaminerAssignment,
       handleAddSyllabusSection,
+      handleUpdateSyllabusSection,
+      handleDeleteSyllabusSection,
     ],
   );
 
