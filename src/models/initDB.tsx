@@ -1,29 +1,38 @@
 import { openDB } from 'idb';
-
-export const DB_NAME = 'my-database';
-export const DB_VERSION = 1;
-export const QUESTION_STORE_NAME = 'question-bank';
-export const SETTINGS_STORE_NAME = 'app-settings';
-export const EXAMINER_STORE_NAME = 'examiner-list';
-export const REVIEW_PANEL_STORE = 'review-panel';
-export const EXAMINER_ASSIGNMENT_STORE = 'examiner-assignment';
-export const SYLLABUS_SECTIONS_STORE = 'syllabus-sections';
-
-// populate sample data [development mode only]
 import {
   sampleSettings,
   sampleExaminers,
   sampleSyllabusSections,
 } from './dev_populateData';
 
+export const DB_NAME = 'my-database';
+export const DB_VERSION = 1;
+export const QUESTION_STORE_NAME = 'question-bank';
+export const PENDING_CHANGES_STORE_NAME = 'pending-changes';
+export const SETTINGS_STORE_NAME = 'app-settings';
+export const EXAMINER_STORE_NAME = 'examiner-list';
+export const REVIEW_PANEL_STORE = 'review-panel';
+export const EXAMINER_ASSIGNMENT_STORE = 'examiner-assignment';
+export const SYLLABUS_SECTIONS_STORE = 'syllabus-sections';
+
 export const initDB = async () => {
   return openDB(DB_NAME, DB_VERSION, {
     upgrade(db, oldVersion, newVersion, transaction) {
       if (!db.objectStoreNames.contains(QUESTION_STORE_NAME)) {
-        db.createObjectStore(QUESTION_STORE_NAME, {
+        const store = db.createObjectStore(QUESTION_STORE_NAME, {
           keyPath: 'id',
           autoIncrement: true,
         });
+        store.createIndex('unitNameYearIndex', ['unitName', 'year']);
+      }
+      // Create pending-changes store if it doesn't exist.
+      // This store will be used to store the pending changes to the question-bank.
+      if (!db.objectStoreNames.contains(PENDING_CHANGES_STORE_NAME)) {
+        const pendingChangesStore = db.createObjectStore(
+          PENDING_CHANGES_STORE_NAME,
+          { keyPath: 'id', autoIncrement: true },
+        );
+        pendingChangesStore.createIndex('typeIndex', 'type');
       }
       if (!db.objectStoreNames.contains(SETTINGS_STORE_NAME)) {
         const settingsStore = db.createObjectStore(SETTINGS_STORE_NAME, {

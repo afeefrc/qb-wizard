@@ -10,12 +10,15 @@ import {
   getQuestions,
   addQuestion,
   deleteQuestion,
+  addPendingChange,
+  getPendingChanges,
+  applyPendingChange,
   // getSetting,
   getAllSettings,
   getAllReviewPanels,
   saveSetting,
   addExaminer,
-  getExaminer,
+  // getExaminer,
   getAllExaminers,
   deleteExaminer,
   updateExaminer,
@@ -27,7 +30,7 @@ import {
   updateExaminerAssignment,
   getAllExaminerAssignments,
   addSyllabusSection,
-  getSyllabusSection,
+  // getSyllabusSection,
   getAllSyllabusSections,
   deleteSyllabusSection,
   updateSyllabusSection,
@@ -37,8 +40,11 @@ interface AppContextProps {
   questions: any[];
   settings: any;
   examiners: any[];
-  handleAddQuestion: (newQuestion: any) => Promise<void>;
   handleDeleteQuestion: (id: number) => Promise<void>;
+  handleAddPendingChange: (change: any) => Promise<void>;
+  handleGetPendingChanges: () => Promise<void>;
+  handleUpdateQuestion: (id: number, updatedQuestion: any) => Promise<void>;
+  handleApplyPendingChange: (id: number) => Promise<void>;
   handleSaveSetting: (newSettings: any) => Promise<void>;
   handleAddExaminer: (newExaminer: any) => Promise<void>;
   handleDeleteExaminer: (id: number) => Promise<void>;
@@ -72,6 +78,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [reviewPanels, setReviewPanels] = useState<any[]>([]);
   const [examinerAssignments, setExaminerAssignments] = useState<any[]>([]);
   const [syllabusSections, setSyllabusSections] = useState<any[]>([]);
+  const [pendingChanges, setPendingChanges] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -93,17 +100,18 @@ export function AppProvider({ children }: AppProviderProps) {
     fetchSettings();
   }, []);
 
-  const fetchExaminers = async () => {
+  const fetchExaminers = useCallback(async () => {
     try {
       const allExaminers = await getAllExaminers();
       setExaminers(allExaminers);
     } catch (error) {
       console.error('Failed to fetch examiners', error);
     }
-  };
+  }, []);
+
   useEffect(() => {
     fetchExaminers();
-  }, []);
+  }, [fetchExaminers]);
 
   useEffect(() => {
     const fetchReviewPanels = async () => {
@@ -139,11 +147,52 @@ export function AppProvider({ children }: AppProviderProps) {
     fetchSyllabusSections();
   }, []);
 
+  useEffect(() => {
+    const fetchPendingChanges = async () => {
+      const allPendingChanges = await getPendingChanges();
+      setPendingChanges(allPendingChanges);
+    };
+    fetchPendingChanges();
+  }, []);
+
   // const handleAddExaminer = async (newExaminers) => {
   //   // Assuming you have a function to add examiners to the backend
   //   await addExaminer(newExaminers);
   //   fetchExaminers(); // Fetch the updated list of examiners
   // };
+
+  const handleAddPendingChange = useCallback(async (change: any) => {
+    await addPendingChange(change);
+    const allPendingChanges = await getPendingChanges();
+    setPendingChanges(allPendingChanges);
+  }, []);
+
+  // const handleGetPendingChanges = async () => {
+  //   const allPendingChanges = await getPendingChanges();
+  //   setPendingChanges(allPendingChanges);
+  // };
+
+  const handleAddQuestion = useCallback(async (newQuestion: any) => {
+    await addQuestion(newQuestion);
+    const allPendingChanges = await getPendingChanges();
+    setPendingChanges(allPendingChanges);
+    const allQuestions = await getQuestions();
+    setQuestions(allQuestions);
+  }, []);
+
+  const handleApplyPendingChange = useCallback(async (id: number) => {
+    await applyPendingChange(id);
+    const allPendingChanges = await getPendingChanges();
+    setPendingChanges(allPendingChanges);
+    const allQuestions = await getQuestions();
+    setQuestions(allQuestions);
+  }, []);
+
+  const handleDeleteQuestion = useCallback(async (id: number) => {
+    await deleteQuestion(id);
+    const allQuestions = await getQuestions();
+    setQuestions(allQuestions);
+  }, []);
 
   const handleAddExaminer = useCallback(
     async (newExaminer: any) => {
@@ -165,102 +214,98 @@ export function AppProvider({ children }: AppProviderProps) {
     [setExaminers],
   );
 
-  const handleDeleteExaminer = async (id: number) => {
-    await deleteExaminer(id);
-    fetchExaminers();
-  };
+  const handleDeleteExaminer = useCallback(
+    async (id: number) => {
+      await deleteExaminer(id);
+      fetchExaminers();
+    },
+    [fetchExaminers],
+  );
 
-  const handleUpdateExaminer = async (id: number, updatedExaminer: any) => {
-    await updateExaminer(id, updatedExaminer);
-    fetchExaminers();
-  };
+  const handleUpdateExaminer = useCallback(
+    async (id: number, updatedExaminer: any) => {
+      await updateExaminer(id, updatedExaminer);
+      fetchExaminers();
+    },
+    [fetchExaminers],
+  );
 
-  const handleAddQuestion = async (newQuestion: any) => {
-    await addQuestion(newQuestion);
-    const allQuestions = await getQuestions();
-    setQuestions(allQuestions);
-  };
-
-  const handleDeleteQuestion = async (id: number) => {
-    await deleteQuestion(id);
-    const allQuestions = await getQuestions();
-    setQuestions(allQuestions);
-  };
-
-  const handleSaveSetting = async (newSettings: any) => {
-    // console.log({
-    //   stationName: { code: 'VOBL', name: 'KIA Bengaluru', city: 'bengaluru' },
-    //   unitsApplicable: ['ADC', 'ACC'],
-    // });
+  const handleSaveSetting = useCallback(async (newSettings: any) => {
     await saveSetting(newSettings);
     const appSettings = await getAllSettings();
     setSettings(appSettings);
-  };
+  }, []);
 
-  const handleAddReviewPanel = async (newReviewPanel: any) => {
+  const handleAddReviewPanel = useCallback(async (newReviewPanel: any) => {
     await addReviewPanel(newReviewPanel);
     const allReviewPanels = await getAllReviewPanels();
     setReviewPanels(allReviewPanels);
-  };
+  }, []);
 
-  const handleDeleteReviewPanel = async (id: number) => {
+  const handleDeleteReviewPanel = useCallback(async (id: number) => {
     await deleteReviewPanel(id);
     const allReviewPanels = await getAllReviewPanels();
     setReviewPanels(allReviewPanels);
-  };
+  }, []);
 
-  const handleUpdateReviewPanel = async (
-    id: number,
-    updatedReviewPanel: any,
-  ) => {
-    await updateReviewPanel(id, updatedReviewPanel);
-    const allReviewPanels = await getAllReviewPanels();
-    setReviewPanels(allReviewPanels);
-  };
+  const handleUpdateReviewPanel = useCallback(
+    async (id: number, updatedReviewPanel: any) => {
+      await updateReviewPanel(id, updatedReviewPanel);
+      const allReviewPanels = await getAllReviewPanels();
+      setReviewPanels(allReviewPanels);
+    },
+    [],
+  );
 
   // Examiner assignments
-  const handleAddExaminerAssignment = async (newExaminerAssignment: any) => {
-    await addExaminerAssignment(newExaminerAssignment);
-    const allExaminerAssignments = await getAllExaminerAssignments();
-    setExaminerAssignments(allExaminerAssignments);
-  };
+  const handleAddExaminerAssignment = useCallback(
+    async (newExaminerAssignment: any) => {
+      await addExaminerAssignment(newExaminerAssignment);
+      const allExaminerAssignments = await getAllExaminerAssignments();
+      setExaminerAssignments(allExaminerAssignments);
+    },
+    [],
+  );
 
-  const handleDeleteExaminerAssignment = async (id: number) => {
+  const handleDeleteExaminerAssignment = useCallback(async (id: number) => {
     await deleteExaminerAssignment(id);
     const allExaminerAssignments = await getAllExaminerAssignments();
     setExaminerAssignments(allExaminerAssignments);
-  };
+  }, []);
 
-  const handleUpdateExaminerAssignment = async (
-    id: number,
-    updatedExaminerAssignment: any,
-  ) => {
-    await updateExaminerAssignment(id, updatedExaminerAssignment);
-    const allExaminerAssignments = await getAllExaminerAssignments();
-    setExaminerAssignments(allExaminerAssignments);
-  };
+  const handleUpdateExaminerAssignment = useCallback(
+    async (id: number, updatedExaminerAssignment: any) => {
+      await updateExaminerAssignment(id, updatedExaminerAssignment);
+      const allExaminerAssignments = await getAllExaminerAssignments();
+      setExaminerAssignments(allExaminerAssignments);
+    },
+    [],
+  );
 
   // Syllabus sections
-  const handleAddSyllabusSection = async (newSyllabusSection: any) => {
-    await addSyllabusSection(newSyllabusSection);
-    const allSyllabusSections = await getAllSyllabusSections();
-    setSyllabusSections(allSyllabusSections);
-  };
+  const handleAddSyllabusSection = useCallback(
+    async (newSyllabusSection: any) => {
+      await addSyllabusSection(newSyllabusSection);
+      const allSyllabusSections = await getAllSyllabusSections();
+      setSyllabusSections(allSyllabusSections);
+    },
+    [],
+  );
 
-  const handleUpdateSyllabusSection = async (
-    id: number,
-    updatedSyllabusSection: any,
-  ) => {
-    await updateSyllabusSection(id, updatedSyllabusSection);
-    const allSyllabusSections = await getAllSyllabusSections();
-    setSyllabusSections(allSyllabusSections);
-  };
+  const handleUpdateSyllabusSection = useCallback(
+    async (id: number, updatedSyllabusSection: any) => {
+      await updateSyllabusSection(id, updatedSyllabusSection);
+      const allSyllabusSections = await getAllSyllabusSections();
+      setSyllabusSections(allSyllabusSections);
+    },
+    [],
+  );
 
-  const handleDeleteSyllabusSection = async (id: number) => {
+  const handleDeleteSyllabusSection = useCallback(async (id: number) => {
     await deleteSyllabusSection(id);
     const allSyllabusSections = await getAllSyllabusSections();
     setSyllabusSections(allSyllabusSections);
-  };
+  }, []);
 
   const contextValue = useMemo(
     () => ({
@@ -272,6 +317,9 @@ export function AppProvider({ children }: AppProviderProps) {
       syllabusSections,
       handleAddQuestion,
       handleDeleteQuestion,
+      pendingChanges,
+      handleAddPendingChange,
+      handleApplyPendingChange,
       handleSaveSetting,
       handleAddExaminer,
       handleDeleteExaminer,
@@ -293,6 +341,10 @@ export function AppProvider({ children }: AppProviderProps) {
       reviewPanels,
       examinerAssignments,
       syllabusSections,
+      pendingChanges,
+      handleAddPendingChange,
+      // handleGetPendingChanges,
+      handleApplyPendingChange,
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,

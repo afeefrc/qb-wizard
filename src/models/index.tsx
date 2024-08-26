@@ -27,6 +27,9 @@ export {
   getQuestions,
   deleteQuestion,
   handleImageUpload,
+  addPendingChange,
+  getPendingChanges,
+  applyPendingChange,
 } from './questionBank';
 
 export { saveSetting, getSetting, getAllSettings } from './stationSettings';

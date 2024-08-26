@@ -1,5 +1,4 @@
-// import { openDB } from 'idb';
-// import { v4 as uuidv4 } from 'uuid';
+import { openDB } from 'idb';
 import {
   questionsSchema,
   // settingsSchema,
@@ -9,7 +8,11 @@ import {
   // validateAndSetDefaultsForExaminerAssignment,
 } from './schema';
 
-import { QUESTION_STORE_NAME, initDB } from './initDB';
+import {
+  QUESTION_STORE_NAME,
+  PENDING_CHANGES_STORE_NAME,
+  initDB,
+} from './initDB';
 import { removeUncloneableProperties } from './utilFunctions';
 
 // for the question-bank store
@@ -29,29 +32,142 @@ const validateAndSetDefaults = (item) => {
 
 // Operations for question-Bank
 
-export const addQuestion = async (item) => {
-  const db = await initDB();
-  const tx = db.transaction(QUESTION_STORE_NAME, 'readwrite');
+// get the next serial number for a question
+async function getNextSerialNumber(db, unitName, year) {
+  const tx = db.transaction(QUESTION_STORE_NAME, 'readonly');
   const store = tx.objectStore(QUESTION_STORE_NAME);
-  const validatedItem = validateAndSetDefaults(item);
-  const cloneableItem = removeUncloneableProperties(validatedItem);
-  await store.add(cloneableItem);
+  const index = store.index('unitNameYearIndex');
+
+  const cursor = await index.openCursor(
+    IDBKeyRange.only([unitName, year]),
+    'prev',
+  );
+
+  if (cursor) {
+    return cursor.value.serialNumber + 1;
+  } else {
+    return 1;
+  }
+}
+
+// Add a pending change to the question-bank
+export const addPendingChange = async (change) => {
+  const db = await initDB();
+  const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+  await store.add(change);
   await tx.done;
 };
+
+// get all pending changes from the question-bank
+export const getPendingChanges = async () => {
+  const db = await initDB();
+  const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readonly');
+  const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+  return store.getAll();
+};
+
+// Apply a pending change to the question-bank
+export const applyPendingChange = async (changeId) => {
+  const db = await initDB();
+  const tx = db.transaction(
+    [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME],
+    'readwrite',
+  );
+  const pendingStore = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+  const questionStore = tx.objectStore(QUESTION_STORE_NAME);
+
+  const change = await pendingStore.get(changeId);
+  const updatedAt = new Date().toISOString();
+
+  if (change.type === 'update') {
+    await questionStore.put({ ...change.data, updatedAt });
+  } else if (change.type === 'delete') {
+    const question = await questionStore.get(change.data.id);
+    if (question) {
+      await questionStore.put({ ...question, isDelete: true, updatedAt });
+    }
+  }
+
+  await pendingStore.delete(changeId);
+  await tx.done;
+};
+
+// Apply all pending changes to the question-bank
+export const applyAllPendingChanges = async () => {
+  const db = await initDB();
+  const tx = db.transaction(
+    [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME],
+    'readwrite',
+  );
+  const pendingStore = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+  const questionStore = tx.objectStore(QUESTION_STORE_NAME);
+
+  const changes = await pendingStore.getAll();
+
+  await Promise.all(
+    changes.map(async (change) => {
+      const updatedAt = new Date().toISOString();
+      if (change.type === 'update') {
+        await questionStore.put({ ...change.data, updatedAt });
+      } else if (change.type === 'delete') {
+        const question = await questionStore.get(change.data.id);
+        if (question) {
+          await questionStore.put({ ...question, isDelete: true, updatedAt });
+        }
+      }
+      await pendingStore.delete(change.id);
+    }),
+  );
+
+  await tx.done;
+};
+
+// update the question-bank to use pending changes
+export const addQuestion = async (item) => {
+  const db = await initDB();
+  const year = new Date().getFullYear();
+  const serialNumber = await getNextSerialNumber(db, item.unitName, year);
+
+  const validatedItem = validateAndSetDefaults({
+    ...item,
+    year,
+    serialNumber,
+  });
+  const cloneableItem = removeUncloneableProperties(validatedItem);
+  await addPendingChange({ type: 'update', data: cloneableItem });
+};
+
+// set isdelete true a question from the question-bank
+export const deleteQuestion = async (id) => {
+  await addPendingChange({ type: 'delete', data: { id } });
+};
+
+// add a question to the question-bank
+// export const addQuestion = async (item) => {
+//   const db = await initDB();
+//   const tx = db.transaction(QUESTION_STORE_NAME, 'readwrite');
+//   const store = tx.objectStore(QUESTION_STORE_NAME);
+
+//   const year = new Date().getFullYear();
+//   const serialNumber = await getNextSerialNumber(db, item.unitName, year);
+
+//   const validatedItem = validateAndSetDefaults({
+//     ...item,
+//     year,
+//     serialNumber,
+//   });
+
+//   const cloneableItem = removeUncloneableProperties(validatedItem);
+//   await store.add(cloneableItem);
+//   await tx.done;
+// };
 
 export const getQuestions = async () => {
   const db = await initDB();
   const tx = db.transaction(QUESTION_STORE_NAME, 'readonly');
   const store = tx.objectStore(QUESTION_STORE_NAME);
   return store.getAll();
-};
-
-export const deleteQuestion = async (id) => {
-  const db = await initDB();
-  const tx = db.transaction(QUESTION_STORE_NAME, 'readwrite');
-  const store = tx.objectStore(QUESTION_STORE_NAME);
-  await store.delete(id);
-  await tx.done;
 };
 
 // Function to handle image upload and convert it to a Blob

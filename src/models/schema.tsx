@@ -7,12 +7,20 @@ export const questionsSchema = {
     values: ['ADC', 'APP', 'APP(S)', 'ACC', 'ACC(S)', 'OCC'],
     default: 'ADC',
   },
+  year: {
+    type: 'number',
+    default: () => new Date().getFullYear(),
+  },
+  serialNumber: {
+    type: 'number',
+  },
   marks: {
     type: 'number',
     default: 1,
     validate: (value) => Number.isInteger(value) && value > 0,
   },
   questionType: { type: 'string', default: '' },
+  syllabusSectionId: { type: 'string', default: null },
   questionText: { type: 'string', default: '' },
   trueAnswer: { type: 'boolean', default: true },
   answerText: { type: 'string', default: '' },
@@ -31,7 +39,10 @@ export const questionsSchema = {
     validate: (value) => [0, 1, 2, 3, 4, 5].includes(value),
   },
   comments: { type: 'string', default: '' },
+  isDeleted: { type: 'boolean', default: false },
   isReviewed: { type: 'boolean', default: false },
+  createdAt: { type: 'date', default: () => new Date() },
+  updatedAt: { type: 'date', default: () => new Date() },
 };
 
 export const settingsSchema = {

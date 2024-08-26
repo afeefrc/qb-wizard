@@ -4,6 +4,7 @@ import { Empty, Modal, Button, Tabs, Card, Button, Tag } from 'antd';
 import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import SyllabusSectionList from './SyllabusSectionList';
+import QuestionBankEditTask from './questionBankEditTask';
 import { AppContext } from '../../context/AppContext';
 
 interface LocationState {
@@ -74,7 +75,7 @@ function ReviewProcessPage(): React.ReactElement {
     {
       key: '2',
       label: 'Question Bank',
-      children: 'Content of Tab Pane 2',
+      children: <QuestionBankEditTask unitName={state.unit} />,
       icon: <AndroidOutlined />,
     },
   ];
