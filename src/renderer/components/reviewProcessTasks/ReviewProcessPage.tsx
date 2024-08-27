@@ -178,7 +178,7 @@ function ReviewProcessPage(): React.ReactElement {
       /> */}
 
         <Tabs
-          defaultActiveKey="1"
+          defaultActiveKey="2"
           items={items}
           onChange={onChange}
           indicator={{ size: (origin) => origin - 20, align: 'center' }}

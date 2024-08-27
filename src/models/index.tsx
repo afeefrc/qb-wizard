@@ -28,6 +28,8 @@ export {
   deleteQuestion,
   handleImageUpload,
   addPendingChange,
+  updatePendingChange,
+  deletePendingChange,
   getPendingChanges,
   applyPendingChange,
 } from './questionBank';

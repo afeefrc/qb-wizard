@@ -59,6 +59,51 @@ export const addPendingChange = async (change) => {
   await tx.done;
 };
 
+// Update a pending change in the pending-changes store
+export const updatePendingChange = async (changeId, updatedChange) => {
+  const db = await initDB();
+  const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+
+  // First, check if the change exists
+  const existingChange = await store.get(changeId);
+  if (!existingChange) {
+    throw new Error(`Pending change with id ${changeId} not found`);
+  }
+
+  // Merge the existing change with the updated change
+  const mergedChange = {
+    ...existingChange,
+    ...updatedChange,
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Update the change in the store
+  await store.put(mergedChange);
+  await tx.done;
+
+  return mergedChange;
+};
+
+// Delete a pending change from the pending-changes store
+export const deletePendingChange = async (changeId) => {
+  const db = await initDB();
+  const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+
+  // Check if the change exists
+  const existingChange = await store.get(changeId);
+  if (!existingChange) {
+    throw new Error(`Pending change with id ${changeId} not found`);
+  }
+
+  // Delete the change from the store
+  await store.delete(changeId);
+  await tx.done;
+
+  return true; // Indicate successful deletion
+};
+
 // get all pending changes from the question-bank
 export const getPendingChanges = async () => {
   const db = await initDB();
@@ -108,8 +153,21 @@ export const applyAllPendingChanges = async () => {
   await Promise.all(
     changes.map(async (change) => {
       const updatedAt = new Date().toISOString();
-      if (change.type === 'update') {
-        await questionStore.put({ ...change.data, updatedAt });
+      const year = new Date().getFullYear();
+
+      if (change.type === 'add' || change.type === 'update') {
+        const serialNumber = await getNextSerialNumber(
+          db,
+          change.data.unitName,
+          year,
+        );
+        const updatedData = {
+          ...change.data,
+          year,
+          serialNumber,
+          updatedAt,
+        };
+        await questionStore.put(updatedData);
       } else if (change.type === 'delete') {
         const question = await questionStore.get(change.data.id);
         if (question) {
@@ -123,19 +181,11 @@ export const applyAllPendingChanges = async () => {
   await tx.done;
 };
 
-// update the question-bank to use pending changes
+// add question to the pending changes
 export const addQuestion = async (item) => {
-  const db = await initDB();
-  const year = new Date().getFullYear();
-  const serialNumber = await getNextSerialNumber(db, item.unitName, year);
-
-  const validatedItem = validateAndSetDefaults({
-    ...item,
-    year,
-    serialNumber,
-  });
+  const validatedItem = validateAndSetDefaults(item);
   const cloneableItem = removeUncloneableProperties(validatedItem);
-  await addPendingChange({ type: 'update', data: cloneableItem });
+  await addPendingChange({ type: 'add', data: cloneableItem });
 };
 
 // set isdelete true a question from the question-bank

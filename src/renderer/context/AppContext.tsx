@@ -12,6 +12,8 @@ import {
   deleteQuestion,
   addPendingChange,
   getPendingChanges,
+  updatePendingChange,
+  deletePendingChange,
   applyPendingChange,
   // getSetting,
   getAllSettings,
@@ -43,6 +45,8 @@ interface AppContextProps {
   handleDeleteQuestion: (id: number) => Promise<void>;
   handleAddPendingChange: (change: any) => Promise<void>;
   handleGetPendingChanges: () => Promise<void>;
+  handleUpdatePendingChange: (id: number, updatedChange: any) => Promise<void>;
+  handleDeletePendingChange: (id: number) => Promise<void>;
   handleUpdateQuestion: (id: number, updatedQuestion: any) => Promise<void>;
   handleApplyPendingChange: (id: number) => Promise<void>;
   handleSaveSetting: (newSettings: any) => Promise<void>;
@@ -163,6 +167,21 @@ export function AppProvider({ children }: AppProviderProps) {
 
   const handleAddPendingChange = useCallback(async (change: any) => {
     await addPendingChange(change);
+    const allPendingChanges = await getPendingChanges();
+    setPendingChanges(allPendingChanges);
+  }, []);
+
+  const handleUpdatePendingChange = useCallback(
+    async (id: number, updatedChange: any) => {
+      await updatePendingChange(id, updatedChange);
+      const allPendingChanges = await getPendingChanges();
+      setPendingChanges(allPendingChanges);
+    },
+    [],
+  );
+
+  const handleDeletePendingChange = useCallback(async (id: number) => {
+    await deletePendingChange(id);
     const allPendingChanges = await getPendingChanges();
     setPendingChanges(allPendingChanges);
   }, []);
@@ -319,6 +338,8 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeleteQuestion,
       pendingChanges,
       handleAddPendingChange,
+      handleUpdatePendingChange,
+      handleDeletePendingChange,
       handleApplyPendingChange,
       handleSaveSetting,
       handleAddExaminer,
@@ -343,6 +364,8 @@ export function AppProvider({ children }: AppProviderProps) {
       syllabusSections,
       pendingChanges,
       handleAddPendingChange,
+      handleUpdatePendingChange,
+      handleDeletePendingChange,
       // handleGetPendingChanges,
       handleApplyPendingChange,
       handleAddExaminer,
