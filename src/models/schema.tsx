@@ -24,7 +24,23 @@ export const questionsSchema = {
   questionText: { type: 'string', default: '' },
   trueAnswer: { type: 'boolean', default: true },
   answerText: { type: 'string', default: '' },
-  keyValuePairs: { type: 'object', default: {} },
+  matchPairs: {
+    type: 'array',
+    default: [],
+    items: {
+      type: 'object',
+      properties: {
+        item: { type: 'string', default: '' },
+        match: { type: 'string', default: '' },
+      },
+    },
+  },
+  answerList: {
+    type: 'array',
+    default: [],
+    items: { type: 'string', default: '' },
+  },
+  correctOption: { type: 'number', default: 0 },
   image: { type: 'blob', default: null },
   linkedQuestion: { type: 'array', default: [] },
   mandatory: { type: 'boolean', default: false },

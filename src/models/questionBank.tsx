@@ -188,30 +188,37 @@ export const addQuestion = async (item) => {
   await addPendingChange({ type: 'add', data: cloneableItem });
 };
 
-// set isdelete true a question from the question-bank
-export const deleteQuestion = async (id) => {
-  await addPendingChange({ type: 'delete', data: { id } });
+// set isdelete true a question from the question-bank item and add to pending changes
+export const deleteQuestion = async (deleteId, updatedChange) => {
+  const db = await initDB();
+  const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+
+  // Check if there's an existing pending change for this question
+  const existingChange = await store.get(deleteId);
+
+  if (existingChange) {
+    // If there's an existing change, update it
+    const mergedChange = {
+      ...existingChange,
+      ...updatedChange,
+      data: { ...existingChange, ...updatedChange, isDeleted: true },
+      updatedAt: new Date().toISOString(),
+    };
+    await store.put(mergedChange);
+  } else {
+    // If there's no existing change, add a new one
+    const newChange = {
+      ...updatedChange,
+      data: { ...updatedChange.data, id: deleteId, isDeleted: true },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await store.add(newChange);
+  }
+
+  await tx.done;
 };
-
-// add a question to the question-bank
-// export const addQuestion = async (item) => {
-//   const db = await initDB();
-//   const tx = db.transaction(QUESTION_STORE_NAME, 'readwrite');
-//   const store = tx.objectStore(QUESTION_STORE_NAME);
-
-//   const year = new Date().getFullYear();
-//   const serialNumber = await getNextSerialNumber(db, item.unitName, year);
-
-//   const validatedItem = validateAndSetDefaults({
-//     ...item,
-//     year,
-//     serialNumber,
-//   });
-
-//   const cloneableItem = removeUncloneableProperties(validatedItem);
-//   await store.add(cloneableItem);
-//   await tx.done;
-// };
 
 export const getQuestions = async () => {
   const db = await initDB();

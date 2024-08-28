@@ -42,7 +42,7 @@ interface AppContextProps {
   questions: any[];
   settings: any;
   examiners: any[];
-  handleDeleteQuestion: (id: number) => Promise<void>;
+  handleDeleteQuestion: (deleteId: number, updatedChange: any) => Promise<void>;
   handleAddPendingChange: (change: any) => Promise<void>;
   handleGetPendingChanges: () => Promise<void>;
   handleUpdatePendingChange: (id: number, updatedChange: any) => Promise<void>;
@@ -207,11 +207,16 @@ export function AppProvider({ children }: AppProviderProps) {
     setQuestions(allQuestions);
   }, []);
 
-  const handleDeleteQuestion = useCallback(async (id: number) => {
-    await deleteQuestion(id);
-    const allQuestions = await getQuestions();
-    setQuestions(allQuestions);
-  }, []);
+  const handleDeleteQuestion = useCallback(
+    async (deleteId: number, updatedChange: any) => {
+      await deleteQuestion(deleteId, updatedChange);
+      const allPendingChanges = await getPendingChanges();
+      setPendingChanges(allPendingChanges);
+      // const allQuestions = await getQuestions();
+      // setQuestions(allQuestions);
+    },
+    [],
+  );
 
   const handleAddExaminer = useCallback(
     async (newExaminer: any) => {

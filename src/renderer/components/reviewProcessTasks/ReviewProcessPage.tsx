@@ -178,6 +178,7 @@ function ReviewProcessPage(): React.ReactElement {
       /> */}
 
         <Tabs
+          type="card"
           defaultActiveKey="2"
           items={items}
           onChange={onChange}

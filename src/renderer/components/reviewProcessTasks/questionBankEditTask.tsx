@@ -1,7 +1,13 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { Button, Table, Collapse, Tag } from 'antd';
+import { Button, Table, Collapse, Tag, Popconfirm } from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
-import { EditTwoTone, SaveTwoTone, LinkOutlined } from '@ant-design/icons';
+import {
+  EditTwoTone,
+  SaveTwoTone,
+  LinkOutlined,
+  PlusSquareTwoTone,
+  DeleteTwoTone,
+} from '@ant-design/icons';
 import ExpandedRowEditor from './ExpandedRowEditor';
 import AddQuestionModal from './AddQuestionModal';
 
@@ -57,6 +63,7 @@ function QuestionBankEditTask({
     handleAddPendingChange,
     pendingChanges,
     handleAddQuestion,
+    handleDeleteQuestion,
     handleUpdatePendingChange,
     handleDeletePendingChange,
     handleApplyPendingChange,
@@ -74,15 +81,15 @@ function QuestionBankEditTask({
   console.log('questions', questions);
   console.log('syllabusSections', filteredSyllabusSections);
 
-  const handleAddSampleData = () => {
-    handleAddQuestion(sampleData.data);
-  };
+  // const handleAddSampleData = () => {
+  //   handleAddQuestion(sampleData.data);
+  // };
 
-  const handleUpdateQuestions = () => {
-    if (pendingChanges && pendingChanges.length > 0 && pendingChanges[0].id) {
-      handleApplyPendingChange(pendingChanges[0].id);
-    }
-  };
+  // const handleUpdateQuestions = () => {
+  //   if (pendingChanges && pendingChanges.length > 0 && pendingChanges[0].id) {
+  //     handleApplyPendingChange(pendingChanges[0].id);
+  //   }
+  // };
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
 
@@ -148,7 +155,7 @@ function QuestionBankEditTask({
       title: 'Question',
       dataIndex: 'questionText',
       key: 'questionText',
-      width: '50%',
+      width: '60%',
       render: (text: string, record: ColumnDataType) => (
         <div>
           {record.isDeleted ? (
@@ -160,7 +167,16 @@ function QuestionBankEditTask({
                   marginBottom: '4px',
                 }}
               >
-                <Tag color="red">Deleted</Tag>
+                <Tag
+                  color="red"
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 'lighter',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  Deleted
+                </Tag>
                 <Button
                   type="link"
                   size="small"
@@ -170,10 +186,23 @@ function QuestionBankEditTask({
                       (change) => change.data.id === record.id,
                     );
                     if (pendingChange) {
-                      handleDeletePendingChange(pendingChange.id);
+                      if (pendingChange.type === 'update') {
+                        handleUpdatePendingChange(pendingChange.id, {
+                          ...pendingChange,
+                          data: { ...pendingChange.data, isDeleted: false },
+                        });
+                      } else {
+                        handleDeletePendingChange(pendingChange.id);
+                      }
                     }
                   }}
-                  style={{ marginLeft: '8px', padding: '0', boxShadow: 'none' }}
+                  style={{
+                    marginLeft: '8px',
+                    padding: '0',
+                    boxShadow: 'none',
+                    fontStyle: 'italic',
+                    // fontSize: '12px',
+                  }}
                 >
                   Undo Delete
                 </Button>
@@ -182,40 +211,128 @@ function QuestionBankEditTask({
             </div>
           ) : (
             <>
-              <div>{text}</div>
-              {record.status && record.status !== 'original' && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginTop: '10px',
-                  }}
-                >
-                  <Tag color={record.status === 'edited' ? 'blue' : 'green'}>
-                    {record.status === 'edited' ? 'Edited' : 'New'}
-                  </Tag>
-                  <Button
-                    type="link"
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const pendingChange = pendingChanges.find(
-                        (change) => change.data.id === record.id,
-                      );
-                      if (pendingChange) {
-                        handleDeletePendingChange(pendingChange.id);
-                      }
-                    }}
+              {/* render edit and delete buttons only if the question is not deleted */}
+              <div>
+                {!record.isDeleted && !expandedRowKeys.includes(record.id) && (
+                  <div
                     style={{
-                      marginLeft: '8px',
-                      padding: '0',
-                      boxShadow: 'none',
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      marginBottom: '5px',
+                      gap: '5px',
                     }}
                   >
-                    Undo
-                  </Button>
+                    <Button
+                      size="small"
+                      type="link"
+                      onClick={() => toggleExpand(record)}
+                      style={{ boxShadow: 'none', fontStyle: 'italic' }}
+                    >
+                      <span>
+                        <EditTwoTone twoToneColor="#eb2f96" /> Edit
+                      </span>
+                    </Button>
+                    {record.status === 'new' ? (
+                      <Popconfirm
+                        title="Permanently delete this new entry?"
+                        onConfirm={() => {
+                          const pendingChange = pendingChanges.find(
+                            (change) => change.data.id === record.id,
+                          );
+                          if (pendingChange) {
+                            handleDeletePendingChange(pendingChange.id);
+                          }
+                        }}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button
+                          size="small"
+                          type="link"
+                          style={{ boxShadow: 'none', fontStyle: 'italic' }}
+                        >
+                          <span>
+                            <DeleteTwoTone twoToneColor="#eb2f96" /> Delete
+                          </span>
+                        </Button>
+                      </Popconfirm>
+                    ) : (
+                      <Button
+                        size="small"
+                        type="link"
+                        onClick={() => {
+                          const existingChange = pendingChanges.find(
+                            (change) => change.data.id === record.id,
+                          );
+                          if (existingChange) {
+                            handleUpdatePendingChange(existingChange.id, {
+                              data: { ...existingChange.data, isDeleted: true },
+                            });
+                          } else {
+                            handleAddPendingChange({
+                              type: 'delete',
+                              data: { ...record, isDeleted: true },
+                            });
+                          }
+                        }}
+                        style={{ boxShadow: 'none', fontStyle: 'italic' }}
+                      >
+                        <span>
+                          <DeleteTwoTone twoToneColor="#eb2f96" /> Delete
+                        </span>
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <div style={{ fontSize: '16px', fontWeight: '400' }}>
+                  {text}
                 </div>
-              )}
+                {record.status && record.status !== 'original' ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      marginTop: '5px',
+                    }}
+                  >
+                    <Tag
+                      color={record.status === 'edited' ? 'blue' : 'green'}
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 'lighter',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      {record.status === 'edited' ? 'Edited' : 'New'}
+                    </Tag>
+                    {record.status === 'edited' && (
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const pendingChange = pendingChanges.find(
+                            (change) => change.data.id === record.id,
+                          );
+                          if (pendingChange) {
+                            handleDeletePendingChange(pendingChange.id);
+                          }
+                        }}
+                        style={{
+                          marginLeft: '8px',
+                          padding: '0',
+                          boxShadow: 'none',
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        Undo edit
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ height: '29px', marginTop: '5px' }}></div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -259,45 +376,89 @@ function QuestionBankEditTask({
     {
       title: 'Action',
       key: 'action',
-      render: (_: any, record: any) => (
-        <div style={{ display: 'flex', flexDirection: 'row' }}>
-          <Button
-            type="link"
-            onClick={() => toggleExpand(record)}
-            style={{ boxShadow: 'none', marginRight: '8px' }}
-          >
-            {expandedRowKeys.includes(record.id) ? (
-              <span>
-                <SaveTwoTone twoToneColor="#eb2f96" /> Save
-              </span>
-            ) : (
-              <span>
-                <EditTwoTone twoToneColor="#eb2f96" /> Edit
-              </span>
-            )}
-          </Button>
-          <Button
-            type="link"
-            onClick={() => {
-              /* Add link functionality here */
+      // width: '10%',
+      render: (_: any, record: any) =>
+        !record.isDeleted && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
             }}
-            style={{ boxShadow: 'none' }}
           >
-            <div
+            {/* <div
               style={{
-                width: '100px',
-                whiteSpace: 'normal',
-                lineHeight: '1.3',
+                display: 'flex',
+                width: '100%',
+                justifyContent: 'space-evenly',
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                <LinkOutlined style={{ marginRight: '4px' }} /> Link similar
-                questions
+              <Button
+                size="small"
+                onClick={() => toggleExpand(record)}
+                style={{ boxShadow: 'none' }}
+              >
+                {expandedRowKeys.includes(record.id) ? (
+                  <span>
+                    <SaveTwoTone twoToneColor="#eb2f96" /> Save
+                  </span>
+                ) : (
+                  <span>
+                    <EditTwoTone twoToneColor="#eb2f96" /> Edit
+                  </span>
+                )}
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  const existingChange = pendingChanges.find(
+                    (change) => change.data.id === record.id,
+                  );
+                  if (existingChange) {
+                    handleUpdatePendingChange(existingChange.id, {
+                      data: { ...existingChange.data, isDeleted: true },
+                    });
+                  } else {
+                    handleAddPendingChange({
+                      type: 'delete',
+                      data: { ...record, isDeleted: true },
+                    });
+                  }
+                }}
+                style={{ boxShadow: 'none' }}
+              >
+                <span>
+                  <DeleteTwoTone twoToneColor="#eb2f96" /> Delete
+                </span>
+              </Button>
+            </div> */}
+            <Button
+              size="small"
+              type="link"
+              ghost
+              onClick={() => {}}
+              style={{
+                boxShadow: 'none',
+                fontStyle: 'italic',
+                lineHeight: '1.2',
+                height: 'auto',
+                padding: '4px 0',
+              }}
+            >
+              <PlusSquareTwoTone twoToneColor="#eb2f96" />
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '100%',
+                  whiteSpace: 'normal',
+                  textAlign: 'left',
+                }}
+              >
+                Link similar questions
               </span>
-            </div>
-          </Button>
-        </div>
-      ),
+            </Button>
+          </div>
+        ),
     },
   ];
 
@@ -360,18 +521,27 @@ function QuestionBankEditTask({
   };
 
   return (
-    <div>
-      {/* <Button type="primary" onClick={handleUpdateQuestions}>
-        Update Questions
-      </Button> */}
-
+    <div
+      style={{
+        height: 'calc(100vh - 200px)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <AddQuestionModal
         visible={isModalVisible}
         onCancel={handleCancel}
         onSubmit={handleSubmit}
       />
 
-      <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '16px',
+          marginBottom: '150px',
+        }}
+      >
         <Collapse accordion defaultActiveKey={groupedQuestions[0]?.id}>
           {groupedQuestions.map((section) => (
             <Collapse.Panel
@@ -393,6 +563,7 @@ function QuestionBankEditTask({
                 onChange={onChange}
                 showSorterTooltip={{ target: 'sorter-icon' }}
                 size="small"
+                pagination={false}
                 expandable={{
                   expandedRowRender,
                   expandedRowKeys,
