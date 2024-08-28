@@ -113,6 +113,7 @@ export const getPendingChanges = async () => {
 };
 
 // Apply a pending change to the question-bank
+// TODO: check the correctness of the function
 export const applyPendingChange = async (changeId) => {
   const db = await initDB();
   const tx = db.transaction(
@@ -125,12 +126,24 @@ export const applyPendingChange = async (changeId) => {
   const change = await pendingStore.get(changeId);
   const updatedAt = new Date().toISOString();
 
-  if (change.type === 'update') {
-    await questionStore.put({ ...change.data, updatedAt });
+  if (change.type === 'add' || change.type === 'update') {
+    let updatedData = { ...change.data, updatedAt };
+
+    if (change.type === 'add' || updatedData.serialNumber === undefined) {
+      const serialNumber = await getNextSerialNumberInTransaction(
+        questionStore,
+        change.data.unitName,
+        year,
+      );
+      updatedData = { ...updatedData, year, serialNumber };
+    }
+
+    await handleRequest(questionStore.put(updatedData));
+    console.log('Question added/updated:', updatedData);
   } else if (change.type === 'delete') {
     const question = await questionStore.get(change.data.id);
     if (question) {
-      await questionStore.put({ ...question, isDelete: true, updatedAt });
+      await questionStore.put({ ...question, isDeleted: true, updatedAt });
     }
   }
 
@@ -140,45 +153,118 @@ export const applyPendingChange = async (changeId) => {
 
 // Apply all pending changes to the question-bank
 export const applyAllPendingChanges = async () => {
-  const db = await initDB();
-  const tx = db.transaction(
-    [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME],
-    'readwrite',
-  );
-  const pendingStore = tx.objectStore(PENDING_CHANGES_STORE_NAME);
-  const questionStore = tx.objectStore(QUESTION_STORE_NAME);
+  try {
+    const db = await initDB();
+    console.log('Database initialized');
 
-  const changes = await pendingStore.getAll();
+    const tx = db.transaction(
+      [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME],
+      'readwrite',
+    );
+    console.log('Transaction started');
 
-  await Promise.all(
-    changes.map(async (change) => {
+    const pendingStore = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+    const questionStore = tx.objectStore(QUESTION_STORE_NAME);
+
+    const changes = await handleRequest(pendingStore.getAll());
+    console.log('Pending changes retrieved:', changes.length);
+
+    const year = new Date().getFullYear();
+
+    await changes.reduce(async (previousPromise, change) => {
+      await previousPromise;
+      console.log('Processing change:', change);
       const updatedAt = new Date().toISOString();
-      const year = new Date().getFullYear();
 
       if (change.type === 'add' || change.type === 'update') {
-        const serialNumber = await getNextSerialNumber(
-          db,
-          change.data.unitName,
-          year,
-        );
-        const updatedData = {
-          ...change.data,
-          year,
-          serialNumber,
-          updatedAt,
-        };
-        await questionStore.put(updatedData);
+        let updatedData = { ...change.data, updatedAt };
+
+        if (change.type === 'add' || updatedData.serialNumber === undefined) {
+          const serialNumber = await getNextSerialNumberInTransaction(
+            questionStore,
+            change.data.unitName,
+            year,
+          );
+          updatedData = { ...updatedData, year, serialNumber };
+        }
+
+        await handleRequest(questionStore.put(updatedData));
+        console.log('Question added/updated:', updatedData);
       } else if (change.type === 'delete') {
-        const question = await questionStore.get(change.data.id);
+        const question = await handleRequest(questionStore.get(change.data.id));
         if (question) {
-          await questionStore.put({ ...question, isDelete: true, updatedAt });
+          await handleRequest(
+            questionStore.put({ ...question, isDeleted: true, updatedAt }),
+          );
+          console.log('Question marked as deleted:', change.data.id);
         }
       }
-      await pendingStore.delete(change.id);
-    }),
-  );
+      await handleRequest(pendingStore.delete(change.id));
+      console.log('Pending change deleted:', change.id);
+    }, Promise.resolve());
 
-  await tx.done;
+    await tx.done;
+    console.log('Transaction completed');
+  } catch (error) {
+    console.error('Error in applyAllPendingChanges:', error);
+    throw error;
+  }
+};
+
+// Helper function to get the next serial number within the current transaction
+const getNextSerialNumberInTransaction = async (store, unitName, year) => {
+  try {
+    const index = store.index('unitNameYearIndex');
+    console.log(`Getting next serial number for ${unitName}, ${year}`);
+
+    // Get all questions for the given unit and year
+    const questions = await handleRequest(
+      index.getAll(IDBKeyRange.only([unitName, year])),
+    );
+
+    if (questions.length > 0) {
+      // Find the maximum serial number
+      const maxSerialNumber = Math.max(...questions.map((q) => q.serialNumber));
+      const nextSerialNumber = maxSerialNumber + 1;
+      console.log(`Next serial number: ${nextSerialNumber}`);
+      return nextSerialNumber;
+    } else {
+      console.log('No existing entries, starting with serial number 1');
+      return 1;
+    }
+  } catch (error) {
+    console.error('Error in getNextSerialNumberInTransaction:', error);
+    throw error;
+  }
+};
+
+// Helper function to handle IDBRequest or Promise
+const handleRequest = (request) => {
+  if (request instanceof IDBRequest) {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => {
+        console.log('IDBRequest succeeded:', request.result);
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        console.error('IDBRequest failed:', request.error);
+        reject(request.error);
+      };
+    });
+  }
+  if (request instanceof Promise) {
+    return request
+      .then((result) => {
+        console.log('Promise resolved:', result);
+        return result;
+      })
+      .catch((error) => {
+        console.error('Promise rejected:', error);
+        throw error;
+      });
+  }
+  console.error('Unexpected request type:', request);
+  return Promise.reject(new Error('Unexpected request type'));
 };
 
 // add question to the pending changes

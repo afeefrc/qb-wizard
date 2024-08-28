@@ -15,6 +15,7 @@ import {
   updatePendingChange,
   deletePendingChange,
   applyPendingChange,
+  applyAllPendingChanges,
   // getSetting,
   getAllSettings,
   getAllReviewPanels,
@@ -49,6 +50,7 @@ interface AppContextProps {
   handleDeletePendingChange: (id: number) => Promise<void>;
   handleUpdateQuestion: (id: number, updatedQuestion: any) => Promise<void>;
   handleApplyPendingChange: (id: number) => Promise<void>;
+  handleApplyAllPendingChanges: () => Promise<void>;
   handleSaveSetting: (newSettings: any) => Promise<void>;
   handleAddExaminer: (newExaminer: any) => Promise<void>;
   handleDeleteExaminer: (id: number) => Promise<void>;
@@ -207,6 +209,14 @@ export function AppProvider({ children }: AppProviderProps) {
     setQuestions(allQuestions);
   }, []);
 
+  const handleApplyAllPendingChanges = useCallback(async () => {
+    await applyAllPendingChanges();
+    const allPendingChanges = await getPendingChanges();
+    setPendingChanges(allPendingChanges);
+    const allQuestions = await getQuestions();
+    setQuestions(allQuestions);
+  }, []);
+
   const handleDeleteQuestion = useCallback(
     async (deleteId: number, updatedChange: any) => {
       await deleteQuestion(deleteId, updatedChange);
@@ -346,6 +356,7 @@ export function AppProvider({ children }: AppProviderProps) {
       handleUpdatePendingChange,
       handleDeletePendingChange,
       handleApplyPendingChange,
+      handleApplyAllPendingChanges,
       handleSaveSetting,
       handleAddExaminer,
       handleDeleteExaminer,
@@ -373,6 +384,7 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeletePendingChange,
       // handleGetPendingChanges,
       handleApplyPendingChange,
+      handleApplyAllPendingChanges,
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,

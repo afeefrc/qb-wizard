@@ -32,6 +32,7 @@ export {
   deletePendingChange,
   getPendingChanges,
   applyPendingChange,
+  applyAllPendingChanges,
 } from './questionBank';
 
 export { saveSetting, getSetting, getAllSettings } from './stationSettings';

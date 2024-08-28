@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { Button, Table, Collapse, Tag, Popconfirm } from 'antd';
+import { Button, Table, Collapse, Tag, Popconfirm, Typography } from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
 import {
   EditTwoTone,
@@ -13,6 +13,8 @@ import AddQuestionModal from './AddQuestionModal';
 
 import { AppContext } from '../../context/AppContext';
 
+const { Text } = Typography;
+
 interface QuestionBankEditTaskProps {
   unitName: string;
 }
@@ -25,6 +27,7 @@ interface ColumnDataType {
   marks: number;
   questionType: string;
   difficultyLevel: string;
+  answerList?: string[];
 }
 
 const sampleData = {
@@ -54,6 +57,31 @@ const onChange: TableProps<ColumnDataType>['onChange'] = (
   console.log('params', pagination, filters, sorter, extra);
 };
 
+const renderQuestionContent = (text: string, record: ColumnDataType) => {
+  if (record.questionType === 'mcq' && record.answerList) {
+    return (
+      <>
+        <Text>{text}</Text>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            marginTop: '2px',
+            paddingLeft: '20px',
+          }}
+        >
+          {record.answerList.map((answer: string, index: number) => (
+            <div key={index} style={{ width: '50%', padding: '0' }}>
+              <Text>{`${String.fromCharCode(65 + index)}. ${answer}`}</Text>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+  return <Text>{text}</Text>;
+};
+
 function QuestionBankEditTask({
   unitName = '',
 }: QuestionBankEditTaskProps): React.ReactElement {
@@ -67,6 +95,7 @@ function QuestionBankEditTask({
     handleUpdatePendingChange,
     handleDeletePendingChange,
     handleApplyPendingChange,
+    handleApplyAllPendingChanges,
     syllabusSections,
   } = appContext || {};
 
@@ -155,7 +184,7 @@ function QuestionBankEditTask({
       title: 'Question',
       dataIndex: 'questionText',
       key: 'questionText',
-      width: '60%',
+      width: '40%',
       render: (text: string, record: ColumnDataType) => (
         <div>
           {record.isDeleted ? (
@@ -207,7 +236,9 @@ function QuestionBankEditTask({
                   Undo Delete
                 </Button>
               </div>
-              <div style={{ textDecoration: 'line-through' }}>{text}</div>
+              <div style={{ textDecoration: 'line-through' }}>
+                {renderQuestionContent(text, record)}
+              </div>
             </div>
           ) : (
             <>
@@ -217,7 +248,7 @@ function QuestionBankEditTask({
                   <div
                     style={{
                       display: 'flex',
-                      justifyContent: 'flex-end',
+                      justifyContent: 'flex-start',
                       marginBottom: '5px',
                       gap: '5px',
                     }}
@@ -285,7 +316,7 @@ function QuestionBankEditTask({
                   </div>
                 )}
                 <div style={{ fontSize: '16px', fontWeight: '400' }}>
-                  {text}
+                  {renderQuestionContent(text, record)}
                 </div>
                 {record.status && record.status !== 'original' ? (
                   <div
@@ -342,7 +373,7 @@ function QuestionBankEditTask({
       title: 'Answer key',
       dataIndex: 'answerText',
       key: 'answerText',
-      width: '30%',
+      width: '25%',
     },
     {
       title: 'Marks',
@@ -358,8 +389,17 @@ function QuestionBankEditTask({
       dataIndex: 'questionType',
       key: 'questionType',
       width: '10%',
-      filters: [{ text: 'MCQ', value: 'MCQ' }],
-      onFilter: (value: any, record: any) => record.questionType === value,
+      filters: [
+        { text: 'One Word', value: 'oneWord' },
+        { text: 'MCQ', value: 'mcq' },
+        { text: 'Short Answer', value: 'shortAnswer' },
+        { text: 'Long Answer', value: 'longAnswer' },
+        { text: 'True/False', value: 'trueFalse' },
+        { text: 'Fill in the Blanks', value: 'fillInTheBlanks' },
+        { text: 'Match the Following', value: 'matchTheFollowing' },
+      ],
+      onFilter: (value: string, record: ColumnDataType) =>
+        record.questionType.toLowerCase() === value.toLowerCase(),
     },
     {
       title: 'Difficulty Level',
@@ -528,6 +568,9 @@ function QuestionBankEditTask({
         flexDirection: 'column',
       }}
     >
+      <Button type="primary" onClick={handleApplyAllPendingChanges}>
+        Apply all pending changes
+      </Button>
       <AddQuestionModal
         visible={isModalVisible}
         onCancel={handleCancel}
@@ -559,6 +602,8 @@ function QuestionBankEditTask({
               <Table
                 dataSource={section.questions}
                 columns={columns}
+                // scroll={{ x: 'max-content', y: 400 }}
+                bordered
                 rowKey="id"
                 onChange={onChange}
                 showSorterTooltip={{ target: 'sorter-icon' }}
