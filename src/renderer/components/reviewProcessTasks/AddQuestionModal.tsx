@@ -29,7 +29,7 @@ function AddQuestionModal({
       shortAnswer: ['questionText', 'answerText', 'marks'],
       longAnswer: ['questionText', 'answerText', 'marks'],
       trueFalse: ['questionText', 'trueAnswer', 'answerText', 'marks'],
-      fillInTheBlanks: ['questionText', 'answers', 'marks'],
+      fillInTheBlanks: ['questionText', 'answerList', 'marks'],
       matchTheFollowing: ['questionText', 'matchPairs', 'marks'],
     };
 
@@ -316,11 +316,11 @@ function AddQuestionModal({
               <Input.TextArea placeholder="The capital of France is _." />
             </Form.Item>
             <Form.List
-              name="answers"
+              name="answerList"
               rules={[
                 {
-                  validator: async (_, answers) => {
-                    if (!answers || answers.length < 1) {
+                  validator: async (_, answerList) => {
+                    if (!answerList || answerList.length < 1) {
                       return Promise.reject(
                         new Error('At least one answer is required'),
                       );

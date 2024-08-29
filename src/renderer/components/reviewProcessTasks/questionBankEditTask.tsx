@@ -1,15 +1,22 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { Button, Table, Collapse, Tag, Popconfirm, Typography } from 'antd';
+import {
+  Button,
+  Table,
+  Collapse,
+  Tag,
+  Popconfirm,
+  Typography,
+  Switch,
+} from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
 import {
   EditTwoTone,
-  SaveTwoTone,
-  LinkOutlined,
   PlusSquareTwoTone,
   DeleteTwoTone,
 } from '@ant-design/icons';
 import ExpandedRowEditor from './ExpandedRowEditor';
 import AddQuestionModal from './AddQuestionModal';
+import LinkSimilarQuestionsDrawer from './LinkSimilarQuestionsDrawer';
 
 import { AppContext } from '../../context/AppContext';
 
@@ -28,25 +35,11 @@ interface ColumnDataType {
   questionType: string;
   difficultyLevel: string;
   answerList?: string[];
+  trueAnswer?: boolean;
+  correctOption?: string;
+  matchPairs?: Array<{ item: string; match: string }>;
+  mandatory?: boolean;
 }
-
-const sampleData = {
-  type: 'update',
-  data: {
-    unitName: 'ADC',
-    marks: 1,
-    questionType: 'MCQ',
-    syllabusSectionId: '03a02c8e-79bd-4544-926e-30a291ecfa96',
-    questionText: 'What is the square root of 144?',
-    answerText: '12',
-    mandatory: true,
-    difficultyLevel: 'medium',
-    moduleNumber: 1,
-    comments: 'This is a sample comment',
-    isDeleted: false,
-    isReviewed: false,
-  },
-};
 
 const onChange: TableProps<ColumnDataType>['onChange'] = (
   pagination,
@@ -61,7 +54,7 @@ const renderQuestionContent = (text: string, record: ColumnDataType) => {
   if (record.questionType === 'mcq' && record.answerList) {
     return (
       <>
-        <Text>{text}</Text>
+        <Text style={{ fontSize: '16px', fontWeight: 400 }}>{text}</Text>
         <div
           style={{
             display: 'flex',
@@ -72,14 +65,72 @@ const renderQuestionContent = (text: string, record: ColumnDataType) => {
         >
           {record.answerList.map((answer: string, index: number) => (
             <div key={index} style={{ width: '50%', padding: '0' }}>
-              <Text>{`${String.fromCharCode(65 + index)}. ${answer}`}</Text>
+              <Text style={{ fontSize: '14px', fontWeight: 400 }}>
+                {`${String.fromCharCode(65 + index)}. ${answer}`}
+              </Text>
             </div>
           ))}
         </div>
       </>
     );
   }
-  return <Text>{text}</Text>;
+  return <Text style={{ fontSize: '16px', fontWeight: 400 }}>{text}</Text>;
+};
+
+const renderAnswerKey = (text: string, record: ColumnDataType) => {
+  const answerStyle = { fontSize: '16px', fontWeight: 400 };
+
+  switch (record.questionType) {
+    case 'mcq':
+      if (record.answerList && record.correctOption !== undefined) {
+        const correctIndex = parseInt(record.correctOption);
+        return (
+          <Text style={answerStyle}>
+            {String.fromCharCode(65 + correctIndex)}.{' '}
+            {record.answerList[correctIndex] || 'N/A'}
+          </Text>
+        );
+      }
+      return <Text style={answerStyle}>{text}</Text>;
+    case 'trueFalse':
+      return (
+        <Text style={answerStyle}>
+          {record.trueAnswer ? 'True' : `False, ${record.answerText}`}
+        </Text>
+      );
+    case 'matchTheFollowing':
+      return (
+        <ul style={{ paddingLeft: '0px', margin: 0 }}>
+          {record.matchPairs?.map((pair, index) => (
+            <li key={index}>
+              <Text style={answerStyle}>
+                {pair.item} ==&gt; {pair.match}
+              </Text>
+            </li>
+          ))}
+        </ul>
+      );
+    case 'fillInTheBlanks':
+      return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0px' }}>
+          {record.answerList?.map((answer, index) => (
+            <Text
+              key={index}
+              style={{
+                ...answerStyle,
+                padding: '2px',
+                borderRadius: '4px',
+              }}
+            >
+              {answer}
+              {index < record.answerList.length - 1 && '  ,'}
+            </Text>
+          ))}
+        </div>
+      );
+    default:
+      return <Text style={answerStyle}>{text}</Text>;
+  }
 };
 
 function QuestionBankEditTask({
@@ -108,17 +159,6 @@ function QuestionBankEditTask({
 
   console.log('pendingChanges', pendingChanges);
   console.log('questions', questions);
-  console.log('syllabusSections', filteredSyllabusSections);
-
-  // const handleAddSampleData = () => {
-  //   handleAddQuestion(sampleData.data);
-  // };
-
-  // const handleUpdateQuestions = () => {
-  //   if (pendingChanges && pendingChanges.length > 0 && pendingChanges[0].id) {
-  //     handleApplyPendingChange(pendingChanges[0].id);
-  //   }
-  // };
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
 
@@ -130,26 +170,162 @@ function QuestionBankEditTask({
     );
   };
 
-  const expandedRowRender = (record: ColumnDataType) => (
-    <ExpandedRowEditor
-      record={record}
-      onSave={(updatedRecord) => {
-        // Handle saving the updated record
-        console.log('Saving updated record:', updatedRecord);
-        // Update the record using AppContext functions
-        const existingChange = pendingChanges.find(
-          (change) => change.data.id === updatedRecord.id,
-        );
-        if (existingChange) {
-          handleUpdatePendingChange(existingChange.id, { data: updatedRecord });
-        } else {
-          handleAddPendingChange({ type: 'update', data: updatedRecord });
-        }
-        toggleExpand(record);
-      }}
-      onCancel={() => toggleExpand(record)}
-    />
+  const groupedQuestions = useMemo(() => {
+    const filtered =
+      questions?.filter((q) => q.unitName === unitName && !q.isDeleted) || [];
+    const pendingChangesMap = new Map(
+      pendingChanges?.map((change) => [change.data.id, change.data]) || [],
+    );
+
+    const mergedQuestions = filtered.map((q) => {
+      const pendingQuestion = pendingChangesMap.get(q.id);
+      return pendingQuestion
+        ? { ...pendingQuestion, status: 'edited' }
+        : { ...q, status: 'original' };
+    });
+
+    const newQuestions = Array.from(pendingChangesMap.values())
+      .filter(
+        (pendingQuestion) =>
+          pendingQuestion.unitName === unitName &&
+          !filtered.some((q) => q.id === pendingQuestion.id),
+      )
+      .map((q) => ({ ...q, status: 'new' }));
+
+    const allQuestions = [...mergedQuestions, ...newQuestions];
+
+    return filteredSyllabusSections.map((section) => ({
+      ...section,
+      questions: allQuestions.filter((q) => q.syllabusSectionId === section.id),
+    }));
+  }, [questions, pendingChanges, filteredSyllabusSections, unitName]);
+
+  // this is to filter out the deleted questions. then pass it to the LinkSimilarQuestionsDrawer
+  const filteredGroupedQuestions = useMemo(() => {
+    return groupedQuestions.map((section) => ({
+      ...section,
+      questions: section.questions.filter((q) => !q.isDeleted),
+    }));
+  }, [groupedQuestions]);
+
+  const expandedRowRender = (record: ColumnDataType) => {
+    const updatedRecord =
+      groupedQuestions
+        .flatMap((section) => section.questions)
+        .find((q) => q.id === record.id) || record;
+
+    // Ensure the record has the correct structure for MCQ questions
+    const preparedRecord = {
+      ...updatedRecord,
+      answerList:
+        updatedRecord.questionType === 'mcq' ||
+        updatedRecord.questionType === 'fillInTheBlanks'
+          ? updatedRecord.answerList || []
+          : undefined,
+      correctOption:
+        updatedRecord.questionType === 'mcq'
+          ? updatedRecord.correctOption
+          : undefined,
+    };
+
+    console.log('Prepared record for ExpandedRowEditor:', preparedRecord);
+
+    return (
+      <ExpandedRowEditor
+        record={preparedRecord}
+        onSave={(updatedRecord) => {
+          // Update the record using AppContext functions
+          const existingChange = pendingChanges.find(
+            (change) => change.data.id === updatedRecord.id,
+          );
+          if (existingChange) {
+            handleUpdatePendingChange(existingChange.id, {
+              data: updatedRecord,
+            });
+          } else {
+            handleAddPendingChange({ type: 'update', data: updatedRecord });
+          }
+          toggleExpand(record);
+        }}
+        onCancel={() => toggleExpand(record)}
+      />
+    );
+  };
+
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(
+    null,
   );
+
+  const showDrawer = (questionId: string) => {
+    setCurrentQuestionId(questionId);
+    setIsDrawerVisible(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerVisible(false);
+    setCurrentQuestionId(null);
+  };
+
+  // this is to link the questions with reciprocity ensured
+  // const handleLinkQuestions = (linkedQuestionIds: string[]) => {
+  //   if (currentQuestionId) {
+  //     // Update the current question
+  //     const updateQuestion = (questionId: string, linkedIds: string[]) => {
+  //       const existingChange = pendingChanges.find(
+  //         (change) => change.data.id === questionId,
+  //       );
+  //       const questionToUpdate =
+  //         existingChange?.data || questions.find((q) => q.id === questionId);
+
+  //       if (!questionToUpdate) return;
+
+  //       const updatedQuestion = {
+  //         ...questionToUpdate,
+  //         linkedQuestion: Array.from(
+  //           new Set([...(questionToUpdate.linkedQuestion || []), ...linkedIds]),
+  //         ),
+  //       };
+
+  //       if (existingChange) {
+  //         handleUpdatePendingChange(existingChange.id, {
+  //           data: updatedQuestion,
+  //         });
+  //       } else {
+  //         handleAddPendingChange({ type: 'update', data: updatedQuestion });
+  //       }
+  //     };
+
+  //     // Update the current question
+  //     updateQuestion(currentQuestionId, linkedQuestionIds);
+
+  //     // Update all linked questions
+  //     linkedQuestionIds.forEach((linkedId) => {
+  //       if (linkedId !== currentQuestionId) {
+  //         updateQuestion(linkedId, [currentQuestionId]);
+  //       }
+  //     });
+  //   }
+  // };
+
+  const handleLinkQuestions = (linkedQuestionIds: string[]) => {
+    if (currentQuestionId) {
+      const existingChange = pendingChanges.find(
+        (change) => change.data.id === currentQuestionId,
+      );
+      const updatedQuestion = {
+        ...(existingChange?.data ||
+          questions.find((q) => q.id === currentQuestionId)),
+        linkedQuestion: linkedQuestionIds,
+      };
+
+      if (existingChange) {
+        handleUpdatePendingChange(existingChange.id, { data: updatedQuestion });
+      } else {
+        handleAddPendingChange({ type: 'update', data: updatedQuestion });
+      }
+    }
+  };
 
   const columns: TableColumnsType<ColumnDataType> = [
     // {
@@ -198,6 +374,7 @@ function QuestionBankEditTask({
               >
                 <Tag
                   color="red"
+                  bordered={false}
                   style={{
                     fontSize: '12px',
                     fontWeight: 'lighter',
@@ -328,6 +505,7 @@ function QuestionBankEditTask({
                   >
                     <Tag
                       color={record.status === 'edited' ? 'blue' : 'green'}
+                      bordered={false}
                       style={{
                         fontSize: '12px',
                         fontWeight: 'lighter',
@@ -374,6 +552,7 @@ function QuestionBankEditTask({
       dataIndex: 'answerText',
       key: 'answerText',
       width: '25%',
+      render: renderAnswerKey,
     },
     {
       title: 'Marks',
@@ -383,6 +562,9 @@ function QuestionBankEditTask({
       sortDirections: ['ascend', 'descend'],
       defaultSortOrder: 'ascend',
       sorter: (a: any, b: any) => a.marks - b.marks,
+      render: (marks: number) => (
+        <Text style={{ fontSize: '16px', fontWeight: 400 }}>{marks}</Text>
+      ),
     },
     {
       title: 'Question Type',
@@ -400,6 +582,18 @@ function QuestionBankEditTask({
       ],
       onFilter: (value: string, record: ColumnDataType) =>
         record.questionType.toLowerCase() === value.toLowerCase(),
+      render: (questionType: string) => {
+        const typeMap: { [key: string]: string } = {
+          oneWord: 'One Word',
+          mcq: 'MCQ',
+          shortAnswer: 'Short Answer',
+          longAnswer: 'Long Answer',
+          trueFalse: 'True/False',
+          fillInTheBlanks: 'Fill in the Blanks',
+          matchTheFollowing: 'Match the Following',
+        };
+        return typeMap[questionType] || questionType;
+      },
     },
     {
       title: 'Difficulty Level',
@@ -412,6 +606,22 @@ function QuestionBankEditTask({
         { text: 'Hard', value: 'hard' },
       ],
       onFilter: (value: any, record: any) => record.difficultyLevel === value,
+      render: (difficultyLevel: string) => {
+        const colorMap: { [key: string]: string } = {
+          easy: 'green',
+          medium: 'orange',
+          hard: 'red',
+        };
+        return (
+          <Tag
+            color={colorMap[difficultyLevel.toLowerCase()] || 'default'}
+            bordered={false}
+            style={{ fontSize: '14px', padding: '2px 8px' }}
+          >
+            {difficultyLevel}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Action',
@@ -426,57 +636,11 @@ function QuestionBankEditTask({
               gap: '8px',
             }}
           >
-            {/* <div
-              style={{
-                display: 'flex',
-                width: '100%',
-                justifyContent: 'space-evenly',
-              }}
-            >
-              <Button
-                size="small"
-                onClick={() => toggleExpand(record)}
-                style={{ boxShadow: 'none' }}
-              >
-                {expandedRowKeys.includes(record.id) ? (
-                  <span>
-                    <SaveTwoTone twoToneColor="#eb2f96" /> Save
-                  </span>
-                ) : (
-                  <span>
-                    <EditTwoTone twoToneColor="#eb2f96" /> Edit
-                  </span>
-                )}
-              </Button>
-              <Button
-                size="small"
-                onClick={() => {
-                  const existingChange = pendingChanges.find(
-                    (change) => change.data.id === record.id,
-                  );
-                  if (existingChange) {
-                    handleUpdatePendingChange(existingChange.id, {
-                      data: { ...existingChange.data, isDeleted: true },
-                    });
-                  } else {
-                    handleAddPendingChange({
-                      type: 'delete',
-                      data: { ...record, isDeleted: true },
-                    });
-                  }
-                }}
-                style={{ boxShadow: 'none' }}
-              >
-                <span>
-                  <DeleteTwoTone twoToneColor="#eb2f96" /> Delete
-                </span>
-              </Button>
-            </div> */}
             <Button
               size="small"
               type="link"
               ghost
-              onClick={() => {}}
+              onClick={() => showDrawer(record.id)}
               style={{
                 boxShadow: 'none',
                 fontStyle: 'italic',
@@ -497,6 +661,30 @@ function QuestionBankEditTask({
                 Link similar questions
               </span>
             </Button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Switch
+                size="small"
+                checked={record.mandatory}
+                onChange={(checked) => {
+                  const updatedRecord = { ...record, mandatory: checked };
+                  const existingChange = pendingChanges.find(
+                    (change) => change.data.id === record.id,
+                  );
+                  if (existingChange) {
+                    handleUpdatePendingChange(existingChange.id, {
+                      data: updatedRecord,
+                    });
+                  } else {
+                    handleAddPendingChange({
+                      type: 'update',
+                      data: updatedRecord,
+                    });
+                  }
+                }}
+                style={{ boxShadow: 'none' }}
+              />
+              <span style={{ fontSize: '12px' }}>Mandatory Question</span>
+            </div>
           </div>
         ),
     },
@@ -504,36 +692,6 @@ function QuestionBankEditTask({
 
   // const filteredQuestions =
   //   questions?.filter((q) => q.unitName === unitName) || [];
-
-  const groupedQuestions = useMemo(() => {
-    const filtered =
-      questions?.filter((q) => q.unitName === unitName && !q.isDeleted) || [];
-    const pendingChangesMap = new Map(
-      pendingChanges?.map((change) => [change.data.id, change.data]) || [],
-    );
-
-    const mergedQuestions = filtered.map((q) => {
-      const pendingQuestion = pendingChangesMap.get(q.id);
-      return pendingQuestion
-        ? { ...pendingQuestion, status: 'edited' }
-        : { ...q, status: 'original' };
-    });
-
-    const newQuestions = Array.from(pendingChangesMap.values())
-      .filter(
-        (pendingQuestion) =>
-          pendingQuestion.unitName === unitName &&
-          !filtered.some((q) => q.id === pendingQuestion.id),
-      )
-      .map((q) => ({ ...q, status: 'new' }));
-
-    const allQuestions = [...mergedQuestions, ...newQuestions];
-
-    return filteredSyllabusSections.map((section) => ({
-      ...section,
-      questions: allQuestions.filter((q) => q.syllabusSectionId === section.id),
-    }));
-  }, [questions, pendingChanges, filteredSyllabusSections, unitName]);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentSectionId, setCurrentSectionId] = useState<string | null>(null);
@@ -620,6 +778,19 @@ function QuestionBankEditTask({
           ))}
         </Collapse>
       </div>
+      <LinkSimilarQuestionsDrawer
+        visible={isDrawerVisible}
+        onClose={handleCloseDrawer}
+        groupedQuestions={filteredGroupedQuestions}
+        onLinkQuestions={handleLinkQuestions}
+        currentQuestionId={currentQuestionId || ''}
+        initialLinkedQuestions={
+          groupedQuestions
+            .flatMap((section) => section.questions)
+            .find((q) => q.id === currentQuestionId && !q.isDeleted)
+            ?.linkedQuestion || []
+        }
+      />
     </div>
   );
 }

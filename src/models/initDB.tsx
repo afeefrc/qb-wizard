@@ -14,6 +14,7 @@ export const EXAMINER_STORE_NAME = 'examiner-list';
 export const REVIEW_PANEL_STORE = 'review-panel';
 export const EXAMINER_ASSIGNMENT_STORE = 'examiner-assignment';
 export const SYLLABUS_SECTIONS_STORE = 'syllabus-sections';
+export const LINKED_QUESTIONS_STORE = 'linked-questions';
 
 export const initDB = async () => {
   return openDB(DB_NAME, DB_VERSION, {
@@ -94,6 +95,12 @@ export const initDB = async () => {
             '[development] Sample syllabus sections populated successfully',
           );
         }
+      }
+      if (!db.objectStoreNames.contains(LINKED_QUESTIONS_STORE)) {
+        db.createObjectStore(LINKED_QUESTIONS_STORE, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
       }
     },
   });

@@ -11,6 +11,7 @@ import {
 import {
   QUESTION_STORE_NAME,
   PENDING_CHANGES_STORE_NAME,
+  LINKED_QUESTIONS_STORE,
   initDB,
 } from './initDB';
 import { removeUncloneableProperties } from './utilFunctions';
@@ -158,17 +159,19 @@ export const applyAllPendingChanges = async () => {
     console.log('Database initialized');
 
     const tx = db.transaction(
-      [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME],
+      [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME, LINKED_QUESTIONS_STORE],
       'readwrite',
     );
     console.log('Transaction started');
 
     const pendingStore = tx.objectStore(PENDING_CHANGES_STORE_NAME);
     const questionStore = tx.objectStore(QUESTION_STORE_NAME);
+    const linkedQuestionsStore = tx.objectStore(LINKED_QUESTIONS_STORE);
 
     const changes = await handleRequest(pendingStore.getAll());
+    const linkedQuestions = await handleRequest(linkedQuestionsStore.getAll());
     console.log('Pending changes retrieved:', changes.length);
-
+    console.log('Linked questions retrieved:', linkedQuestions.length);
     const year = new Date().getFullYear();
 
     await changes.reduce(async (previousPromise, change) => {
@@ -201,6 +204,24 @@ export const applyAllPendingChanges = async () => {
       }
       await handleRequest(pendingStore.delete(change.id));
       console.log('Pending change deleted:', change.id);
+    }, Promise.resolve());
+
+    // apply linked questions
+    await linkedQuestions.reduce(async (previousPromise, linkedQuestion) => {
+      await previousPromise;
+      const sourceQuestion = await handleRequest(questionStore.get(linkedQuestion.questionId));
+      for (sourceQuestion) {
+        sourceQuestion.linkedQuestion = Array.from(new Set([...(sourceQuestion.linkedQuestion || []), ...linkedQuestion.linkedQuestionIds]));
+        await handleRequest(questionStore.put(sourceQuestion));
+        // update linked questions
+        for (const linkedQuestionId of linkedQuestion.linkedQuestionIds) {
+          const linkedQuestion = await handleRequest(questionStore.get(linkedQuestionId));
+          if (linkedQuestion) {
+            linkedQuestion.linkedQuestion = Array.from(new Set([...(linkedQuestion.linkedQuestion || []), ...linkedQuestion.linkedQuestionIds]));
+            await handleRequest(questionStore.put(linkedQuestion));
+          }
+        }
+      }
     }, Promise.resolve());
 
     await tx.done;
@@ -324,4 +345,36 @@ export const handleImageUpload = async (file) => {
     reader.onerror = reject;
     reader.readAsArrayBuffer(file);
   });
+};
+
+// Link questions
+export const addLinkedQuestions = async (questionId, linkedQuestionIds) => {
+  const db = await initDB();
+  const tx = db.transaction(LINKED_QUESTIONS_STORE, 'readwrite');
+  const store = tx.objectStore(LINKED_QUESTIONS_STORE);
+  await store.add({ questionId, linkedQuestionIds });
+  await tx.done;
+};
+
+export const getLinkedQuestions = async (questionId) => {
+  const db = await initDB();
+  const tx = db.transaction(LINKED_QUESTIONS_STORE, 'readonly');
+  const store = tx.objectStore(LINKED_QUESTIONS_STORE);
+  return store.get(questionId);
+};
+
+export const deleteLinkedQuestions = async (questionId) => {
+  const db = await initDB();
+  const tx = db.transaction(LINKED_QUESTIONS_STORE, 'readwrite');
+  const store = tx.objectStore(LINKED_QUESTIONS_STORE);
+  await store.delete(questionId);
+  await tx.done;
+};
+
+export const updateLinkedQuestions = async (questionId, linkedQuestionIds) => {
+  const db = await initDB();
+  const tx = db.transaction(LINKED_QUESTIONS_STORE, 'readwrite');
+  const store = tx.objectStore(LINKED_QUESTIONS_STORE);
+  await store.put({ questionId, linkedQuestionIds });
+  await tx.done;
 };
