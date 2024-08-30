@@ -16,6 +16,11 @@ import {
   deletePendingChange,
   applyPendingChange,
   applyAllPendingChanges,
+  // Linked questions
+  addLinkedQuestions,
+  getLinkedQuestions,
+  deleteLinkedQuestions,
+  updateLinkedQuestions,
   // getSetting,
   getAllSettings,
   getAllReviewPanels,
@@ -43,6 +48,7 @@ interface AppContextProps {
   questions: any[];
   settings: any;
   examiners: any[];
+  linkedQuestions: any[];
   handleDeleteQuestion: (deleteId: number, updatedChange: any) => Promise<void>;
   handleAddPendingChange: (change: any) => Promise<void>;
   handleGetPendingChanges: () => Promise<void>;
@@ -51,6 +57,16 @@ interface AppContextProps {
   handleUpdateQuestion: (id: number, updatedQuestion: any) => Promise<void>;
   handleApplyPendingChange: (id: number) => Promise<void>;
   handleApplyAllPendingChanges: () => Promise<void>;
+  handleAddLinkedQuestions: (newLinkedQuestions: {
+    questionId: string;
+    linkedQuestionIds: string[];
+  }) => Promise<void>;
+  handleGetLinkedQuestions: () => Promise<void>;
+  handleDeleteLinkedQuestions: (id: number) => Promise<void>;
+  handleUpdateLinkedQuestions: (
+    id: number,
+    updatedLinkedQuestions: { questionId: string; linkedQuestionIds: string[] },
+  ) => Promise<void>;
   handleSaveSetting: (newSettings: any) => Promise<void>;
   handleAddExaminer: (newExaminer: any) => Promise<void>;
   handleDeleteExaminer: (id: number) => Promise<void>;
@@ -85,6 +101,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [examinerAssignments, setExaminerAssignments] = useState<any[]>([]);
   const [syllabusSections, setSyllabusSections] = useState<any[]>([]);
   const [pendingChanges, setPendingChanges] = useState<any[]>([]);
+  const [linkedQuestions, setLinkedQuestions] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -161,6 +178,14 @@ export function AppProvider({ children }: AppProviderProps) {
     fetchPendingChanges();
   }, []);
 
+  useEffect(() => {
+    const fetchLinkedQuestions = async () => {
+      const allLinkedQuestions = await getLinkedQuestions();
+      setLinkedQuestions(allLinkedQuestions);
+    };
+    fetchLinkedQuestions();
+  }, []);
+
   // const handleAddExaminer = async (newExaminers) => {
   //   // Assuming you have a function to add examiners to the backend
   //   await addExaminer(newExaminers);
@@ -224,6 +249,42 @@ export function AppProvider({ children }: AppProviderProps) {
       setPendingChanges(allPendingChanges);
       // const allQuestions = await getQuestions();
       // setQuestions(allQuestions);
+    },
+    [],
+  );
+
+  const handleAddLinkedQuestions = useCallback(
+    async (newLinkedQuestions: {
+      questionId: string;
+      linkedQuestionIds: string[];
+    }) => {
+      await addLinkedQuestions(
+        newLinkedQuestions.questionId,
+        newLinkedQuestions.linkedQuestionIds,
+      );
+      const allLinkedQuestions = await getLinkedQuestions();
+      setLinkedQuestions(allLinkedQuestions);
+    },
+    [],
+  );
+
+  const handleDeleteLinkedQuestions = useCallback(async (id: number) => {
+    await deleteLinkedQuestions(id);
+    const allLinkedQuestions = await getLinkedQuestions();
+    setLinkedQuestions(allLinkedQuestions);
+  }, []);
+
+  const handleUpdateLinkedQuestions = useCallback(
+    async (
+      id: number,
+      updatedLinkedQuestions: {
+        questionId: string;
+        linkedQuestionIds: string[];
+      },
+    ) => {
+      await updateLinkedQuestions(id, updatedLinkedQuestions);
+      const allLinkedQuestions = await getLinkedQuestions();
+      setLinkedQuestions(allLinkedQuestions);
     },
     [],
   );
@@ -357,6 +418,10 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeletePendingChange,
       handleApplyPendingChange,
       handleApplyAllPendingChanges,
+      linkedQuestions,
+      handleAddLinkedQuestions,
+      handleDeleteLinkedQuestions,
+      handleUpdateLinkedQuestions,
       handleSaveSetting,
       handleAddExaminer,
       handleDeleteExaminer,
@@ -385,6 +450,10 @@ export function AppProvider({ children }: AppProviderProps) {
       // handleGetPendingChanges,
       handleApplyPendingChange,
       handleApplyAllPendingChanges,
+      linkedQuestions,
+      handleAddLinkedQuestions,
+      handleDeleteLinkedQuestions,
+      handleUpdateLinkedQuestions,
       handleAddExaminer,
       handleDeleteExaminer,
       handleUpdateExaminer,

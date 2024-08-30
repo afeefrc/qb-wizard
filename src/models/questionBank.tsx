@@ -169,60 +169,80 @@ export const applyAllPendingChanges = async () => {
     const linkedQuestionsStore = tx.objectStore(LINKED_QUESTIONS_STORE);
 
     const changes = await handleRequest(pendingStore.getAll());
-    const linkedQuestions = await handleRequest(linkedQuestionsStore.getAll());
     console.log('Pending changes retrieved:', changes.length);
-    console.log('Linked questions retrieved:', linkedQuestions.length);
     const year = new Date().getFullYear();
 
-    await changes.reduce(async (previousPromise, change) => {
-      await previousPromise;
-      console.log('Processing change:', change);
-      const updatedAt = new Date().toISOString();
+    await Promise.all(
+      changes.map(async (change) => {
+        console.log('Processing change:', change);
+        const updatedAt = new Date().toISOString();
 
-      if (change.type === 'add' || change.type === 'update') {
-        let updatedData = { ...change.data, updatedAt };
+        if (change.type === 'add' || change.type === 'update') {
+          let updatedData = { ...change.data, updatedAt };
 
-        if (change.type === 'add' || updatedData.serialNumber === undefined) {
-          const serialNumber = await getNextSerialNumberInTransaction(
-            questionStore,
-            change.data.unitName,
-            year,
+          if (change.type === 'add' || updatedData.serialNumber === undefined) {
+            const serialNumber = await getNextSerialNumberInTransaction(
+              questionStore,
+              change.data.unitName,
+              year,
+            );
+            updatedData = { ...updatedData, year, serialNumber };
+          }
+
+          await handleRequest(questionStore.put(updatedData));
+          console.log('Question added/updated:', updatedData);
+        } else if (change.type === 'delete') {
+          const question = await handleRequest(
+            questionStore.get(change.data.id),
           );
-          updatedData = { ...updatedData, year, serialNumber };
-        }
-
-        await handleRequest(questionStore.put(updatedData));
-        console.log('Question added/updated:', updatedData);
-      } else if (change.type === 'delete') {
-        const question = await handleRequest(questionStore.get(change.data.id));
-        if (question) {
-          await handleRequest(
-            questionStore.put({ ...question, isDeleted: true, updatedAt }),
-          );
-          console.log('Question marked as deleted:', change.data.id);
-        }
-      }
-      await handleRequest(pendingStore.delete(change.id));
-      console.log('Pending change deleted:', change.id);
-    }, Promise.resolve());
-
-    // apply linked questions
-    await linkedQuestions.reduce(async (previousPromise, linkedQuestion) => {
-      await previousPromise;
-      const sourceQuestion = await handleRequest(questionStore.get(linkedQuestion.questionId));
-      for (sourceQuestion) {
-        sourceQuestion.linkedQuestion = Array.from(new Set([...(sourceQuestion.linkedQuestion || []), ...linkedQuestion.linkedQuestionIds]));
-        await handleRequest(questionStore.put(sourceQuestion));
-        // update linked questions
-        for (const linkedQuestionId of linkedQuestion.linkedQuestionIds) {
-          const linkedQuestion = await handleRequest(questionStore.get(linkedQuestionId));
-          if (linkedQuestion) {
-            linkedQuestion.linkedQuestion = Array.from(new Set([...(linkedQuestion.linkedQuestion || []), ...linkedQuestion.linkedQuestionIds]));
-            await handleRequest(questionStore.put(linkedQuestion));
+          if (question) {
+            await handleRequest(
+              questionStore.put({ ...question, isDeleted: true, updatedAt }),
+            );
+            console.log('Question marked as deleted:', change.data.id);
           }
         }
+        await handleRequest(pendingStore.delete(change.id));
+        console.log('Pending change deleted:', change.id);
+      }),
+    );
+
+    // Apply linked questions
+    const linkedQuestions = await handleRequest(linkedQuestionsStore.getAll());
+    console.log('Linked questions retrieved:', linkedQuestions.length);
+
+    const linkMap = new Map();
+
+    // First pass: collect all links
+    linkedQuestions.forEach(({ questionId, linkedQuestionIds }) => {
+      if (!linkMap.has(questionId)) {
+        linkMap.set(questionId, new Set());
       }
-    }, Promise.resolve());
+      linkedQuestionIds.forEach((linkedId) => {
+        if (linkedId !== questionId) {
+          linkMap.get(questionId).add(linkedId);
+          if (!linkMap.has(linkedId)) {
+            linkMap.set(linkedId, new Set());
+          }
+          linkMap.get(linkedId).add(questionId);
+        }
+      });
+    });
+
+    // Convert Map to array and use Promise.all with map
+    await Promise.all(
+      Array.from(linkMap).map(async ([questionId, linkedIds]) => {
+        const question = await handleRequest(questionStore.get(questionId));
+        if (question) {
+          question.linkedQuestion = Array.from(linkedIds);
+          await handleRequest(questionStore.put(question));
+          console.log(`Updated links for question ${questionId}`);
+        }
+      }),
+    );
+
+    // Clear the linked questions store
+    await handleRequest(linkedQuestionsStore.clear());
 
     await tx.done;
     console.log('Transaction completed');
@@ -356,11 +376,11 @@ export const addLinkedQuestions = async (questionId, linkedQuestionIds) => {
   await tx.done;
 };
 
-export const getLinkedQuestions = async (questionId) => {
+export const getLinkedQuestions = async () => {
   const db = await initDB();
   const tx = db.transaction(LINKED_QUESTIONS_STORE, 'readonly');
   const store = tx.objectStore(LINKED_QUESTIONS_STORE);
-  return store.get(questionId);
+  return store.getAll();
 };
 
 export const deleteLinkedQuestions = async (questionId) => {
@@ -371,10 +391,16 @@ export const deleteLinkedQuestions = async (questionId) => {
   await tx.done;
 };
 
-export const updateLinkedQuestions = async (questionId, linkedQuestionIds) => {
+export const updateLinkedQuestions = async (
+  id: number,
+  {
+    questionId,
+    linkedQuestionIds,
+  }: { questionId: string; linkedQuestionIds: string[] },
+) => {
   const db = await initDB();
   const tx = db.transaction(LINKED_QUESTIONS_STORE, 'readwrite');
   const store = tx.objectStore(LINKED_QUESTIONS_STORE);
-  await store.put({ questionId, linkedQuestionIds });
+  await store.put({ id, questionId, linkedQuestionIds });
   await tx.done;
 };

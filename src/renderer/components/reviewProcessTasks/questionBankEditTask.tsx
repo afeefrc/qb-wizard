@@ -141,6 +141,10 @@ function QuestionBankEditTask({
     questions,
     handleAddPendingChange,
     pendingChanges,
+    linkedQuestions,
+    handleAddLinkedQuestions,
+    handleDeleteLinkedQuestions,
+    handleUpdateLinkedQuestions,
     handleAddQuestion,
     handleDeleteQuestion,
     handleUpdatePendingChange,
@@ -256,9 +260,32 @@ function QuestionBankEditTask({
   const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(
     null,
   );
+  const [initialLinkedQuestions, setInitialLinkedQuestions] = useState<
+    string[]
+  >([]);
 
   const showDrawer = (questionId: string) => {
     setCurrentQuestionId(questionId);
+
+    // Create the initialLinkedQuestions list
+    const currentQuestion = questions?.find(
+      (q) => q.id === questionId && !q.isDeleted,
+    );
+
+    const linkedQuestionIds = currentQuestion?.linkedQuestion || [];
+    const linkedQuestionsFromState = linkedQuestions?.[questionId] || [];
+
+    const combinedLinkedQuestions = Array.from(
+      new Set([...linkedQuestionIds, ...linkedQuestionsFromState]),
+    );
+
+    // Filter out any deleted questions from the combined list
+    const filteredLinkedQuestions = combinedLinkedQuestions.filter((id) => {
+      const linkedQuestion = questions?.find((q) => q.id === id);
+      return linkedQuestion && !linkedQuestion.isDeleted;
+    });
+
+    setInitialLinkedQuestions(filteredLinkedQuestions);
     setIsDrawerVisible(true);
   };
 
@@ -267,73 +294,33 @@ function QuestionBankEditTask({
     setCurrentQuestionId(null);
   };
 
-  // this is to link the questions with reciprocity ensured
-  // const handleLinkQuestions = (linkedQuestionIds: string[]) => {
-  //   if (currentQuestionId) {
-  //     // Update the current question
-  //     const updateQuestion = (questionId: string, linkedIds: string[]) => {
-  //       const existingChange = pendingChanges.find(
-  //         (change) => change.data.id === questionId,
-  //       );
-  //       const questionToUpdate =
-  //         existingChange?.data || questions.find((q) => q.id === questionId);
-
-  //       if (!questionToUpdate) return;
-
-  //       const updatedQuestion = {
-  //         ...questionToUpdate,
-  //         linkedQuestion: Array.from(
-  //           new Set([...(questionToUpdate.linkedQuestion || []), ...linkedIds]),
-  //         ),
-  //       };
-
-  //       if (existingChange) {
-  //         handleUpdatePendingChange(existingChange.id, {
-  //           data: updatedQuestion,
-  //         });
-  //       } else {
-  //         handleAddPendingChange({ type: 'update', data: updatedQuestion });
-  //       }
-  //     };
-
-  //     // Update the current question
-  //     updateQuestion(currentQuestionId, linkedQuestionIds);
-
-  //     // Update all linked questions
-  //     linkedQuestionIds.forEach((linkedId) => {
-  //       if (linkedId !== currentQuestionId) {
-  //         updateQuestion(linkedId, [currentQuestionId]);
-  //       }
-  //     });
-  //   }
-  // };
-
   const handleLinkQuestions = (linkedQuestionIds: string[]) => {
     if (currentQuestionId) {
-      const existingChange = pendingChanges.find(
-        (change) => change.data.id === currentQuestionId,
-      );
-      const updatedQuestion = {
-        ...(existingChange?.data ||
-          questions.find((q) => q.id === currentQuestionId)),
-        linkedQuestion: linkedQuestionIds,
-      };
+      console.log('currentQuestionId', currentQuestionId);
+      console.log('linkedQuestionIds', linkedQuestionIds);
 
-      if (existingChange) {
-        handleUpdatePendingChange(existingChange.id, { data: updatedQuestion });
+      // Find existing linked questions for the current question
+      const existingLinkedQuestions = linkedQuestions?.find(
+        (lq) => lq.questionId === currentQuestionId,
+      );
+
+      if (existingLinkedQuestions) {
+        // Update existing linked questions
+        handleUpdateLinkedQuestions(existingLinkedQuestions.id, {
+          questionId: currentQuestionId,
+          linkedQuestionIds,
+        });
       } else {
-        handleAddPendingChange({ type: 'update', data: updatedQuestion });
+        // Add new linked questions
+        handleAddLinkedQuestions({
+          questionId: currentQuestionId,
+          linkedQuestionIds,
+        });
       }
     }
   };
 
   const columns: TableColumnsType<ColumnDataType> = [
-    // {
-    //   title: 'S.No',
-    //   key: 'serial',
-    //   render: (_: any, __: any, index: number) => index + 1,
-    //   width: '5%',
-    // },
     {
       title: 'Question Id',
       dataIndex: 'id',
@@ -407,7 +394,6 @@ function QuestionBankEditTask({
                     padding: '0',
                     boxShadow: 'none',
                     fontStyle: 'italic',
-                    // fontSize: '12px',
                   }}
                 >
                   Undo Delete
@@ -626,7 +612,6 @@ function QuestionBankEditTask({
     {
       title: 'Action',
       key: 'action',
-      // width: '10%',
       render: (_: any, record: any) =>
         !record.isDeleted && (
           <div
@@ -689,9 +674,6 @@ function QuestionBankEditTask({
         ),
     },
   ];
-
-  // const filteredQuestions =
-  //   questions?.filter((q) => q.unitName === unitName) || [];
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentSectionId, setCurrentSectionId] = useState<string | null>(null);
@@ -760,7 +742,6 @@ function QuestionBankEditTask({
               <Table
                 dataSource={section.questions}
                 columns={columns}
-                // scroll={{ x: 'max-content', y: 400 }}
                 bordered
                 rowKey="id"
                 onChange={onChange}
@@ -784,12 +765,7 @@ function QuestionBankEditTask({
         groupedQuestions={filteredGroupedQuestions}
         onLinkQuestions={handleLinkQuestions}
         currentQuestionId={currentQuestionId || ''}
-        initialLinkedQuestions={
-          groupedQuestions
-            .flatMap((section) => section.questions)
-            .find((q) => q.id === currentQuestionId && !q.isDeleted)
-            ?.linkedQuestion || []
-        }
+        initialLinkedQuestions={initialLinkedQuestions}
       />
     </div>
   );

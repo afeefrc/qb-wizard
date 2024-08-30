@@ -25,7 +25,7 @@ function LinkSimilarQuestionsDrawer({
     initialLinkedQuestions,
   );
 
-  console.log(selectedQuestions);
+  console.log('selectedQuestions', selectedQuestions);
   const columns = [
     {
       title: 'Question',

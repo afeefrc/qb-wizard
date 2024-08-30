@@ -33,6 +33,10 @@ export {
   getPendingChanges,
   applyPendingChange,
   applyAllPendingChanges,
+  addLinkedQuestions,
+  getLinkedQuestions,
+  deleteLinkedQuestions,
+  updateLinkedQuestions,
 } from './questionBank';
 
 export { saveSetting, getSetting, getAllSettings } from './stationSettings';
