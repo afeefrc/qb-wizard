@@ -152,133 +152,6 @@ export const applyPendingChange = async (changeId) => {
   await tx.done;
 };
 
-// Apply all pending changes to the question-bank
-export const applyAllPendingChanges = async () => {
-  try {
-    const db = await initDB();
-    console.log('Database initialized');
-
-    const tx = db.transaction(
-      [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME, LINKED_QUESTIONS_STORE],
-      'readwrite',
-    );
-    console.log('Transaction started');
-
-    const pendingStore = tx.objectStore(PENDING_CHANGES_STORE_NAME);
-    const questionStore = tx.objectStore(QUESTION_STORE_NAME);
-    const linkedQuestionsStore = tx.objectStore(LINKED_QUESTIONS_STORE);
-
-    const changes = await handleRequest(pendingStore.getAll());
-    console.log('Pending changes retrieved:', changes.length);
-    const year = new Date().getFullYear();
-
-    await Promise.all(
-      changes.map(async (change) => {
-        console.log('Processing change:', change);
-        const updatedAt = new Date().toISOString();
-
-        if (change.type === 'add' || change.type === 'update') {
-          let updatedData = { ...change.data, updatedAt };
-
-          if (change.type === 'add' || updatedData.serialNumber === undefined) {
-            const serialNumber = await getNextSerialNumberInTransaction(
-              questionStore,
-              change.data.unitName,
-              year,
-            );
-            updatedData = { ...updatedData, year, serialNumber };
-          }
-
-          await handleRequest(questionStore.put(updatedData));
-          console.log('Question added/updated:', updatedData);
-        } else if (change.type === 'delete') {
-          const question = await handleRequest(
-            questionStore.get(change.data.id),
-          );
-          if (question) {
-            await handleRequest(
-              questionStore.put({ ...question, isDeleted: true, updatedAt }),
-            );
-            console.log('Question marked as deleted:', change.data.id);
-          }
-        }
-        await handleRequest(pendingStore.delete(change.id));
-        console.log('Pending change deleted:', change.id);
-      }),
-    );
-
-    // Apply linked questions
-    const linkedQuestions = await handleRequest(linkedQuestionsStore.getAll());
-    console.log('Linked questions retrieved:', linkedQuestions.length);
-
-    const linkMap = new Map();
-
-    // First pass: collect all links
-    linkedQuestions.forEach(({ questionId, linkedQuestionIds }) => {
-      if (!linkMap.has(questionId)) {
-        linkMap.set(questionId, new Set());
-      }
-      linkedQuestionIds.forEach((linkedId) => {
-        if (linkedId !== questionId) {
-          linkMap.get(questionId).add(linkedId);
-          if (!linkMap.has(linkedId)) {
-            linkMap.set(linkedId, new Set());
-          }
-          linkMap.get(linkedId).add(questionId);
-        }
-      });
-    });
-
-    // Convert Map to array and use Promise.all with map
-    await Promise.all(
-      Array.from(linkMap).map(async ([questionId, linkedIds]) => {
-        const question = await handleRequest(questionStore.get(questionId));
-        if (question) {
-          question.linkedQuestion = Array.from(linkedIds);
-          await handleRequest(questionStore.put(question));
-          console.log(`Updated links for question ${questionId}`);
-        }
-      }),
-    );
-
-    // Clear the linked questions store
-    await handleRequest(linkedQuestionsStore.clear());
-
-    await tx.done;
-    console.log('Transaction completed');
-  } catch (error) {
-    console.error('Error in applyAllPendingChanges:', error);
-    throw error;
-  }
-};
-
-// Helper function to get the next serial number within the current transaction
-const getNextSerialNumberInTransaction = async (store, unitName, year) => {
-  try {
-    const index = store.index('unitNameYearIndex');
-    console.log(`Getting next serial number for ${unitName}, ${year}`);
-
-    // Get all questions for the given unit and year
-    const questions = await handleRequest(
-      index.getAll(IDBKeyRange.only([unitName, year])),
-    );
-
-    if (questions.length > 0) {
-      // Find the maximum serial number
-      const maxSerialNumber = Math.max(...questions.map((q) => q.serialNumber));
-      const nextSerialNumber = maxSerialNumber + 1;
-      console.log(`Next serial number: ${nextSerialNumber}`);
-      return nextSerialNumber;
-    } else {
-      console.log('No existing entries, starting with serial number 1');
-      return 1;
-    }
-  } catch (error) {
-    console.error('Error in getNextSerialNumberInTransaction:', error);
-    throw error;
-  }
-};
-
 // Helper function to handle IDBRequest or Promise
 const handleRequest = (request) => {
   if (request instanceof IDBRequest) {
@@ -306,6 +179,155 @@ const handleRequest = (request) => {
   }
   console.error('Unexpected request type:', request);
   return Promise.reject(new Error('Unexpected request type'));
+};
+
+// Helper function to get the next serial number within the current transaction
+const getNextSerialNumberInTransaction = async (
+  store,
+  unitName,
+  year,
+  lastAssignedSerialNumber,
+) => {
+  try {
+    const index = store.index('unitNameYearIndex');
+    console.log(`Getting next serial number for ${unitName}, ${year}`);
+
+    if (lastAssignedSerialNumber) {
+      console.log(
+        `Using last assigned serial number: ${lastAssignedSerialNumber + 1}`,
+      );
+      return lastAssignedSerialNumber + 1;
+    }
+
+    // Get all questions for the given unit and year
+    const questions = await handleRequest(
+      index.getAll(IDBKeyRange.only([unitName, year])),
+    );
+
+    if (questions.length > 0) {
+      // Find the maximum serial number
+      const maxSerialNumber = Math.max(...questions.map((q) => q.serialNumber));
+      const nextSerialNumber = maxSerialNumber + 1;
+      console.log(`Next serial number: ${nextSerialNumber}`);
+      return nextSerialNumber;
+    } else {
+      console.log('No existing entries, starting with serial number 1');
+      return 1;
+    }
+  } catch (error) {
+    console.error('Error in getNextSerialNumberInTransaction:', error);
+    throw error;
+  }
+};
+
+// Apply all pending changes to the question-bank
+export const applyAllPendingChanges = async () => {
+  try {
+    const db = await initDB();
+    console.log('Database initialized');
+
+    const tx = db.transaction(
+      [PENDING_CHANGES_STORE_NAME, QUESTION_STORE_NAME, LINKED_QUESTIONS_STORE],
+      'readwrite',
+    );
+    console.log('Transaction started');
+
+    const pendingStore = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+    const questionStore = tx.objectStore(QUESTION_STORE_NAME);
+    const linkedQuestionsStore = tx.objectStore(LINKED_QUESTIONS_STORE);
+
+    const changes = await handleRequest(pendingStore.getAll());
+    console.log('Pending changes retrieved:', changes.length);
+    const year = new Date().getFullYear();
+
+    let lastAssignedSerialNumber = 0;
+
+    for (const change of changes) {
+      console.log('Processing change:', change);
+      const updatedAt = new Date().toISOString();
+
+      if (change.type === 'add' || change.type === 'update') {
+        let updatedData = { ...change.data, updatedAt };
+
+        if (change.type === 'add' || updatedData.serialNumber === undefined) {
+          const serialNumber = await getNextSerialNumberInTransaction(
+            questionStore,
+            change.data.unitName,
+            year,
+            lastAssignedSerialNumber,
+          );
+          updatedData = { ...updatedData, year, serialNumber };
+          lastAssignedSerialNumber = serialNumber;
+        }
+
+        await handleRequest(questionStore.put(updatedData));
+        console.log('Question added/updated:', updatedData);
+      } else if (change.type === 'delete') {
+        const question = await handleRequest(questionStore.get(change.data.id));
+        if (question) {
+          await handleRequest(
+            questionStore.put({ ...question, isDeleted: true, updatedAt }),
+          );
+          console.log('Question marked as deleted:', change.data.id);
+        }
+      }
+      await handleRequest(pendingStore.delete(change.id));
+      console.log('Pending change deleted:', change.id);
+    }
+
+    // Apply linked questions
+    const linkedQuestions = await handleRequest(linkedQuestionsStore.getAll());
+    console.log('Linked questions retrieved:', linkedQuestions.length);
+
+    const linkMap = new Map();
+
+    // First pass: collect all links
+    linkedQuestions.forEach(({ questionId, linkedQuestionIds }) => {
+      // Set main links (replacing existing, including empty arrays)
+      linkMap.set(questionId, new Set(linkedQuestionIds));
+
+      // Add reverse links (additive), but only if linkedQuestionIds is not empty
+      if (linkedQuestionIds.length > 0) {
+        linkedQuestionIds.forEach((linkedId) => {
+          if (linkedId !== questionId) {
+            if (!linkMap.has(linkedId)) {
+              linkMap.set(linkedId, new Set());
+            }
+            linkMap.get(linkedId).add(questionId);
+          }
+        });
+      }
+    });
+
+    // Update questions with their links
+    await Promise.all(
+      Array.from(linkMap).map(async ([questionId, linkedIds]) => {
+        const question = await handleRequest(questionStore.get(questionId));
+        if (question) {
+          // For main links, directly set the new links (including empty arrays)
+          if (linkedQuestions.some((lq) => lq.questionId === questionId)) {
+            question.linkedQuestion = Array.from(linkedIds);
+          } else {
+            // For reverse links, merge with existing links
+            const existingLinks = new Set(question.linkedQuestion || []);
+            const updatedLinks = new Set([...existingLinks, ...linkedIds]);
+            question.linkedQuestion = Array.from(updatedLinks);
+          }
+          await handleRequest(questionStore.put(question));
+          console.log(`Updated links for question ${questionId}`);
+        }
+      }),
+    );
+
+    // Clear the linked questions store
+    await handleRequest(linkedQuestionsStore.clear());
+
+    await tx.done;
+    console.log('Transaction completed');
+  } catch (error) {
+    console.error('Error in applyAllPendingChanges:', error);
+    throw error;
+  }
 };
 
 // add question to the pending changes

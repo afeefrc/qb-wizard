@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Empty, Modal, Button, Tabs, Card, Button, Tag } from 'antd';
+import { Empty, Modal, Button, Tabs, Card, Button, Tag, Switch } from 'antd';
 import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import SyllabusSectionList from './SyllabusSectionList';
@@ -29,7 +29,8 @@ function ReviewProcessPage(): React.ReactElement {
   const state = location.state as LocationState;
 
   const appContext = React.useContext(AppContext);
-  const { examiners, syllabusSections } = appContext || {};
+  const { examiners, syllabusSections, handleUpdateReviewPanel } =
+    appContext || {};
   const matchingChairman = examiners.find(
     (examiner: any) => examiner.id === state.renderContent.chairman,
   );
@@ -51,6 +52,7 @@ function ReviewProcessPage(): React.ReactElement {
   };
 
   const [isModalOpen, setIsModalOpen] = useState(true);
+  const [reviewStatus, setReviewStatus] = useState(state.renderContent.status);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -138,7 +140,29 @@ function ReviewProcessPage(): React.ReactElement {
                 </div>
                 <div>
                   Status:{' '}
-                  {<Tag color="processing">{state.renderContent.status}</Tag>}
+                  {reviewStatus === 'In Progress' ? (
+                    <Tag
+                      color="success"
+                      style={{
+                        fontSize: '16px',
+                        border: 'none',
+                        padding: '4px 8px',
+                      }}
+                    >
+                      {reviewStatus}
+                    </Tag>
+                  ) : (
+                    <Tag
+                      color="processing"
+                      style={{
+                        fontSize: '16px',
+                        border: 'none',
+                        padding: '4px 8px',
+                      }}
+                    >
+                      {reviewStatus}
+                    </Tag>
+                  )}
                 </div>
               </div>
               {/* <ul> */}
@@ -169,6 +193,20 @@ function ReviewProcessPage(): React.ReactElement {
               Save Draft
             </Button>
             {/* <Button onClick={}>Submit </Button> */}
+            <Button
+              type="primary"
+              onClick={() => {
+                console.log('Forward to Training Incharge');
+                // Add logic here to handle forwarding to Training Incharge
+                handleUpdateReviewPanel(state.renderContent.id, {
+                  status: 'Submitted',
+                });
+                navigate('/review-panel');
+              }}
+              style={{ marginLeft: '10px' }}
+            >
+              Submit to Training Incharge
+            </Button>
           </div>
         </Card>
 
@@ -220,13 +258,38 @@ function ReviewProcessPage(): React.ReactElement {
             </div>
           </div>
           <p style={{ marginBottom: '20px', fontSize: '16px', color: 'green' }}>
-            Ensure you are part of this review process to proceed.
+            Ensure you are part of this review panel.
           </p>
+          <div style={{ marginBottom: '20px' }}>
+            {reviewStatus.toLowerCase() === 'initiated' && (
+              <>
+                <span style={{ marginRight: '10px', fontSize: '16px' }}>
+                  Switch the status to start the process
+                </span>
+                <Switch
+                  style={{ boxShadow: 'none' }}
+                  checkedChildren="In Progress"
+                  unCheckedChildren="Initiated"
+                  checked={reviewStatus === 'In Progress'}
+                  onChange={(checked) => {
+                    setReviewStatus(checked ? 'In Progress' : 'Initiated');
+                    handleUpdateReviewPanel(state.renderContent.id, {
+                      status: checked ? 'In Progress' : 'Initiated',
+                    });
+                  }}
+                />
+              </>
+            )}
+          </div>
           <Button onClick={handleCancel} style={{ marginRight: '10px' }}>
-            Cancel
+            Go back
           </Button>
-          <Button type="primary" onClick={handleOk}>
-            Confirm
+          <Button
+            type="primary"
+            onClick={handleOk}
+            disabled={reviewStatus !== 'In Progress'}
+          >
+            Proceed
           </Button>
         </div>
       </Modal>

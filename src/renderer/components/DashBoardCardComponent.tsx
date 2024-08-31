@@ -64,6 +64,22 @@ function DashboardCard({ content, onClick, cardType }: CardProps) {
     );
   }
 
+  // Function to determine tag color based on status
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'initiated':
+        return 'processing';
+      case 'in progress':
+        return 'success';
+      case 'submitted':
+        return 'orange';
+      // case 'rejected':
+      //   return 'red';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <div>
       <div
@@ -116,7 +132,14 @@ function DashboardCard({ content, onClick, cardType }: CardProps) {
                   {title}
                 </div>
                 <div>
-                  Status: <Tag color="geekblue">{content.status}</Tag>
+                  Status:{' '}
+                  <Tag
+                    bordered={false}
+                    color={getStatusColor(content.status)}
+                    style={{ fontSize: '16px' }}
+                  >
+                    {content.status}
+                  </Tag>
                 </div>
                 {content.deadline && (
                   <div>

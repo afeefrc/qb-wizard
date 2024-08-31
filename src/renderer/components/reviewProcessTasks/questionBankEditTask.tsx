@@ -273,16 +273,24 @@ function QuestionBankEditTask({
     );
 
     const linkedQuestionIds = currentQuestion?.linkedQuestion || [];
-    const linkedQuestionsFromState = linkedQuestions?.[questionId] || [];
+    const linkedQuestionsFromState =
+      linkedQuestions
+        ?.filter((link) => link.questionId === questionId)
+        .map((link) => link.linkedQuestionIds)
+        .flat() || [];
+    console.log('linkedQuestions', linkedQuestions);
+    console.log('linkedQuestionsFromState', linkedQuestionsFromState);
 
     const combinedLinkedQuestions = Array.from(
       new Set([...linkedQuestionIds, ...linkedQuestionsFromState]),
     );
 
-    // Filter out any deleted questions from the combined list
     const filteredLinkedQuestions = combinedLinkedQuestions.filter((id) => {
       const linkedQuestion = questions?.find((q) => q.id === id);
-      return linkedQuestion && !linkedQuestion.isDeleted;
+      const existsInLinkedQuestions = linkedQuestionsFromState.includes(id);
+      return (
+        (linkedQuestion && !linkedQuestion.isDeleted) || existsInLinkedQuestions
+      );
     });
 
     setInitialLinkedQuestions(filteredLinkedQuestions);
@@ -734,8 +742,12 @@ function QuestionBankEditTask({
                   ?.title || section.sectionName
               }
             >
-              <div style={{ marginBottom: '16px' }}>
-                <Button type="primary" onClick={() => showModal(section.id)}>
+              <div style={{ margin: '16px 0px' }}>
+                <Button
+                  type="primary"
+                  ghost
+                  onClick={() => showModal(section.id)}
+                >
                   Add New Question
                 </Button>
               </div>
@@ -755,6 +767,15 @@ function QuestionBankEditTask({
                   expandIconColumnIndex: -1,
                 }}
               />
+              <div style={{ margin: '16px 0px' }}>
+                <Button
+                  type="primary"
+                  ghost
+                  onClick={() => showModal(section.id)}
+                >
+                  Add New Question
+                </Button>
+              </div>
             </Collapse.Panel>
           ))}
         </Collapse>

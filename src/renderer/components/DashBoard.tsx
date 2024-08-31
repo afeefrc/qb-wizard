@@ -16,7 +16,10 @@ function DashBoard() {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  const handleNavigation = (path: string, state: { unit: string, renderContent: any }) => {
+  const handleNavigation = (
+    path: string,
+    state: { unit: string; renderContent: any },
+  ) => {
     navigate(path, { state });
   };
 
@@ -33,10 +36,17 @@ function DashBoard() {
   //   },
   // }; // Add other cards as needed;
 
-  const renderContents =
-    user && (user.role === 'review-panel' || user.role === 'trg-incharge')
-      ? reviewPanels
-      : null;
+  let renderContents = null;
+  if (user && (user.role === 'review-panel' || user.role === 'trg-incharge')) {
+    renderContents =
+      user.role === 'review-panel'
+        ? reviewPanels?.filter(
+            (panel) =>
+              panel.status.toLowerCase() === 'initiated' ||
+              panel.status.toLowerCase() === 'in progress',
+          )
+        : reviewPanels;
+  }
   const examinerAssignmentsContents =
     (user && user.role === 'examiner') || user.role === 'trg-incharge'
       ? examinerAssignments
@@ -69,7 +79,19 @@ function DashBoard() {
               onClick={() => {
                 console.log(`card clicked ${renderContent.unit}`);
                 if (user?.role === 'review-panel') {
-                  handleNavigation('/review-process', { unit: renderContent.unit, renderContent });
+                  handleNavigation('/review-process', {
+                    unit: renderContent.unit,
+                    renderContent,
+                  });
+                }
+                if (
+                  user?.role === 'trg-incharge' &&
+                  renderContent.status.toLowerCase() === 'submitted'
+                ) {
+                  handleNavigation('/approval-process', {
+                    unit: renderContent.unit,
+                    renderContent,
+                  });
                 }
               }}
               cardType={'reviewPanel'}

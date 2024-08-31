@@ -81,7 +81,7 @@ function CreateReviewPanel({
       unit: unit,
       members: [values.chairman, ...values.names],
       chairman: values.chairman,
-      status: 'initiated',
+      status: 'Initiated',
       comments_initiate: values.comments || '',
       deadline: values.date?.toDate() || null,
     };

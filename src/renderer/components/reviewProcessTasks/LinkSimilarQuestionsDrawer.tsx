@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Drawer, Collapse, Table, Button, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Drawer, Collapse, Table, Button, Typography } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 
+const { Text, Link } = Typography;
 const { Panel } = Collapse;
 
 interface LinkSimilarQuestionsDrawerProps {
@@ -10,7 +11,7 @@ interface LinkSimilarQuestionsDrawerProps {
   groupedQuestions: any[];
   onLinkQuestions: (linkedQuestionIds: string[]) => void;
   currentQuestionId: string;
-  initialLinkedQuestions?: string[];
+  initialLinkedQuestions: string[];
 }
 
 function LinkSimilarQuestionsDrawer({
@@ -19,13 +20,24 @@ function LinkSimilarQuestionsDrawer({
   groupedQuestions,
   onLinkQuestions,
   currentQuestionId,
-  initialLinkedQuestions = [],
+  initialLinkedQuestions,
 }: LinkSimilarQuestionsDrawerProps) {
-  const [selectedQuestions, setSelectedQuestions] = useState<string[]>(
-    initialLinkedQuestions,
-  );
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [activeKey, setActiveKey] = useState<string | undefined>(undefined);
 
-  console.log('selectedQuestions', selectedQuestions);
+  useEffect(() => {
+    setSelectedQuestions(initialLinkedQuestions || []);
+
+    // Find the section containing the first initialLinkedQuestion
+    const firstLinkedQuestionId = initialLinkedQuestions?.[0];
+    const sectionWithLinkedQuestion = groupedQuestions.find((section) =>
+      section.questions.some((q: any) => q.id === firstLinkedQuestionId),
+    );
+
+    // Set the active key to the found section or the first section
+    setActiveKey(sectionWithLinkedQuestion?.id || groupedQuestions[0]?.id);
+  }, [initialLinkedQuestions, groupedQuestions]);
+
   const columns = [
     {
       title: 'Question',
@@ -60,7 +72,15 @@ function LinkSimilarQuestionsDrawer({
       visible={visible}
       width={600}
     >
-      <Collapse accordion>
+      <Text type="success" style={{ marginBottom: 16 }}>
+        Note: linked questions will be automatically linked back to the current
+        question.
+      </Text>
+      <Collapse
+        accordion
+        activeKey={activeKey}
+        onChange={(key) => setActiveKey(key as string)}
+      >
         {groupedQuestions.map((section) => (
           <Panel header={section.title} key={section.id}>
             <Table
