@@ -714,11 +714,12 @@ function QuestionBankEditTask({
         height: 'calc(100vh - 200px)',
         display: 'flex',
         flexDirection: 'column',
+        // height: '100%',
       }}
     >
-      <Button type="primary" onClick={handleApplyAllPendingChanges}>
+      {/* <Button type="primary" onClick={handleApplyAllPendingChanges}>
         Apply all pending changes
-      </Button>
+      </Button> */}
       <AddQuestionModal
         visible={isModalVisible}
         onCancel={handleCancel}

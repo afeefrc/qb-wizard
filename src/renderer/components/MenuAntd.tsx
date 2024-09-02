@@ -140,6 +140,7 @@ function MenuList({
               icon: <SignalFilled style={{ color: '#002C58' }} />,
               children: [
                 { key: 'informations-logs', label: 'Activity logs' },
+                { key: 'informations-questionLogs', label: 'Question Logs' },
                 { key: 'informations-reports', label: 'Reports' },
               ],
             },

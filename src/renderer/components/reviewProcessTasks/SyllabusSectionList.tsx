@@ -83,6 +83,8 @@ function EditableCell({
 function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
   const appContext = useContext(AppContext);
   const {
+    questions,
+    pendingChanges,
     syllabusSections,
     handleUpdateSyllabusSection,
     handleAddSyllabusSection,
@@ -193,7 +195,7 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
     {
       title: 'Serial No.',
       dataIndex: 'serialNumber',
-      width: '10%',
+      width: '8%',
       // editable: true,
     },
     {
@@ -216,16 +218,45 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
     },
     {
       title: 'Number of Questions',
-      dataIndex: 'questionsCount',
+      dataIndex: 'key',
       width: '10%',
-      // editable: true,
+      render: (key: string) => {
+        const sectionQuestions = questions.filter(
+          (q) =>
+            q.syllabusSectionId === key &&
+            q.unitName === unitName &&
+            !q.isDeleted,
+        );
+        return sectionQuestions.length;
+      },
+    },
+    {
+      title: 'No. of New questions proposed',
+      dataIndex: 'key',
+      width: '10%',
+      render: (key: string) => {
+        const newSectionQuestions = pendingChanges.filter(
+          (q) =>
+            q.data.syllabusSectionId === key &&
+            q.data.unitName === unitName &&
+            !q.data.isDeleted &&
+            q.type === 'add',
+        );
+        return newSectionQuestions.length;
+      },
     },
     {
       title: 'operation',
       dataIndex: 'operation',
       render: (_: any, record: Item) => {
         const editable = isEditing(record);
-        const canDelete = record.questionsCount === 0;
+        const canDelete =
+          questions.filter(
+            (q) =>
+              q.syllabusSectionId === record.key &&
+              q.unitName === unitName &&
+              !q.isDeleted,
+          ).length === 0;
 
         return editable ? (
           <span>

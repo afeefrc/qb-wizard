@@ -1,55 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Card, Button, Tabs, Tag } from 'antd';
+import React from 'react';
+import { Card, Button, Tabs, Tag, message } from 'antd';
 import type { TabsProps } from 'antd';
 import { AppContext } from '../../context/AppContext';
 import SyllabusSectionList from '../reviewProcessTasks/SyllabusSectionList';
-import QuestionBankApprovalTask from './QuestionBankApprovalTask';
+import QuestionBankEditTask from '../reviewProcessTasks/QuestionBankEditTask';
 
-interface LocationState {
+interface RenderContent {
+  id: string;
   unit: string;
-  renderContent: {
-    id: string;
-    unit: string;
-    description: string;
-    members: string[];
-    chairman: string;
-    status: string;
-    deadline?: Date;
-  };
+  description: string;
+  members: string[];
+  chairman: string;
+  status: string;
+  deadline?: Date;
 }
 
-function ApprovalProcessPage(): React.ReactElement {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as LocationState;
+interface ApprovalProcessPageProps {
+  content: RenderContent;
+  onClose: () => void;
+}
 
+function ApprovalProcessPage({
+  content,
+  onClose,
+}: ApprovalProcessPageProps): React.ReactElement {
   const appContext = React.useContext(AppContext);
-  const { examiners, handleUpdateReviewPanel } = appContext || {};
+  const {
+    examiners,
+    handleUpdateReviewPanel,
+    handleApplyAllPendingChanges,
+    handleDeleteReviewPanel,
+  } = appContext || {};
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const successMessage = () => {
+    messageApi.open({
+      type: 'success',
+      content: 'This is a success message',
+    });
+  };
 
   const matchingChairman = examiners.find(
-    (examiner: any) => examiner.id === state.renderContent.chairman,
+    (examiner: any) => examiner.id === content.chairman,
   );
   const matchingExaminers = examiners.filter(
     (examiner: any) =>
-      state.renderContent.members.includes(examiner.id) &&
-      examiner.id !== state.renderContent.chairman,
+      content.members.includes(examiner.id) && examiner.id !== content.chairman,
   );
-
-  const handleBackClick = () => {
-    navigate(-1);
-  };
 
   const items: TabsProps['items'] = [
     {
       key: '1',
       label: 'Syllabus and weightage',
-      children: <SyllabusSectionList unitName={state.unit} />,
+      children: <SyllabusSectionList unitName={content.unit} />,
     },
     {
       key: '2',
       label: 'Question Bank',
-      children: <QuestionBankApprovalTask unitName={state.unit} />,
+      // children: <QuestionBankApprovalTask unitName={content.unit} />,
+      children: <QuestionBankEditTask unitName={content.unit} />,
     },
   ];
 
@@ -60,82 +70,101 @@ function ApprovalProcessPage(): React.ReactElement {
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'center',
-        width: '100vw',
-        height: '95vh',
-        // backgroundColor: 'red',
+        // width: '100vw',
+        // height: '95vh',
+        marginTop: '10px',
       }}
     >
+      {contextHolder}
       <div
         style={{
           width: '90%',
-          // maxWidth: '800px',
           padding: '20px',
-          backgroundColor: 'white',
+          // backgroundColor: 'white',
           borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <Card>
-          <h2>Approval Process</h2>
-          {state && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-                width: '70%',
-              }}
-            >
-              <div className="create-review-panel-unitname">{state.unit}</div>
+        <Card bordered={false}>
+          {/* <h3>Approval Process</h3> */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              width: '70%',
+            }}
+          >
+            <div className="create-review-panel-unitname">{content.unit}</div>
+            <div>
               <div>
-                <div>
-                  Panel Members: {matchingChairman?.examinerName} (Chairman),{' '}
-                  {matchingExaminers
-                    .map((examiner: any) => examiner.examinerName)
-                    .join(', ')}
-                </div>
-                <div>Description: {state.renderContent.description}</div>
-                <div>
-                  Deadline:{' '}
-                  {state.renderContent.deadline
-                    ? new Date(state.renderContent.deadline).toLocaleDateString(
-                        'en-IN',
-                        {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        },
-                      )
-                    : 'N/A'}
-                </div>
-                <div>
-                  Status:{' '}
-                  <Tag
-                    color={
-                      state.renderContent.status === 'Submitted'
-                        ? 'orange'
-                        : 'success'
-                    }
-                  >
-                    {state.renderContent.status}
-                  </Tag>
-                </div>
+                Panel Members: {matchingChairman?.examinerName} (Chairman),{' '}
+                {matchingExaminers
+                  .map((examiner: any) => examiner.examinerName)
+                  .join(', ')}
+              </div>
+              <div>Description: {content.description}</div>
+              <div>
+                Deadline:{' '}
+                {content.deadline
+                  ? new Date(content.deadline).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })
+                  : 'N/A'}
+              </div>
+              <div>
+                Status:{' '}
+                <Tag
+                  color={content.status === 'Submitted' ? 'orange' : 'success'}
+                >
+                  {content.status}
+                </Tag>
               </div>
             </div>
-          )}
+          </div>
           <div style={{ marginTop: '20px' }}>
-            <Button onClick={handleBackClick}>Go Back</Button>
+            {/* <Button onClick={onClose}>Close</Button> */}
+            <Button
+              ghost
+              type="primary"
+              onClick={() => {
+                handleUpdateReviewPanel(content.id, { status: 'In Progress' });
+                successMessage();
+                setTimeout(() => {
+                  onClose();
+                }, 500);
+              }}
+              style={{ marginLeft: '20px' }}
+            >
+              Return back to the panel
+            </Button>
+            <Button
+              ghost
+              type="primary"
+              onClick={() => {}}
+              style={{ marginLeft: '25px' }}
+            >
+              Foward to new Review Panel
+            </Button>
             <Button
               type="primary"
               onClick={() => {
+                handleApplyAllPendingChanges();
+                handleDeleteReviewPanel(content.id);
+                successMessage();
+                // Delay closing to allow the message to be shown
+                setTimeout(() => {
+                  onClose();
+                }, 1000); // Adjust the delay as needed
                 console.log('Approve Question Bank');
-                // handleUpdateReviewPanel(state.renderContent.id, {
+                // handleUpdateReviewPanel(content.id, {
                 //   status: 'Approved',
                 // });
-                // navigate('/trg-incharge');
+                // onClose();
               }}
-              style={{ marginLeft: '10px' }}
+              style={{ marginLeft: '25px' }}
             >
               Approve Question Bank
             </Button>
@@ -147,7 +176,12 @@ function ApprovalProcessPage(): React.ReactElement {
         type="card"
         defaultActiveKey="2"
         items={items}
-        style={{ marginTop: '20px', width: '90%' }}
+        style={{
+          width: '90%',
+          backgroundColor: 'white',
+          padding: '10px 20px',
+        }}
+        // indicator={{ size: (origin) => origin - 20, align: 'center' }}
       />
     </div>
   );

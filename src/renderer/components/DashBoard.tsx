@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Divider, Button } from 'antd';
 import DashboardCard from './DashBoardCardComponent';
-import { Divider } from 'antd';
+import ApprovalProcessPage from './trgInchargeTasks/ApprovalProcessPage';
 import '../RolePage.css';
 import { AppContext } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
+import BodyContentCard from './BodyContentCard';
 
 // interface DashBoardProps {
 //   contentList: string[];
@@ -15,12 +17,19 @@ function DashBoard() {
   const { reviewPanels, examinerAssignments } = appContext || {};
   const { user } = useUser();
   const navigate = useNavigate();
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [selectedContent, setSelectedContent] = useState(null);
 
   const handleNavigation = (
     path: string,
     state: { unit: string; renderContent: any },
   ) => {
     navigate(path, { state });
+  };
+
+  const handleCloseApprovalProcess = () => {
+    setCurrentView('dashboard');
+    setSelectedContent(null);
   };
 
   console.log('examinerAssignments', examinerAssignments);
@@ -51,6 +60,24 @@ function DashBoard() {
     (user && user.role === 'examiner') || user.role === 'trg-incharge'
       ? examinerAssignments
       : null;
+
+  if (currentView === 'approvalProcess') {
+    return (
+      <div>
+        <BodyContentCard
+          title={`${selectedContent?.unit} Question bank review (for approval)`}
+          onClose={handleCloseApprovalProcess}
+        >
+          {selectedContent && (
+            <ApprovalProcessPage
+              content={selectedContent}
+              onClose={handleCloseApprovalProcess}
+            />
+          )}
+        </BodyContentCard>
+      </div>
+    );
+  }
 
   return (
     <div className="scroll-view">
@@ -88,10 +115,8 @@ function DashBoard() {
                   user?.role === 'trg-incharge' &&
                   renderContent.status.toLowerCase() === 'submitted'
                 ) {
-                  handleNavigation('/approval-process', {
-                    unit: renderContent.unit,
-                    renderContent,
-                  });
+                  setCurrentView('approvalProcess');
+                  setSelectedContent(renderContent);
                 }
               }}
               cardType={'reviewPanel'}
@@ -120,9 +145,12 @@ function DashBoard() {
             key={index}
             content={renderContent}
             onClick={(unit) => {
-              console.log(`card clicked ${unit}`);
+              // console.log(`card clicked ${unit}`);
               if (user?.role === 'examiner') {
-                handleNavigation('/examiner-process', { unit });
+                handleNavigation('/examiner-process', {
+                  unit,
+                  renderContent,
+                });
               }
             }}
             cardType={'questionPaperAssignment'}

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Empty, Modal, Button, Tabs, Card, Button, Tag, Switch } from 'antd';
-import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
+import {
+  AndroidOutlined,
+  ProfileTwoTone,
+  LayoutTwoTone,
+} from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import SyllabusSectionList from './SyllabusSectionList';
-import QuestionBankEditTask from './questionBankEditTask';
+import QuestionBankEditTask from './QuestionBankEditTask';
 import { AppContext } from '../../context/AppContext';
 
 interface LocationState {
@@ -72,13 +76,13 @@ function ReviewProcessPage(): React.ReactElement {
       key: '1',
       label: 'Syllabus and weightage',
       children: <SyllabusSectionList unitName={state.unit} />,
-      icon: <AndroidOutlined />,
+      icon: <ProfileTwoTone twoToneColor="#eb2f96" />,
     },
     {
       key: '2',
       label: 'Question Bank',
       children: <QuestionBankEditTask unitName={state.unit} />,
-      icon: <AndroidOutlined />,
+      icon: <LayoutTwoTone twoToneColor="#eb2f96" />,
     },
   ];
 
@@ -185,13 +189,13 @@ function ReviewProcessPage(): React.ReactElement {
           )}
           <div>
             <Button onClick={handleBackClick}>Go Back</Button>
-            <Button
+            {/* <Button
               onClick={() => {
                 console.log('save draft');
               }}
             >
               Save Draft
-            </Button>
+            </Button> */}
             {/* <Button onClick={}>Submit </Button> */}
             <Button
               type="primary"

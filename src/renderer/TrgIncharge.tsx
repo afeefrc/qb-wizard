@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MenuList from './components/MenuAntd';
-import { Empty } from 'antd';
+import { Empty, message } from 'antd';
 import DashBoard from './components/DashBoard';
 import ListOfExaminers from './components/ListOfExaminers';
 import StationSettings from './components/StationSettings';
@@ -10,6 +10,7 @@ import BodyContentCard from './components/BodyContentCard';
 import CreateReviewPanel from './components/trgInchargeTasks/createReviewPanel';
 import ExaminerAssignment from './components/trgInchargeTasks/AssignExaminer';
 import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
+import QuestionLogs from './components/trgInchargeTasks/QuestionLogs';
 // import { useUser } from './context/UserContext';
 
 const trgInchargeMenuTitles = [
@@ -33,6 +34,7 @@ function TrgIncharge() {
   const handleBackClick = () => {
     navigate(-1);
   };
+  const [messageApi, contextHolder] = message.useMessage();
   // const { user } = useUser();
 
   const handleButtonClick = (MenuItem: string, BtnName: string) => {
@@ -85,6 +87,12 @@ function TrgIncharge() {
             title: 'Activity logs',
           };
         }
+        if (BtnPressed.BtnName === 'questionLogs') {
+          return {
+            component: <QuestionLogs />,
+            title: 'Questions change Log',
+          };
+        }
         if (BtnPressed.BtnName === 'reports') {
           return {
             component: (
@@ -115,6 +123,7 @@ function TrgIncharge() {
 
   return (
     <div>
+      {contextHolder}
       <div className="rolepage-header">
         <div className="button-container">
           <button type="button" onClick={handleBackClick}>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Empty } from 'antd';
+import { Empty, Button } from 'antd';
 import DashBoard from './components/DashBoard';
 import BodyContentCard from './components/BodyContentCard';
 import MenuList from './components/MenuAntd';
@@ -10,7 +10,7 @@ import { useUser } from './context/UserContext';
 function ReviewPanel() {
   const navigate = useNavigate();
   const handleBackClick = () => {
-    navigate(-1);
+    navigate('/');
   };
   const [BtnPressed, setBtnPressed] = useState<{
     MenuItem?: string;

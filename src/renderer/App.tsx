@@ -20,8 +20,7 @@ import QuestionPapers from './QuestionPapers';
 import Feedbacks from './Feedbacks';
 import ActivityLogs from './ActivityLogsPage';
 import ReviewProcessPage from './components/reviewProcessTasks/ReviewProcessPage';
-import QuestionPaperProcessPage from './QuestionPaperProcessPage';
-import ApprovalProcessPage from './components/trgInchargeTasks/ApprovalProcessPage';
+import QuestionPaperProcessPage from './components/examinerProcessTasks/QuestionPaperProcessPage';
 
 function Hello() {
   // db test button case
@@ -241,10 +240,6 @@ export default function App() {
               <Route
                 path="/examiner-process"
                 element={<QuestionPaperProcessPage />}
-              />
-              <Route
-                path="/approval-process"
-                element={<ApprovalProcessPage />}
               />
             </Routes>
           </Router>
