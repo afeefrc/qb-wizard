@@ -84,7 +84,7 @@ function ExaminerAssignment({
       examiner: values.examiner,
       examiner_invigilator: values.examiner_invigilator || '',
       examiner_evaluation: values.examiner_evaluation || '',
-      status: 'initiated',
+      status: 'Initiated',
       comments_initiate: values.comments || '',
       deadline: values.date?.toDate() || null,
     };
@@ -108,7 +108,7 @@ function ExaminerAssignment({
       examiner: formValues.examiner,
       examiner_invigilator: formValues.examiner_invigilator || '',
       examiner_evaluation: formValues.examiner_evaluation || '',
-      status: editValues.status || 'initiated',
+      status: editValues.status || 'Initiated',
       comments_initiate: formValues.comments || '',
       deadline: formValues.date?.toDate() || null,
     };

@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Empty, Modal, Button, Tabs, Card, Button, Tag, Switch } from 'antd';
-import {
-  AndroidOutlined,
-  ProfileTwoTone,
-  LayoutTwoTone,
-} from '@ant-design/icons';
+import { Modal, Button, Tabs, Card, Tag, Switch, Alert } from 'antd';
+import { ProfileTwoTone, LayoutTwoTone } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import SyllabusSectionList from './SyllabusSectionList';
 import QuestionBankEditTask from './QuestionBankEditTask';
@@ -108,8 +104,8 @@ function ReviewProcessPage(): React.ReactElement {
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <Card>
-          <h2>Review Process</h2>
+        <Card title="Question Bank Review Process">
+          {/* <h2>Review Process</h2> */}
           {state ? (
             <div
               style={{
@@ -261,9 +257,19 @@ function ReviewProcessPage(): React.ReactElement {
               </p>
             </div>
           </div>
-          <p style={{ marginBottom: '20px', fontSize: '16px', color: 'green' }}>
+          {/* <p style={{ marginBottom: '20px', fontSize: '16px', color: 'green' }}>
             Ensure you are part of this review panel.
-          </p>
+          </p> */}
+          <div style={{ marginBottom: '20px' }}>
+            <Alert
+              message={
+                <span style={{ fontSize: '16px' }}>
+                  Ensure you are part of this review panel.
+                </span>
+              }
+              type="warning"
+            />
+          </div>
           <div style={{ marginBottom: '20px' }}>
             {reviewStatus.toLowerCase() === 'initiated' && (
               <>

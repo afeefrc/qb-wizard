@@ -1,5 +1,5 @@
 import React from 'react';
-import { Timeline, Table } from 'antd';
+import { Table, Tag } from 'antd';
 
 interface ActivityLogsProps {
   logs: string[];
@@ -10,26 +10,36 @@ function ActivityLogs(logs: ActivityLogsProps) {
     {
       key: '2024-08-01',
       log: 'Trg incharge Created a Task: Review panel for ADC, panel members: 1, 2, 3',
+      task: 'Question Bank',
+      status: 'Initiated',
       comment: '',
     },
     {
       key: '2025-08-05 09:12:11',
       log: 'Trg incharge Created a Task: Question paper assignment, examiner: 1',
+      task: 'Question Paper',
+      status: 'Initiated',
       comment: '',
     },
     {
       key: '2025-08-05 09:12:11',
       log: 'Task in progress: Qestion paper assignment, examiner: 1',
+      task: 'Question Paper',
+      status: 'In Progress',
       comment: '',
     },
     {
       key: '2024-08-08 09:12:11',
       log: 'Task completed: Qestion paper assignment, examiner: 1',
+      task: 'Question Paper',
+      status: 'Completed',
       comment: '',
     },
     {
       key: '2024-08-09 09:12:11',
       log: 'Question Paper Approved by Trg incharge: Qestion paper assignment, examiner: 1',
+      task: 'Question Paper',
+      status: 'Approved',
       comment: '',
     },
   ];
@@ -44,6 +54,20 @@ function ActivityLogs(logs: ActivityLogsProps) {
       title: 'log',
       dataIndex: 'log',
       key: 'log',
+      width: '40%',
+    },
+    {
+      title: 'Task',
+      dataIndex: 'task',
+      key: 'task',
+      render: (task: string) => (
+        <Tag color={task === 'Question Bank' ? 'purple' : 'volcano'}>{task}</Tag>
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
     },
     {
       title: 'comment',
@@ -62,7 +86,7 @@ function ActivityLogs(logs: ActivityLogsProps) {
       <Table
         dataSource={dataSource}
         columns={columns}
-        style={{ width: '80%', margin: 0 }}
+        style={{ width: '95%', margin: 0 }}
       />
       {/* <div
         style={{

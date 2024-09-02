@@ -226,7 +226,7 @@ function DashboardCard({ content, onClick, cardType }: CardProps) {
             <Avatar
               size="small"
               icon={<EditOutlined />}
-              style={{ margin: '10px 0px' }}
+              style={{ margin: '10px 0px', cursor: 'pointer' }}
               onClick={() => setEditBtnPressed(!editBtnPressed)}
             />
             <Avatar

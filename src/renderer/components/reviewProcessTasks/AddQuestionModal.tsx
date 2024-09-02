@@ -313,7 +313,7 @@ function AddQuestionModal({
               label="Question (Use '_' for blanks)"
               rules={[{ required: true, message: 'Please enter the question' }]}
             >
-              <Input.TextArea placeholder="The capital of France is _." />
+              <Input.TextArea placeholder="Write the question ___." />
             </Form.Item>
             <Form.List
               name="answerList"

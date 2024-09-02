@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Divider, Button } from 'antd';
 import DashboardCard from './DashBoardCardComponent';
 import ApprovalProcessPage from './trgInchargeTasks/ApprovalProcessPage';
+import QPapprovalProcessPage from './trgInchargeTasks/QPapprovalProcessPage';
 import '../RolePage.css';
 import { AppContext } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -56,12 +57,21 @@ function DashBoard() {
           )
         : reviewPanels;
   }
-  const examinerAssignmentsContents =
-    (user && user.role === 'examiner') || user.role === 'trg-incharge'
-      ? examinerAssignments
-      : null;
 
-  if (currentView === 'approvalProcess') {
+  let examinerAssignmentsContents = null;
+  if (user && (user.role === 'examiner' || user.role === 'trg-incharge')) {
+    if (user.role === 'examiner') {
+      examinerAssignmentsContents = examinerAssignments?.filter(
+        (assignment) =>
+          assignment.status.toLowerCase() === 'initiated' ||
+          assignment.status.toLowerCase() === 'in progress',
+      );
+    } else {
+      examinerAssignmentsContents = examinerAssignments;
+    }
+  }
+
+  if (currentView === 'QBapprovalProcess') {
     return (
       <div>
         <BodyContentCard
@@ -78,6 +88,23 @@ function DashBoard() {
       </div>
     );
   }
+  if (currentView === 'QPapprovalProcess') {
+    return (
+      <div>
+        <BodyContentCard
+          title={`${selectedContent?.unit} Question paper preparation (for approval)`}
+          onClose={handleCloseApprovalProcess}
+        >
+          {selectedContent && (
+            <QPapprovalProcessPage
+              content={selectedContent}
+              onClose={handleCloseApprovalProcess}
+            />
+          )}
+        </BodyContentCard>
+      </div>
+    );
+  }
 
   return (
     <div className="scroll-view">
@@ -85,11 +112,13 @@ function DashBoard() {
       {renderContents && (
         <Divider
           orientation="right"
-          plain
+          // plain
           style={{
-            margin: '0px',
+            borderRadius: '5px',
+            padding: '0px 10px',
             color: 'rgba(0, 0, 0, 0.6)',
             fontStyle: 'italic',
+            // backgroundColor: '#002C58',
           }}
         >
           Question Bank Review Tasks
@@ -115,7 +144,7 @@ function DashBoard() {
                   user?.role === 'trg-incharge' &&
                   renderContent.status.toLowerCase() === 'submitted'
                 ) {
-                  setCurrentView('approvalProcess');
+                  setCurrentView('QBapprovalProcess');
                   setSelectedContent(renderContent);
                 }
               }}
@@ -127,11 +156,13 @@ function DashBoard() {
       {examinerAssignmentsContents && (
         <Divider
           orientation="right"
-          plain
+          // plain
           style={{
-            margin: '0px',
+            borderRadius: '5px',
+            padding: '0px 10px',
             color: 'rgba(0, 0, 0, 0.6)',
             fontStyle: 'italic',
+            // backgroundColor: '#002C58',
           }}
         >
           Question Paper Preparation Tasks
@@ -139,7 +170,7 @@ function DashBoard() {
       )}
 
       {examinerAssignmentsContents?.map((renderContent, index) => {
-        console.log('renderContent', renderContent);
+        // console.log('renderContent', renderContent);
         return (
           <DashboardCard
             key={index}
@@ -151,6 +182,13 @@ function DashBoard() {
                   unit,
                   renderContent,
                 });
+              }
+              if (
+                user?.role === 'trg-incharge' &&
+                renderContent.status.toLowerCase() === 'submitted'
+              ) {
+                setCurrentView('QPapprovalProcess');
+                setSelectedContent(renderContent);
               }
             }}
             cardType={'questionPaperAssignment'}

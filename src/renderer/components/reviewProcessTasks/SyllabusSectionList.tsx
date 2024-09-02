@@ -319,7 +319,7 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
   });
 
   return (
-    <div style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+    <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
       <h3>Syllabus Sections for {unitName}</h3>
       <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
         Add a new section
@@ -341,6 +341,15 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
           }}
         />
       </Form>
+      <div>
+        <Button
+          onClick={handleAdd}
+          type="primary"
+          style={{ marginBottom: '50px' }}
+        >
+          Add a new section
+        </Button>
+      </div>
     </div>
   );
 }

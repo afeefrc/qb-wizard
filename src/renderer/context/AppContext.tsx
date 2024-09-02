@@ -78,6 +78,10 @@ interface AppContextProps {
     updatedReviewPanel: any,
   ) => Promise<void>;
   handleAddExaminerAssignment: (newExaminerAssignment: any) => Promise<void>;
+  handleUpdateExaminerAssignment: (
+    id: number,
+    updatedExaminerAssignment: any,
+  ) => Promise<void>;
   handleAddSyllabusSection: (newSyllabusSection: any) => Promise<void>;
   handleUpdateSyllabusSection: (
     id: number,
