@@ -153,6 +153,11 @@ export const syllabusSectionSchema = {
     default: 100,
     validate: (value) => Number.isInteger(value) && value >= 0,
   },
+  questionPart: {
+    type: 'number',
+    default: 1,
+    validate: (value) => Number.isInteger(value) && value > 0,
+  },
   questionsCount: {
     type: 'number',
     default: 0,

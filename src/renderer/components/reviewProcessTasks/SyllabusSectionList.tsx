@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 import type { TableProps } from 'antd';
+import { Select } from 'antd';
 import {
   Form,
   Input,
@@ -24,17 +25,18 @@ interface Item {
   minWeightage: number;
   maxWeightage: number;
   questionsCount: number;
+  questionPart: number;
 }
 
-const originData: Item[] = [];
-for (let i = 0; i < 10; i++) {
-  originData.push({
-    key: i.toString(),
-    name: `Edward ${i}`,
-    age: 32,
-    address: `London Park no. ${i}`,
-  });
-}
+// const originData: Item[] = [];
+// for (let i = 0; i < 10; i++) {
+//   originData.push({
+//     key: i.toString(),
+//     name: `Edward ${i}`,
+//     age: 32,
+//     address: `London Park no. ${i}`,
+//   });
+// }
 // const syllabusData: Item[] = [];
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -56,7 +58,19 @@ function EditableCell({
   children,
   ...restProps
 }: React.PropsWithChildren<EditableCellProps>) {
-  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
+  let inputNode;
+  if (inputType === 'number') {
+    inputNode = <InputNumber />;
+  } else if (inputType === 'select') {
+    inputNode = (
+      <Select>
+        <Select.Option value={1}>Part A</Select.Option>
+        <Select.Option value={2}>Part B</Select.Option>
+      </Select>
+    );
+  } else {
+    inputNode = <Input />;
+  }
 
   return (
     <td {...restProps}>
@@ -106,6 +120,7 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
         title: section.title,
         minWeightage: section.minWeightage,
         maxWeightage: section.maxWeightage,
+        questionPart: section.questionPart,
         questionsCount: section.questionsCount,
       }))
       .sort((a, b) => a.serialNumber - b.serialNumber),
@@ -116,7 +131,9 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
   const isEditing = (record: Item) => record.key === editingKey;
 
   const edit = (record: Partial<Item> & { key: React.Key }) => {
-    form.setFieldsValue({ name: '', age: '', address: '', ...record });
+    form.setFieldsValue({
+      ...record,
+    });
     setEditingKey(record.key);
   };
 
@@ -146,15 +163,17 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
             title: newData[index].title,
             minWeightage: newData[index].minWeightage,
             maxWeightage: newData[index].maxWeightage,
+            questionPart: newData[index].questionPart,
             unitName: unitName,
           });
           setIsNewRow(false);
         } else {
           handleUpdateSyllabusSection(key, {
-            serialNumber: newData[index].serialNumber,
+            // serialNumber: newData[index].serialNumber,
             title: newData[index].title,
             minWeightage: newData[index].minWeightage,
             maxWeightage: newData[index].maxWeightage,
+            questionPart: newData[index].questionPart,
           });
         }
       }
@@ -177,6 +196,7 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
       minWeightage: 0,
       maxWeightage: 0,
       questionsCount: 0,
+      questionPart: 1,
     };
     setData([...data, newData]);
     setEditingKey(newData.key);
@@ -196,7 +216,7 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
       title: 'Serial No.',
       dataIndex: 'serialNumber',
       width: '8%',
-      // editable: true,
+      render: (_: any, __: any, index: number) => index + 1,
     },
     {
       title: 'title',
@@ -215,6 +235,14 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
       dataIndex: 'maxWeightage',
       width: '10%',
       editable: true,
+    },
+    {
+      title: 'Part',
+      dataIndex: 'questionPart',
+      width: '10%',
+      editable: true,
+      render: (questionPart: number) =>
+        questionPart === 1 ? 'Part A' : 'Part B',
     },
     {
       title: 'Number of Questions',
@@ -256,6 +284,12 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
               q.syllabusSectionId === record.key &&
               q.unitName === unitName &&
               !q.isDeleted,
+          ).length === 0 &&
+          pendingChanges.filter(
+            (change) =>
+              change.data.syllabusSectionId === record.key &&
+              change.data.unitName === unitName &&
+              !change.data.isDeleted,
           ).length === 0;
 
         return editable ? (
@@ -310,7 +344,11 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
       ...col,
       onCell: (record: Item) => ({
         record,
-        inputType: col.dataIndex === 'title' ? 'text' : 'number',
+        inputType: (() => {
+          if (col.dataIndex === 'questionPart') return 'select';
+          if (col.dataIndex === 'title') return 'text';
+          return 'number';
+        })(),
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -332,7 +370,7 @@ function SyllabusSectionList({ unitName = '' }: SyllabusSectionListProps) {
             },
           }}
           bordered
-          dataSource={data}
+          dataSource={data.sort((a, b) => a.serialNumber - b.serialNumber)}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
