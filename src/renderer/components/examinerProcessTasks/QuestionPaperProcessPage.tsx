@@ -11,7 +11,7 @@ import {
   Switch,
   Alert,
 } from 'antd';
-import { SyncOutlined } from '@ant-design/icons';
+import { SyncOutlined, CompassTwoTone } from '@ant-design/icons';
 import { AppContext } from '../../context/AppContext';
 
 interface LocationState {
@@ -186,9 +186,11 @@ function QuestionPaperProcessPage(): React.ReactElement {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: '100vh',
+        // minHeight: '100vh',
         minWidth: '100vw',
-        backgroundColor: '#f0f2f5',
+        // backgroundColor: '#f0f2f5',
+        overflowY: 'auto',
+        maxHeight: '100vh',
       }}
     >
       <div
@@ -198,7 +200,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
           padding: '20px',
           backgroundColor: 'white',
           borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          // boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
         <Card title="Question Paper Preparation">
@@ -267,6 +269,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
           <div style={{ marginTop: '20px' }}>
             <Button onClick={handleBackClick}>Go Back</Button>
             <Button
+              ghost
               type="primary"
               onClick={() => {
                 generateQuestionPaper();
@@ -274,6 +277,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
               }}
               style={{ marginLeft: '20px' }}
             >
+              <CompassTwoTone twoToneColor="#eb2f96" />
               {questionPaper.length > 0
                 ? 'Regenerate Question Paper'
                 : 'Generate Question Paper'}
@@ -305,7 +309,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
           <div
             style={{
               overflowY: 'auto',
-              maxHeight: '500px',
+              maxHeight: '800px',
               width: '80%',
             }}
           >

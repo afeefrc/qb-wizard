@@ -56,6 +56,8 @@ export const questionsSchema = {
   },
   comments: { type: 'string', default: '' },
   isDeleted: { type: 'boolean', default: false },
+  isEdited: { type: 'boolean', default: false },
+  isLatestVersion: { keyPath: 'isLatestVersion', unique: false, default: true },
   isReviewed: { type: 'boolean', default: false },
   createdAt: { type: 'date', default: () => new Date() },
   updatedAt: { type: 'date', default: () => new Date() },

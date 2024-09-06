@@ -145,7 +145,7 @@ function QuestionBankEditTask({
     handleAddLinkedQuestions,
     handleDeleteLinkedQuestions,
     handleUpdateLinkedQuestions,
-    handleAddQuestion,
+    // handleAddQuestion,
     handleDeleteQuestion,
     handleUpdatePendingChange,
     handleDeletePendingChange,
@@ -176,7 +176,9 @@ function QuestionBankEditTask({
 
   const groupedQuestions = useMemo(() => {
     const filtered =
-      questions?.filter((q) => q.unitName === unitName && !q.isDeleted) || [];
+      questions?.filter(
+        (q) => q.unitName === unitName && !q.isDeleted && q.isLatestVersion,
+      ) || [];
     const pendingChangesMap = new Map(
       pendingChanges?.map((change) => [change.data.id, change.data]) || [],
     );
@@ -247,7 +249,10 @@ function QuestionBankEditTask({
               data: updatedRecord,
             });
           } else {
-            handleAddPendingChange({ type: 'update', data: updatedRecord });
+            handleAddPendingChange({
+              type: 'update',
+              data: { ...updatedRecord, isEdited: false },
+            });
           }
           toggleExpand(record);
         }}
@@ -698,10 +703,13 @@ function QuestionBankEditTask({
 
   const handleSubmit = (values: any) => {
     if (currentSectionId) {
-      handleAddQuestion({
-        ...values,
-        unitName,
-        syllabusSectionId: currentSectionId,
+      handleAddPendingChange({
+        type: 'add',
+        data: {
+          ...values,
+          unitName,
+          syllabusSectionId: currentSectionId,
+        },
       });
     }
     setIsModalVisible(false);

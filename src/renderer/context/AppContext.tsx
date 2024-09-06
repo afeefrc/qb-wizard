@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import {
   getQuestions,
-  addQuestion,
+  // addQuestion,
   deleteQuestion,
   addPendingChange,
   getPendingChanges,
@@ -222,13 +222,13 @@ export function AppProvider({ children }: AppProviderProps) {
   //   setPendingChanges(allPendingChanges);
   // };
 
-  const handleAddQuestion = useCallback(async (newQuestion: any) => {
-    await addQuestion(newQuestion);
-    const allPendingChanges = await getPendingChanges();
-    setPendingChanges(allPendingChanges);
-    const allQuestions = await getQuestions();
-    setQuestions(allQuestions);
-  }, []);
+  // const handleAddQuestion = useCallback(async (newQuestion: any) => {
+  //   await addQuestion(newQuestion);
+  //   const allPendingChanges = await getPendingChanges();
+  //   setPendingChanges(allPendingChanges);
+  //   const allQuestions = await getQuestions();
+  //   setQuestions(allQuestions);
+  // }, []);
 
   const handleApplyPendingChange = useCallback(async (id: number) => {
     await applyPendingChange(id);
@@ -414,7 +414,7 @@ export function AppProvider({ children }: AppProviderProps) {
       reviewPanels,
       examinerAssignments,
       syllabusSections,
-      handleAddQuestion,
+      // handleAddQuestion,
       handleDeleteQuestion,
       pendingChanges,
       handleAddPendingChange,
@@ -463,7 +463,7 @@ export function AppProvider({ children }: AppProviderProps) {
       handleUpdateExaminer,
       handleDeleteReviewPanel,
       handleUpdateReviewPanel,
-      handleAddQuestion,
+      // handleAddQuestion,
       handleDeleteQuestion,
       handleSaveSetting,
       handleAddReviewPanel,

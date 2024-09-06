@@ -23,7 +23,7 @@
 // } from './initDB';
 
 export {
-  addQuestion,
+  // addQuestion,
   getQuestions,
   deleteQuestion,
   handleImageUpload,

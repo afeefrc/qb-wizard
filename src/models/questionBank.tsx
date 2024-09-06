@@ -1,4 +1,5 @@
 import { openDB } from 'idb';
+import { v4 as uuidv4 } from 'uuid';
 import {
   questionsSchema,
   // settingsSchema,
@@ -51,13 +52,75 @@ async function getNextSerialNumber(db, unitName, year) {
   }
 }
 
-// Add a pending change to the question-bank
-export const addPendingChange = async (change) => {
+// // Add a pending change to the question-bank
+// export const addPendingChange = async (change) => {
+//   const db = await initDB();
+//   const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
+//   const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+//   await store.add(change);
+//   await tx.done;
+// };
+
+// add new question to the pending changes
+export const addPendingChange = async (item) => {
+  // if the item has id, it is an update, otherwise it is an add
+  const { type, data } = item;
+  // const dataToPass = type === 'delete' ? item.data : dataWithoutId;
+  const validatedItem = validateAndSetDefaults(data);
+  const cloneableItem = removeUncloneableProperties(validatedItem);
+  // await addPendingChange({ type: 'add', data: cloneableItem });
   const db = await initDB();
   const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
   const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
-  await store.add(change);
+  // if the item has id, it is an update (we need new id and item to preserve old), otherwise it is an add
+  await store.add({ type, data: cloneableItem });
+  // if (type === 'update') {
+  //   await store.add({ type: 'update', data: cloneableItem });
+  // } else if (type === 'delete') {
+  //   await store.add({ type: 'delete', data: cloneableItem });
+  // } else {
+  //   await store.add({ type: 'add', data: cloneableItem });
+  // }
   await tx.done;
+};
+
+// set isdelete true a question from the question-bank item and add to pending changes
+export const deleteQuestion = async (deleteId, updatedChange) => {
+  const db = await initDB();
+  const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
+  const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
+
+  // Check if there's an existing pending change for this question
+  const existingChange = await store.get(deleteId);
+
+  if (existingChange) {
+    // If there's an existing change, update it
+    const mergedChange = {
+      ...existingChange,
+      ...updatedChange,
+      data: { ...existingChange, ...updatedChange, isDeleted: true },
+      updatedAt: new Date().toISOString(),
+    };
+    await store.put(mergedChange);
+  } else {
+    // If there's no existing change, add a new one
+    const newChange = {
+      ...updatedChange,
+      data: { ...updatedChange.data, id: deleteId, isDeleted: true },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await store.add(newChange);
+  }
+
+  await tx.done;
+};
+
+export const getQuestions = async () => {
+  const db = await initDB();
+  const tx = db.transaction(QUESTION_STORE_NAME, 'readonly');
+  const store = tx.objectStore(QUESTION_STORE_NAME);
+  return store.getAll();
 };
 
 // Update a pending change in the pending-changes store
@@ -242,27 +305,64 @@ export const applyAllPendingChanges = async () => {
 
     let lastAssignedSerialNumber = 0;
 
-    for (const change of changes) {
+    changes.forEach(async (change) => {
       console.log('Processing change:', change);
       const updatedAt = new Date().toISOString();
 
-      if (change.type === 'add' || change.type === 'update') {
+      if (change.type === 'add') {
         let updatedData = { ...change.data, updatedAt };
 
-        if (change.type === 'add' || updatedData.serialNumber === undefined) {
-          const serialNumber = await getNextSerialNumberInTransaction(
-            questionStore,
-            change.data.unitName,
-            year,
-            lastAssignedSerialNumber,
-          );
-          updatedData = { ...updatedData, year, serialNumber };
-          lastAssignedSerialNumber = serialNumber;
-        }
+        const serialNumber = await getNextSerialNumberInTransaction(
+          questionStore,
+          change.data.unitName,
+          year,
+        );
+        updatedData = { ...updatedData, year, serialNumber };
 
         await handleRequest(questionStore.put(updatedData));
-        console.log('Question added/updated:', updatedData);
-      } else if (change.type === 'delete') {
+        console.log('Question added:', updatedData);
+      } else if (change.data.isDeleted === false && change.type === 'update') {
+        const existingQuestion = await handleRequest(
+          questionStore.get(change.data.id),
+        );
+        if (existingQuestion) {
+          // Preserve the old instance
+          const oldInstance = {
+            ...existingQuestion,
+            isLatestVersion: false,
+            archivedAt: new Date().toISOString(),
+          };
+          await handleRequest(questionStore.put(oldInstance));
+          console.log('Old instance archived:', oldInstance.id);
+
+          // Create a new item with updated data and new serial number
+          let updatedData = {
+            ...existingQuestion, // Start with existing data
+            ...change.data, // Override with new data
+            updatedAt,
+            previousVersionId: existingQuestion.id, // Reference to the old version
+            isLatestVersion: true,
+            id: uuidv4(),
+          };
+          const serialNumber = await getNextSerialNumberInTransaction(
+            questionStore,
+            updatedData.unitName,
+            year,
+          );
+          updatedData = {
+            ...updatedData,
+            year,
+            serialNumber,
+          };
+
+          await handleRequest(questionStore.put(updatedData));
+          console.log('New updated question added:', updatedData);
+        } else {
+          console.warn(
+            `Question with id ${change.data.id} not found for update`,
+          );
+        }
+      } else if (change.data.isDeleted === true || change.type === 'delete') {
         const question = await handleRequest(questionStore.get(change.data.id));
         if (question) {
           await handleRequest(
@@ -273,7 +373,7 @@ export const applyAllPendingChanges = async () => {
       }
       await handleRequest(pendingStore.delete(change.id));
       console.log('Pending change deleted:', change.id);
-    }
+    });
 
     // Apply linked questions
     const linkedQuestions = await handleRequest(linkedQuestionsStore.getAll());
@@ -328,52 +428,6 @@ export const applyAllPendingChanges = async () => {
     console.error('Error in applyAllPendingChanges:', error);
     throw error;
   }
-};
-
-// add question to the pending changes
-export const addQuestion = async (item) => {
-  const validatedItem = validateAndSetDefaults(item);
-  const cloneableItem = removeUncloneableProperties(validatedItem);
-  await addPendingChange({ type: 'add', data: cloneableItem });
-};
-
-// set isdelete true a question from the question-bank item and add to pending changes
-export const deleteQuestion = async (deleteId, updatedChange) => {
-  const db = await initDB();
-  const tx = db.transaction(PENDING_CHANGES_STORE_NAME, 'readwrite');
-  const store = tx.objectStore(PENDING_CHANGES_STORE_NAME);
-
-  // Check if there's an existing pending change for this question
-  const existingChange = await store.get(deleteId);
-
-  if (existingChange) {
-    // If there's an existing change, update it
-    const mergedChange = {
-      ...existingChange,
-      ...updatedChange,
-      data: { ...existingChange, ...updatedChange, isDeleted: true },
-      updatedAt: new Date().toISOString(),
-    };
-    await store.put(mergedChange);
-  } else {
-    // If there's no existing change, add a new one
-    const newChange = {
-      ...updatedChange,
-      data: { ...updatedChange.data, id: deleteId, isDeleted: true },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    await store.add(newChange);
-  }
-
-  await tx.done;
-};
-
-export const getQuestions = async () => {
-  const db = await initDB();
-  const tx = db.transaction(QUESTION_STORE_NAME, 'readonly');
-  const store = tx.objectStore(QUESTION_STORE_NAME);
-  return store.getAll();
 };
 
 // Function to handle image upload and convert it to a Blob

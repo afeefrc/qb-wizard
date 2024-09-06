@@ -91,6 +91,8 @@ function ReviewProcessPage(): React.ReactElement {
         minHeight: '100vh',
         minWidth: '100vw',
         backgroundColor: '#f0f2f5',
+        // overflowY: 'auto',
+        // maxHeight: '100vh',
       }}
     >
       <div
@@ -101,7 +103,7 @@ function ReviewProcessPage(): React.ReactElement {
           padding: '20px',
           backgroundColor: 'white',
           borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          // boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
         <Card title="Question Bank Review Process">
