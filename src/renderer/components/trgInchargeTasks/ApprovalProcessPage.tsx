@@ -138,7 +138,7 @@ function ApprovalProcessPage({
               }}
               style={{ marginLeft: '20px' }}
             >
-              Return back to the panel
+              Send back to the panel
             </Button>
             <Button
               ghost

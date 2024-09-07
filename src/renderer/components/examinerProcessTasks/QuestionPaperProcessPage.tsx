@@ -13,6 +13,7 @@ import {
 } from 'antd';
 import { SyncOutlined, CompassTwoTone } from '@ant-design/icons';
 import { AppContext } from '../../context/AppContext';
+import QuestionPaperDisplay from './QuestionPaperDisplay';
 
 interface LocationState {
   unit: string;
@@ -51,13 +52,13 @@ function QuestionPaperProcessPage(): React.ReactElement {
 
   const state = location.state as LocationState;
   const { unit, renderContent } = state;
-  const [questionPaper, setQuestionPaper] = useState<any[]>([]);
+  const [questionPaper, setQuestionPaper] = useState<any[]>(
+    renderContent.questionPaper,
+  );
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [examinerAssignmentStatus, setExaminerAssignmentStatus] = useState(
     renderContent.status,
   );
-
-  console.log('questionPaper', questionPaper);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -78,51 +79,63 @@ function QuestionPaperProcessPage(): React.ReactElement {
       (s) => s.unitName === unit,
     );
 
-    const mandatoryQuestions = filteredQuestions.filter((q) => q.mandatory);
-    const nonMandatoryQuestions = filteredQuestions.filter((q) => !q.mandatory);
+    const generatePart = (partQuestions, targetMarks) => {
+      let partPaper = [];
+      let partTotalMarks = 0;
 
-    let questionPaper = [...mandatoryQuestions];
-    let totalMarks = mandatoryQuestions.reduce((sum, q) => sum + q.marks, 0);
+      const mandatoryQuestions = partQuestions.filter((q) => q.mandatory);
+      const nonMandatoryQuestions = partQuestions.filter((q) => !q.mandatory);
 
-    const sectionMarks = filteredSyllabusSections.map((section) => {
-      const minMarks = (section.minWeightage / 100) * 100;
-      const maxMarks = (section.maxWeightage / 100) * 100;
-      return { sectionId: section.id, minMarks, maxMarks, currentMarks: 0 };
+      partPaper = [...mandatoryQuestions];
+      partTotalMarks = mandatoryQuestions.reduce((sum, q) => sum + q.marks, 0);
+
+      const isValidQuestion = (question) => {
+        if (partPaper.some((q) => q.id === question.id)) return false;
+        if (!question.linkedQuestion || question.linkedQuestion.length === 0)
+          return true;
+        return !question.linkedQuestion.some((id) =>
+          partPaper.some((q) => q.id === id),
+        );
+      };
+
+      while (partTotalMarks < targetMarks) {
+        const remainingMarks = targetMarks - partTotalMarks;
+        const validQuestions = nonMandatoryQuestions.filter(
+          (q) => isValidQuestion(q) && q.marks <= remainingMarks,
+        );
+        if (validQuestions.length === 0) break;
+
+        const randomQuestion =
+          validQuestions[Math.floor(Math.random() * validQuestions.length)];
+        partPaper.push(randomQuestion);
+        partTotalMarks += randomQuestion.marks;
+      }
+
+      return partPaper;
+    };
+
+    const partASections = filteredSyllabusSections.filter(
+      (s) => s.questionPart === 1,
+    );
+    const partBSections = filteredSyllabusSections.filter(
+      (s) => s.questionPart === 2,
+    );
+
+    const partAQuestions = filteredQuestions.filter((q) =>
+      partASections.some((s) => s.id === q.syllabusSectionId),
+    );
+    const partBQuestions = filteredQuestions.filter((q) =>
+      partBSections.some((s) => s.id === q.syllabusSectionId),
+    );
+
+    const partA = generatePart(partAQuestions, 100);
+    const partB = generatePart(partBQuestions, 50);
+
+    setQuestionPaper([...partA, ...partB]);
+    handleUpdateExaminerAssignment(renderContent.id, {
+      ...renderContent,
+      questionPaper: [...partA, ...partB],
     });
-
-    const addQuestionToPaper = (question) => {
-      questionPaper.push(question);
-      totalMarks += question.marks;
-      const section = sectionMarks.find(
-        (s) => s.sectionId === question.syllabusSectionId,
-      );
-      if (section) section.currentMarks += question.marks;
-    };
-
-    const isValidQuestion = (question) => {
-      if (questionPaper.some((q) => q.id === question.id)) return false;
-      if (
-        question.linkedQuestion.some((id) =>
-          questionPaper.some((q) => q.id === id),
-        )
-      )
-        return false;
-      return true;
-    };
-
-    while (totalMarks < 100) {
-      const remainingMarks = 100 - totalMarks;
-      const validQuestions = nonMandatoryQuestions.filter(
-        (q) => isValidQuestion(q) && q.marks <= remainingMarks,
-      );
-      if (validQuestions.length === 0) break;
-
-      const randomQuestion =
-        validQuestions[Math.floor(Math.random() * validQuestions.length)];
-      addQuestionToPaper(randomQuestion);
-    }
-
-    setQuestionPaper(questionPaper);
   };
 
   const columns = [
@@ -165,11 +178,6 @@ function QuestionPaperProcessPage(): React.ReactElement {
       ),
     },
   ];
-
-  const totalMarks = questionPaper.reduce(
-    (sum, question) => sum + question.marks,
-    0,
-  );
 
   const handleOk = () => {
     setIsModalOpen(false);
@@ -306,80 +314,13 @@ function QuestionPaperProcessPage(): React.ReactElement {
             alignItems: 'center',
           }}
         >
-          <div
-            style={{
-              overflowY: 'auto',
-              maxHeight: '800px',
-              width: '80%',
-            }}
-          >
-            {questionPaper
-              .reduce((acc, item) => {
-                const section = acc.find(
-                  (section) =>
-                    section.syllabusSectionId === item.syllabusSectionId,
-                );
-                if (section) {
-                  section.questions.push(item);
-                } else {
-                  acc.push({
-                    syllabusSectionId: item.syllabusSectionId,
-                    questions: [item],
-                  });
-                }
-                return acc;
-              }, [])
-              .map((section) => (
-                <div key={section.syllabusSectionId}>
-                  <div
-                    style={{
-                      fontSize: '18px',
-                      fontWeight: '500',
-                      marginBottom: '10px',
-                      marginTop: '10px',
-                    }}
-                  >
-                    Syllabus Section:{' '}
-                    {syllabusSections.find(
-                      (s) => s.id === section.syllabusSectionId,
-                    )?.title || section.syllabusSectionId}
-                  </div>
-                  <Table
-                    dataSource={section.questions.sort(
-                      (a, b) => a.marks - b.marks,
-                    )}
-                    columns={columns}
-                    rowKey="id"
-                    pagination={false}
-                  />
-                  <div
-                    style={{
-                      marginTop: '10px',
-                      marginBottom: '20px',
-                      textAlign: 'right',
-                      marginRight: '20px',
-                    }}
-                  >
-                    Total Marks for this Section:{' '}
-                    {section.questions.reduce(
-                      (sum, question) => sum + question.marks,
-                      0,
-                    )}
-                  </div>
-                </div>
-              ))}
-            <div
-              style={{
-                marginTop: '20px',
-                fontWeight: 'bold',
-                textAlign: 'right',
-                marginRight: '20px',
-                marginBottom: '40px',
-              }}
-            >
-              Total Marks for Question Paper:{totalMarks}
-            </div>
-          </div>
+          {questionPaper.length > 0 && (
+            <QuestionPaperDisplay
+              questionPaper={questionPaper}
+              syllabusSections={syllabusSections}
+              columns={columns}
+            />
+          )}
         </div>
       </div>
       <Modal

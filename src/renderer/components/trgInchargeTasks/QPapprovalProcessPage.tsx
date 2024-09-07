@@ -1,8 +1,9 @@
 import React from 'react';
-import { Card, Button, Tabs, Tag, message } from 'antd';
-import type { TabsProps } from 'antd';
+import { Card, Button, Tag, message, Typography } from 'antd';
 import { AppContext } from '../../context/AppContext';
-// import SyllabusSectionList from '../reviewProcessTasks/SyllabusSectionList';
+import QuestionPaperDisplay from '../examinerProcessTasks/QuestionPaperDisplay';
+
+const { Title } = Typography;
 
 interface RenderContent {
   id: string;
@@ -32,7 +33,8 @@ function QPapprovalProcessPage({
   onClose,
 }: QPapprovalProcessPageProps): React.ReactElement {
   const appContext = React.useContext(AppContext);
-  const { examiners } = appContext || {};
+  const { examiners, syllabusSections, handleUpdateExaminerAssignment } =
+    appContext || {};
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -45,20 +47,38 @@ function QPapprovalProcessPage({
     });
   };
 
-  // const matchingChairman = examiners.find(
-  //   (examiner: any) => examiner.id === content.chairman,
-  // );
-  // const matchingExaminers = examiners.filter(
-  //   (examiner: any) =>
-  //     content.members.includes(examiner.id) && examiner.id !== content.chairman,
-  // );
-
-  const items: TabsProps['items'] = [
+  // Define columns for the QuestionPaperDisplay component
+  const columns = [
     {
-      key: '2',
-      label: 'Question Paper',
-      children: <div>Question Paper</div>,
+      title: 'S.No',
+      dataIndex: 'serialNumber',
+      key: 'serialNumber',
+      render: (text, record, index) => index + 1,
+      width: '5%',
     },
+    {
+      title: 'Question',
+      dataIndex: 'questionText',
+      key: 'questionText',
+      width: '40%',
+      render: (text) => <Typography.Text strong>{text}</Typography.Text>,
+    },
+    {
+      title: 'Marks',
+      dataIndex: 'marks',
+      key: 'marks',
+    },
+    {
+      title: 'Type',
+      dataIndex: 'questionType',
+      key: 'questionType',
+    },
+    {
+      title: 'Difficulty',
+      dataIndex: 'difficultyLevel',
+      key: 'difficultyLevel',
+    },
+    // Add more columns as needed
   ];
 
   return (
@@ -69,6 +89,10 @@ function QPapprovalProcessPage({
         justifyContent: 'flex-start',
         alignItems: 'center',
         marginTop: '10px',
+        overflowY: 'auto',
+        maxHeight: '75vh',
+        // width: '90%',
+        // padding: '0px 40px',
       }}
     >
       {contextHolder}
@@ -130,6 +154,22 @@ function QPapprovalProcessPage({
           </div>
           <div style={{ marginTop: '20px' }}>
             <Button
+              onClick={() => {
+                handleUpdateExaminerAssignment(content.id, {
+                  ...content,
+                  status: 'In Progress',
+                });
+                successMessage();
+                setTimeout(() => {
+                  onClose();
+                }, 500);
+                console.log('Status set to In Progress');
+              }}
+              style={{ marginRight: '10px' }}
+            >
+              Send back to Examiner
+            </Button>
+            <Button
               type="primary"
               onClick={() => {
                 // handleApplyAllPendingChanges();
@@ -137,26 +177,21 @@ function QPapprovalProcessPage({
                 successMessage();
                 setTimeout(() => {
                   onClose();
-                }, 1000);
+                }, 500);
                 console.log('Approve Question Bank');
               }}
               style={{ marginLeft: '25px' }}
             >
-              Approve Question Bank
+              Approve Question Paper
             </Button>
           </div>
         </Card>
       </div>
 
-      <Tabs
-        type="card"
-        defaultActiveKey="2"
-        items={items}
-        style={{
-          width: '90%',
-          backgroundColor: 'white',
-          padding: '10px 20px',
-        }}
+      <QuestionPaperDisplay
+        questionPaper={content.questionPaper}
+        syllabusSections={syllabusSections} // You need to provide the syllabus sections data
+        columns={columns}
       />
     </div>
   );

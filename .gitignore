@@ -30,3 +30,4 @@ npm-debug.log.*
 
 # Dev populate data
 src/models/dev_populateData.tsx
+src/models/dev_sampleQuestions.tsx

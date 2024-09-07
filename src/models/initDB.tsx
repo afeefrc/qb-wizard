@@ -3,6 +3,7 @@ import {
   sampleSettings,
   sampleExaminers,
   sampleSyllabusSections,
+  sampleQuestions,
 } from './dev_populateData';
 
 export const DB_NAME = 'my-database';
@@ -25,6 +26,13 @@ export const initDB = async () => {
           autoIncrement: true,
         });
         store.createIndex('unitNameYearIndex', ['unitName', 'year']);
+
+        if (process.env.NODE_ENV === 'development') {
+          sampleQuestions.forEach((question) => store.add(question));
+          console.log(
+            '[development] Sample question bank populated successfully',
+          );
+        }
       }
       // Create pending-changes store if it doesn't exist.
       // This store will be used to store the pending changes to the question-bank.
