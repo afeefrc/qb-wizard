@@ -9,11 +9,14 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import fs from 'fs';
+import { execFile } from 'child_process';
+import os from 'os';
 
 class AppUpdater {
   constructor() {
@@ -25,10 +28,68 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
+// qpdf path
+
+function getQPDFPath() {
+  const platform = os.platform();
+  const arch = os.arch();
+  const qpdfDir = path.join(
+    __dirname,
+    '..',
+    '..',
+    'resources',
+    'qpdf',
+    `${platform}-${arch}`,
+  );
+  const qpdfBinary = platform === 'win32' ? 'qpdf.exe' : 'qpdf';
+  return path.join(qpdfDir, qpdfBinary);
+}
+
+ipcMain.handle('encrypt-pdf', async (event, pdfData) => {
+  const tempDir = os.tmpdir();
+  const inputPath = path.join(tempDir, 'input.pdf');
+  const outputPath = path.join(tempDir, 'encrypted.pdf');
+
+  // Write the PDF data to a temporary file
+  fs.writeFileSync(inputPath, Buffer.from(pdfData));
+
+  // Encrypt the PDF using qpdf
+  const password = '123456'; // You might want to generate this dynamically
+  const qpdfPath = getQPDFPath();
+
+  await new Promise((resolve, reject) => {
+    execFile(
+      qpdfPath,
+      ['--encrypt', password, password, '128', '--', inputPath, outputPath],
+      (error) => {
+        if (error) {
+          console.error('QPDF encryption error:', error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+
+  // Clean up the input file
+  fs.unlinkSync(inputPath);
+
+  return outputPath;
+});
+
+ipcMain.on('download-file', (event, filePath, suggestedName) => {
+  dialog
+    .showSaveDialog({
+      defaultPath: suggestedName,
+    })
+    .then(({ filePath: savePath }) => {
+      if (savePath) {
+        fs.copyFileSync(filePath, savePath);
+        // Clean up the temporary encrypted file
+        fs.unlinkSync(filePath);
+      }
+    });
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -135,3 +196,11 @@ app
     });
   })
   .catch(console.log);
+
+app.on('ready', () => {
+  if (process.platform !== 'win32') {
+    const qpdfPath = getQPDFPath();
+    fs.chmodSync(qpdfPath, '755');
+  }
+  createWindow();
+});

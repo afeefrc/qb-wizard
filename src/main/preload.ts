@@ -2,7 +2,10 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'ipc-example';
+export type Channels =
+  | 'ipc-example'
+  | 'encrypt-and-download-pdf'
+  | 'pdf-download-result';
 
 const electronHandler = {
   ipcRenderer: {
@@ -20,6 +23,10 @@ const electronHandler = {
     },
     once(channel: Channels, func: (...args: unknown[]) => void) {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
+    },
+    // Add this new method
+    send(channel: Channels, ...args: unknown[]) {
+      ipcRenderer.send(channel, ...args);
     },
   },
 };

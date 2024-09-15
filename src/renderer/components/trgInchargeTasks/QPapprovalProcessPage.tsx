@@ -13,7 +13,12 @@ interface RenderContent {
   examiner_invigilator: string;
   examiner_evaluation: string;
   status: string;
-  content: any[];
+  questionPaper: any[];
+  archivedQuestionPaper: {
+    content: any[];
+    syllabusSections: any[];
+    archivedAt: Date | null;
+  };
   deadline?: Date | null;
   comments_initiate: string;
   comments_submit: string;
@@ -172,8 +177,10 @@ function QPapprovalProcessPage({
             <Button
               type="primary"
               onClick={() => {
-                // handleApplyAllPendingChanges();
-                // handleDeleteReviewPanel(content.id);
+                handleUpdateExaminerAssignment(content.id, {
+                  ...content,
+                  status: 'Approved',
+                });
                 successMessage();
                 setTimeout(() => {
                   onClose();
@@ -188,11 +195,13 @@ function QPapprovalProcessPage({
         </Card>
       </div>
 
-      <QuestionPaperDisplay
-        questionPaper={content.questionPaper}
-        syllabusSections={syllabusSections} // You need to provide the syllabus sections data
-        columns={columns}
-      />
+      <div>
+        <QuestionPaperDisplay
+          questionPaper={content.archivedQuestionPaper.content}
+          syllabusSections={content.archivedQuestionPaper.syllabusSections} // You need to provide the syllabus sections data
+          columns={columns}
+        />
+      </div>
     </div>
   );
 }

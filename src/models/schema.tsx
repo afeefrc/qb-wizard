@@ -124,7 +124,15 @@ export const examinerAssignmentSchema = {
   examiner_invigilator: { type: 'string', default: '' },
   examiner_evaluation: { type: 'string', default: '' },
   status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'in process', 'submitted', 'approved', 'rejected'
-  questionPaper: { type: 'array', default: [] },
+  archivedQuestionPaper: {
+    type: 'object',
+    default: () => ({
+      content: [],
+      syllabusSections: [],
+      archivedAt: null,
+    }),
+  },
+  isArchived: { type: 'boolean', default: false },
   deadline: { type: 'date', default: null },
   comments_initiate: { type: 'string', default: '' },
   comments_submit: { type: 'string', default: '' },

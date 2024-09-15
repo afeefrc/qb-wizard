@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Button,
-  Table,
+  // Table,
   Typography,
   Card,
   Tag,
-  Collapse,
+  // Collapse,
   Modal,
   Switch,
   Alert,
@@ -25,7 +25,12 @@ interface LocationState {
     examiner_invigilator: string;
     examiner_evaluation: string;
     status: string;
-    content: any[];
+    // questionPaper: any[];
+    archivedQuestionPaper: {
+      content: any[];
+      syllabusSections: any[];
+      archivedAt: Date | null;
+    };
     deadline: Date | null;
     comments_initiate: string;
     comments_submit: string;
@@ -36,8 +41,8 @@ interface LocationState {
   };
 }
 
-const { Title, Text } = Typography;
-const { Panel } = Collapse;
+// const { Title, Text } = Typography;
+// const { Panel } = Collapse;
 
 function QuestionPaperProcessPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -51,9 +56,10 @@ function QuestionPaperProcessPage(): React.ReactElement {
   } = appContext || {};
 
   const state = location.state as LocationState;
-  const { unit, renderContent } = state;
+  const { unit } = state;
+  const [renderContent, setRenderContent] = useState<any>(state.renderContent);
   const [questionPaper, setQuestionPaper] = useState<any[]>(
-    renderContent.questionPaper,
+    renderContent.archivedQuestionPaper.content,
   );
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [examinerAssignmentStatus, setExaminerAssignmentStatus] = useState(
@@ -131,11 +137,18 @@ function QuestionPaperProcessPage(): React.ReactElement {
     const partA = generatePart(partAQuestions, 100);
     const partB = generatePart(partBQuestions, 50);
 
-    setQuestionPaper([...partA, ...partB]);
-    handleUpdateExaminerAssignment(renderContent.id, {
+    const updatedRenderContent = {
       ...renderContent,
-      questionPaper: [...partA, ...partB],
-    });
+      // questionPaper: [...partA, ...partB],
+      archivedQuestionPaper: {
+        content: [...partA, ...partB],
+        syllabusSections: [...partASections, ...partBSections],
+      },
+    };
+    handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
+    setQuestionPaper([...partA, ...partB]);
+    // update the local state with the new render content
+    setRenderContent(updatedRenderContent);
   };
 
   const columns = [
@@ -196,7 +209,6 @@ function QuestionPaperProcessPage(): React.ReactElement {
         alignItems: 'center',
         // minHeight: '100vh',
         minWidth: '100vw',
-        // backgroundColor: '#f0f2f5',
         overflowY: 'auto',
         maxHeight: '100vh',
       }}
@@ -317,7 +329,9 @@ function QuestionPaperProcessPage(): React.ReactElement {
           {questionPaper.length > 0 && (
             <QuestionPaperDisplay
               questionPaper={questionPaper}
-              syllabusSections={syllabusSections}
+              syllabusSections={
+                renderContent.archivedQuestionPaper.syllabusSections
+              }
               columns={columns}
             />
           )}
