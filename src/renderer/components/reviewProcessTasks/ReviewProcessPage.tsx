@@ -29,8 +29,12 @@ function ReviewProcessPage(): React.ReactElement {
   const state = location.state as LocationState;
 
   const appContext = React.useContext(AppContext);
-  const { examiners, syllabusSections, handleUpdateReviewPanel } =
-    appContext || {};
+  const {
+    examiners,
+    syllabusSections,
+    handleUpdateReviewPanel,
+    handleAddUserActivityLog,
+  } = appContext || {};
   const matchingChairman = examiners.find(
     (examiner: any) => examiner.id === state.renderContent.chairman,
   );
@@ -287,6 +291,15 @@ function ReviewProcessPage(): React.ReactElement {
                     setReviewStatus(checked ? 'In Progress' : 'Initiated');
                     handleUpdateReviewPanel(state.renderContent.id, {
                       status: checked ? 'In Progress' : 'Initiated',
+                    });
+                    handleAddUserActivityLog({
+                      user: matchingChairman?.examinerName,
+                      members: matchingExaminers
+                        .map((examiner: any) => examiner.examinerName)
+                        .join(', '),
+                      action: `Question bank review process for ${state.renderContent.unit}`,
+                      targetType: 'questionBank',
+                      description: 'Review process started',
                     });
                   }}
                 />

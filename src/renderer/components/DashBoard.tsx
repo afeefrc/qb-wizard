@@ -169,14 +169,13 @@ function DashBoard() {
         </Divider>
       )}
 
-      {examinerAssignmentsContents?.map((renderContent, index) => {
-        // console.log('renderContent', renderContent);
-        return (
+      {examinerAssignmentsContents
+        ?.filter((content) => content.status.toLowerCase() !== 'approved')
+        .map((renderContent, index) => (
           <DashboardCard
             key={index}
             content={renderContent}
             onClick={(unit) => {
-              // console.log(`card clicked ${unit}`);
               if (user?.role === 'examiner') {
                 handleNavigation('/examiner-process', {
                   unit,
@@ -193,8 +192,7 @@ function DashBoard() {
             }}
             cardType={'questionPaperAssignment'}
           />
-        );
-      })}
+        ))}
     </div>
   );
 }

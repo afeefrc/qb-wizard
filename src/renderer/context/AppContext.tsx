@@ -42,6 +42,8 @@ import {
   getAllSyllabusSections,
   deleteSyllabusSection,
   updateSyllabusSection,
+  addUserActivityLog,
+  getAllUserActivityLogs,
 } from '../../models';
 
 interface AppContextProps {
@@ -89,6 +91,8 @@ interface AppContextProps {
   ) => Promise<void>;
   syllabusSections: any[];
   handleDeleteSyllabusSection: (id: number) => Promise<void>;
+  handleAddUserActivityLog: (newUserActivityLog: any) => Promise<void>;
+  handleGetAllUserActivityLogs: () => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -106,6 +110,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [syllabusSections, setSyllabusSections] = useState<any[]>([]);
   const [pendingChanges, setPendingChanges] = useState<any[]>([]);
   const [linkedQuestions, setLinkedQuestions] = useState<any[]>([]);
+  const [userActivityLogs, setUserActivityLogs] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -188,6 +193,14 @@ export function AppProvider({ children }: AppProviderProps) {
       setLinkedQuestions(allLinkedQuestions);
     };
     fetchLinkedQuestions();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserActivityLogs = async () => {
+      const allUserActivityLogs = await getAllUserActivityLogs();
+      setUserActivityLogs(allUserActivityLogs);
+    };
+    fetchUserActivityLogs();
   }, []);
 
   // const handleAddExaminer = async (newExaminers) => {
@@ -406,6 +419,21 @@ export function AppProvider({ children }: AppProviderProps) {
     setSyllabusSections(allSyllabusSections);
   }, []);
 
+  // user activity log
+  const handleAddUserActivityLog = useCallback(
+    async (newUserActivityLog: any) => {
+      await addUserActivityLog(newUserActivityLog);
+      const allUserActivityLogs = await getAllUserActivityLogs();
+      setUserActivityLogs(allUserActivityLogs);
+    },
+    [],
+  );
+
+  // const handleGetAllUserActivityLogs = useCallback(async () => {
+  //   const allUserActivityLogs = await getAllUserActivityLogs();
+  //   setUserActivityLogs(allUserActivityLogs);
+  // }, []);
+
   const contextValue = useMemo(
     () => ({
       questions,
@@ -439,6 +467,8 @@ export function AppProvider({ children }: AppProviderProps) {
       handleAddSyllabusSection,
       handleUpdateSyllabusSection,
       handleDeleteSyllabusSection,
+      userActivityLogs,
+      handleAddUserActivityLog,
     }),
     [
       questions,
@@ -473,6 +503,8 @@ export function AppProvider({ children }: AppProviderProps) {
       handleAddSyllabusSection,
       handleUpdateSyllabusSection,
       handleDeleteSyllabusSection,
+      userActivityLogs,
+      handleAddUserActivityLog,
     ],
   );
 

@@ -35,8 +35,12 @@ function CreateReviewPanel({
   // setEditBtnPressed, //set the edit button to true/false
 }: CreateReviewPanelProps) {
   const appContext = React.useContext(AppContext);
-  const { handleAddReviewPanel, handleUpdateReviewPanel, examiners } =
-    appContext || {};
+  const {
+    handleAddReviewPanel,
+    handleUpdateReviewPanel,
+    examiners,
+    handleAddUserActivityLog,
+  } = appContext || {};
   const [form] = Form.useForm();
   const [selectedValues, setSelectedValues] = useState([]);
   // const [chairman, setChairman] = useState('');
@@ -76,6 +80,9 @@ function CreateReviewPanel({
     );
   };
 
+  const getExaminerName = (id) =>
+    examiners.find((e) => e.id === id)?.examinerName || id;
+
   const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
     const content = {
       unit: unit,
@@ -86,6 +93,12 @@ function CreateReviewPanel({
       deadline: values.date?.toDate() || null,
     };
     handleAddReviewPanel(content);
+    handleAddUserActivityLog({
+      user: 'TRG Incharge',
+      action: `Question bank review process for ${unit}`,
+      targetType: 'questionBank',
+      description: `Created review panel. Members: ${getExaminerName(values.chairman)} (Chairman), ${values.names.map(getExaminerName).join(', ')}`,
+    });
     form.resetFields();
     close();
   };

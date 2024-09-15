@@ -174,3 +174,17 @@ export const syllabusSectionSchema = {
   createdAt: { type: 'date', default: () => new Date() },
   updatedAt: { type: 'date', default: () => new Date() },
 };
+
+export const userActivityLogSchema = {
+  id: { type: 'string', default: () => uuidv4() },
+  user: { type: 'string', default: '' },
+  members: { type: 'array', default: [] },
+  action: { type: 'string', default: '' },
+  targetType: {
+    type: 'enum',
+    values: ['questionBank', 'questionPaper'],
+    default: 'questionPaper',
+  },
+  description: { type: 'string', default: '' },
+  activityTime: { type: 'date', default: () => new Date() },
+};

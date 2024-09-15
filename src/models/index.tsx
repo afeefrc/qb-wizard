@@ -70,6 +70,8 @@ export {
   updateSyllabusSection,
 } from './syllabusSections';
 
+export { addUserActivityLog, getAllUserActivityLogs } from './userActivityLog';
+
 // const DB_NAME = 'my-database';
 // const DB_VERSION = 1;
 // const QUESTION_STORE_NAME = 'question-bank';
