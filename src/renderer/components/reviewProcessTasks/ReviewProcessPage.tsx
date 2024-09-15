@@ -299,6 +299,7 @@ function ReviewProcessPage(): React.ReactElement {
                         .join(', '),
                       action: `Question bank review process for ${state.renderContent.unit}`,
                       targetType: 'questionBank',
+                      unit: state.renderContent.unit,
                       description: 'Review process started',
                     });
                   }}

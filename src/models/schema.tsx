@@ -185,6 +185,7 @@ export const userActivityLogSchema = {
     values: ['questionBank', 'questionPaper'],
     default: 'questionPaper',
   },
+  unit: { type: 'string', default: '' },
   description: { type: 'string', default: '' },
   activityTime: { type: 'date', default: () => new Date() },
 };

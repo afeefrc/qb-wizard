@@ -97,6 +97,7 @@ function CreateReviewPanel({
       user: 'TRG Incharge',
       action: `Question bank review process for ${unit}`,
       targetType: 'questionBank',
+      unit: unit,
       description: `Created review panel. Members: ${getExaminerName(values.chairman)} (Chairman), ${values.names.map(getExaminerName).join(', ')}`,
     });
     form.resetFields();
