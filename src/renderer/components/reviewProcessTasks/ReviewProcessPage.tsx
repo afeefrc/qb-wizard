@@ -207,6 +207,16 @@ function ReviewProcessPage(): React.ReactElement {
                 handleUpdateReviewPanel(state.renderContent.id, {
                   status: 'Submitted',
                 });
+                handleAddUserActivityLog({
+                  user: matchingChairman?.examinerName,
+                  members: matchingExaminers
+                    .map((examiner: any) => examiner.examinerName)
+                    .join(', '),
+                  action: `Question bank review process for ${state.renderContent.unit}`,
+                  targetType: 'questionBank',
+                  unit: state.renderContent.unit,
+                  description: 'Review process submitted',
+                });
                 navigate('/review-panel');
               }}
               style={{ marginLeft: '10px' }}

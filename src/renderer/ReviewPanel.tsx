@@ -6,6 +6,7 @@ import BodyContentCard from './components/BodyContentCard';
 import MenuList from './components/MenuAntd';
 import './RolePage.css'; // Import the CSS file for styling
 import { useUser } from './context/UserContext';
+import QuestionBankDisplay from './components/QuestionBankDisplay';
 
 function ReviewPanel() {
   const navigate = useNavigate();
@@ -39,7 +40,8 @@ function ReviewPanel() {
       '0': {
         title: menuTitles[0],
         component: (
-          <Empty description={`Under development ${BtnPressed.BtnName}`} />
+          // <Empty description={`Under development ${BtnPressed.BtnName}`} />
+          <QuestionBankDisplay unitName={BtnPressed.BtnName} />
         ),
       },
       '1': {

@@ -17,7 +17,7 @@ import {
 import ExpandedRowEditor from './ExpandedRowEditor';
 import AddQuestionModal from './AddQuestionModal';
 import LinkSimilarQuestionsDrawer from './LinkSimilarQuestionsDrawer';
-
+import { renderAnswerKey } from '../utils/tableRenderers';
 import { AppContext } from '../../context/AppContext';
 
 const { Text } = Typography;
@@ -75,62 +75,6 @@ const renderQuestionContent = (text: string, record: ColumnDataType) => {
     );
   }
   return <Text style={{ fontSize: '16px', fontWeight: 400 }}>{text}</Text>;
-};
-
-const renderAnswerKey = (text: string, record: ColumnDataType) => {
-  const answerStyle = { fontSize: '16px', fontWeight: 400 };
-
-  switch (record.questionType) {
-    case 'mcq':
-      if (record.answerList && record.correctOption !== undefined) {
-        const correctIndex = parseInt(record.correctOption);
-        return (
-          <Text style={answerStyle}>
-            {String.fromCharCode(65 + correctIndex)}.{' '}
-            {record.answerList[correctIndex] || 'N/A'}
-          </Text>
-        );
-      }
-      return <Text style={answerStyle}>{text}</Text>;
-    case 'trueFalse':
-      return (
-        <Text style={answerStyle}>
-          {record.trueAnswer ? 'True' : `False, ${record.answerText}`}
-        </Text>
-      );
-    case 'matchTheFollowing':
-      return (
-        <ul style={{ paddingLeft: '0px', margin: 0 }}>
-          {record.matchPairs?.map((pair, index) => (
-            <li key={index}>
-              <Text style={answerStyle}>
-                {pair.item} ==&gt; {pair.match}
-              </Text>
-            </li>
-          ))}
-        </ul>
-      );
-    case 'fillInTheBlanks':
-      return (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0px' }}>
-          {record.answerList?.map((answer, index) => (
-            <Text
-              key={index}
-              style={{
-                ...answerStyle,
-                padding: '2px',
-                borderRadius: '4px',
-              }}
-            >
-              {answer}
-              {index < record.answerList.length - 1 && '  ,'}
-            </Text>
-          ))}
-        </div>
-      );
-    default:
-      return <Text style={answerStyle}>{text}</Text>;
-  }
 };
 
 function QuestionBankEditTask({

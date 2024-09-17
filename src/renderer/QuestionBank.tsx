@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
 import './ToolbarPage.css'; // Import the CSS file for styling
+import QuestionBankDisplay from './components/QuestionBankDisplay';
 
 function QuestionBank() {
   const navigate = useNavigate();

@@ -14,6 +14,7 @@ import {
 import { SyncOutlined, CompassTwoTone } from '@ant-design/icons';
 import { AppContext } from '../../context/AppContext';
 import QuestionPaperDisplay from './QuestionPaperDisplay';
+import { renderAnswerKey } from '../utils/tableRenderers';
 
 interface LocationState {
   unit: string;
@@ -164,6 +165,12 @@ function QuestionPaperProcessPage(): React.ReactElement {
       key: 'questionText',
       width: '35%',
       render: (text) => <Typography.Text strong>{text}</Typography.Text>,
+    },
+    {
+      title: 'Answer Key',
+      dataIndex: 'answerText',
+      key: 'answerText',
+      render: renderAnswerKey,
     },
     {
       title: 'Marks',

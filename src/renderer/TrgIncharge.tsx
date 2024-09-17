@@ -11,6 +11,7 @@ import CreateReviewPanel from './components/trgInchargeTasks/createReviewPanel';
 import ExaminerAssignment from './components/trgInchargeTasks/AssignExaminer';
 import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
 import QuestionLogs from './components/trgInchargeTasks/QuestionLogs';
+import QuestionBankDisplay from './components/QuestionBankDisplay';
 // import { useUser } from './context/UserContext';
 
 const trgInchargeMenuTitles = [
@@ -50,7 +51,8 @@ function TrgIncharge() {
       '0': {
         title: menuTitles[0],
         component: (
-          <Empty description={`Under development ${BtnPressed.BtnName}`} />
+          // <Empty description={`Under development ${BtnPressed.BtnName}`} />
+          <QuestionBankDisplay unitName={BtnPressed.BtnName} />
         ),
       },
       '1': {

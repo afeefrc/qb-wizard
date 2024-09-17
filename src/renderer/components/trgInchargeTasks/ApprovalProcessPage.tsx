@@ -30,6 +30,7 @@ function ApprovalProcessPage({
     handleUpdateReviewPanel,
     handleApplyAllPendingChanges,
     handleDeleteReviewPanel,
+    handleAddUserActivityLog,
   } = appContext || {};
 
   const [messageApi, contextHolder] = message.useMessage();
@@ -131,6 +132,15 @@ function ApprovalProcessPage({
               type="primary"
               onClick={() => {
                 handleUpdateReviewPanel(content.id, { status: 'In Progress' });
+                handleAddUserActivityLog({
+                  user: 'Trg Incharge',
+                  action: `Question bank review process for ${content.unit}`,
+                  targetType: 'questionBank',
+                  unit: content.unit,
+                  description: `Question bank review returned back to the panel for rework, Panel Members: ${matchingChairman?.examinerName} (Chairman), ${matchingExaminers
+                    .map((examiner: any) => examiner.examinerName)
+                    .join(', ')}`,
+                });
                 successMessage();
                 setTimeout(() => {
                   onClose();
@@ -143,7 +153,7 @@ function ApprovalProcessPage({
             <Button
               ghost
               type="primary"
-              onClick={() => {}}
+              onClick={() => {}} // TODO: Add logic for forwarding to new review panel and log
               style={{ marginLeft: '25px' }}
             >
               Foward to new Review Panel
@@ -153,6 +163,14 @@ function ApprovalProcessPage({
               onClick={() => {
                 handleApplyAllPendingChanges();
                 handleDeleteReviewPanel(content.id);
+                handleAddUserActivityLog({
+                  user: 'Trg Incharge',
+                  action: `Question bank review process for ${content.unit}`,
+                  targetType: 'questionBank',
+                  unit: content.unit,
+                  description:
+                    'Question bank updated and approved by Training Incharge',
+                });
                 successMessage();
                 // Delay closing to allow the message to be shown
                 setTimeout(() => {

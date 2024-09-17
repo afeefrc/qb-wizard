@@ -166,3 +166,37 @@ a:hover {
   align-items: center;
   margin: 20px 0px;
 }
+
+/* adjust vertical alignment of pagination */
+.ant-pagination-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure consistent padding for pagination items */
+.ant-pagination-item,
+.ant-pagination-prev,
+.ant-pagination-next {
+  padding: 0px;
+  line-height: 32px;
+  /* Adjust this value as needed */
+}
+
+/* Set a fixed height and width for pagination items */
+.ant-pagination-item,
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  height: 32px;
+  /* Adjust as needed */
+  width: 32px;
+  /* Adjust as needed */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reset the line height for pagination items */
+.ant-pagination-item a {
+  line-height: 0.5;
+}

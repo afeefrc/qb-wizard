@@ -1,13 +1,13 @@
 import React, { useState, useContext } from 'react';
 // import MenuItem from './MenuItem';
+import type { CollapseProps } from 'antd';
+import { Collapse } from 'antd';
+import { SettingOutlined, AuditOutlined } from '@ant-design/icons';
 import CustomButton from './CustomButton';
 import {
   trgInchargeMenuContentCopy,
   trgInchargeAccordionTitles,
 } from '../SampleData';
-import type { CollapseProps } from 'antd';
-import { Collapse } from 'antd';
-import { SettingOutlined, AuditOutlined } from '@ant-design/icons';
 import { AppContext } from '../context/AppContext';
 
 // interface Button {
@@ -32,7 +32,7 @@ function MenuColumn({ BtnPressed, handleButtonClick }: MenuColumnProps) {
   const appContext = useContext(AppContext);
   const { settings } = appContext || {};
 
-  const generateMenuItems = () => { 
+  const generateMenuItems = () => {
     const units = settings?.unitsApplicable || [];
 
     const style = {

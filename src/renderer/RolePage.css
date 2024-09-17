@@ -181,10 +181,31 @@ flex-direction: column;
 
 .content-box {
   flex: 1;
-  /* padding: 5px; */
   margin-right: 30px;
   margin-left: 15px;
   border-top: 2px solid rgba(255, 255, 255, 0.2);
+  overflow-y: auto;
+  max-height: 100vh;
+  scrollbar-width: thin;
+  scrollbar-color: #a3a1a1 transparent;
+}
+
+.content-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-box::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.content-box::-webkit-scrollbar-thumb {
+  background: #a3a1a1;
+  border-radius: 6px;
+}
+
+.content-box::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .button-container {
