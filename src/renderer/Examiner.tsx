@@ -4,6 +4,7 @@ import { Empty } from 'antd';
 import MenuList from './components/MenuAntd';
 import BodyContentCard from './components/BodyContentCard';
 import DashBoard from './components/DashBoard';
+import QuestionBankDisplay from './components/QuestionBankDisplay';
 import './RolePage.css'; // Import the CSS file for styling
 import { useUser } from './context/UserContext';
 
@@ -50,9 +51,7 @@ function Examiner() {
       },
       '2': {
         title: menuTitles[2],
-        component: (
-          <Empty description={`Under development ${BtnPressed.BtnName}`} />
-        ),
+        component: <QuestionBankDisplay unitName={BtnPressed.BtnName} />,
       },
       // '3': {
       //   title: 'Assign examiner to prepare Question Paper',

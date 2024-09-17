@@ -570,3 +570,13 @@ flex-direction: column;
 .ant-menu-submenu-title {
   height: 45px  !important;
 }
+
+
+/* .wide-tabs .ant-tabs-tab {
+  min-width: 150px !important;
+  text-align: center !important;
+}
+
+.wide-tabs .ant-tabs-tab-btn {
+  width: 100% !important;
+} */

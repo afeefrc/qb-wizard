@@ -213,11 +213,14 @@ function QuestionBankDisplay({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
       }}
     >
       <div
         style={{
           flex: 1,
+          width: '100%',
           overflowY: 'auto',
         }}
       >
@@ -240,7 +243,7 @@ function QuestionBankDisplay({
                       pagination={false}
                       bordered
                       size="middle"
-                      scroll={{ y: 500 }}
+                      scroll={{ y: '50vh' }}
                     />
                   ) : (
                     <Empty description="No questions found in this section" />
@@ -249,7 +252,7 @@ function QuestionBankDisplay({
               ))}
             </Collapse>
           ) : (
-            <Empty description="No questions found for this unit" />
+            <Empty description={`No questions found for ${unitName}`} />
           )}
         </div>
       </div>
