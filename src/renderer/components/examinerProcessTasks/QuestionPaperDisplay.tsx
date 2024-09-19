@@ -1,6 +1,6 @@
 import React from 'react';
-import { Table, Typography } from 'antd';
-import { SyncOutlined } from '@ant-design/icons';
+import { Table, Typography, Button } from 'antd';
+import { SyncOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import QuestionPaperPDF from '../utils/QuestionPaperPDF';
 
 const { Title } = Typography;
@@ -9,12 +9,14 @@ interface QuestionPaperDisplayProps {
   questionPaper: any[];
   syllabusSections: any[];
   columns: any[];
+  replaceQuestion: (question: any) => void;
 }
 
 function QuestionPaperDisplay({
   questionPaper,
   syllabusSections,
   columns,
+  replaceQuestion,
 }: QuestionPaperDisplayProps) {
   const totalMarks = questionPaper.reduce(
     (sum, question) => sum + question.marks,
@@ -63,12 +65,31 @@ function QuestionPaperDisplay({
                 .sort((a, b) => a.serialNumber - b.serialNumber)
                 .map((section) => (
                   <div key={section.syllabusSectionId}>
-                    <Title level={4}>
-                      Syllabus Section:{' '}
-                      {syllabusSections.find(
-                        (s) => s.id === section.syllabusSectionId,
-                      )?.title || section.syllabusSectionId}
-                    </Title>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        paddingRight: '20px',
+                      }}
+                    >
+                      <Title level={4}>
+                        Syllabus Section:{' '}
+                        {syllabusSections.find(
+                          (s) => s.id === section.syllabusSectionId,
+                        )?.title || section.syllabusSectionId}
+                      </Title>
+                      <Button
+                        type="primary"
+                        ghost
+                        icon={<PlusSquareOutlined />}
+                        onClick={() => {
+                          console.log('add question to this section');
+                          // call prop function to add question to this section
+                        }}
+                      >
+                        Add question to this section
+                      </Button>
+                    </div>
                     <Table
                       dataSource={section.questions.sort(
                         (a, b) => a.marks - b.marks,

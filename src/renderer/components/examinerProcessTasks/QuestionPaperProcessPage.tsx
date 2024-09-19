@@ -152,6 +152,35 @@ function QuestionPaperProcessPage(): React.ReactElement {
     setRenderContent(updatedRenderContent);
   };
 
+  // function to replace a question with another question
+  /**
+   * Replaces a question in the questionPaper array, updates the global store using handleUpdateExaminerAssignment,
+   * and updates the local state variables questionPaper and renderContent.
+   *
+   * @param {string} questionId - The ID of the question to be replaced.
+   * @param {any} newQuestion - The new question object to replace the existing one.
+   */
+  const replaceQuestion = (questionId: string, newQuestion: any) => {
+    // Replace the question in the local questionPaper state
+    const updatedQuestionPaper = questionPaper.map((question) =>
+      question.id === questionId ? newQuestion : question,
+    );
+    // Update the renderContent with the new questionPaper
+    const updatedRenderContent = {
+      ...renderContent,
+      archivedQuestionPaper: {
+        ...renderContent.archivedQuestionPaper,
+        content: updatedQuestionPaper,
+      },
+    };
+
+    // update the store
+    handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
+    // update the local state
+    setQuestionPaper(updatedQuestionPaper);
+    setRenderContent(updatedRenderContent);
+  };
+
   const columns = [
     {
       title: 'S.No',
@@ -340,6 +369,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
                 renderContent.archivedQuestionPaper.syllabusSections
               }
               columns={columns}
+              replaceQuestion={replaceQuestion}
             />
           )}
         </div>
