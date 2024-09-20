@@ -52,6 +52,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
   const {
     examiners,
     questions,
+    activeQuestions,
     syllabusSections,
     handleUpdateExaminerAssignment,
   } = appContext || {};
@@ -62,6 +63,8 @@ function QuestionPaperProcessPage(): React.ReactElement {
   const [questionPaper, setQuestionPaper] = useState<any[]>(
     renderContent.archivedQuestionPaper.content,
   );
+  // Ids of questions that are added to the paper
+  const [addedQuestions, setAddedQuestions] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [examinerAssignmentStatus, setExaminerAssignmentStatus] = useState(
     renderContent.status,
@@ -181,6 +184,40 @@ function QuestionPaperProcessPage(): React.ReactElement {
     setRenderContent(updatedRenderContent);
   };
 
+  /**
+   * Adds a new question to the questionPaper array, updates the global store using handleUpdateExaminerAssignment,
+   * and updates the local state variables questionPaper and renderContent.
+   *
+   */
+  const addQuestionsToPaper = (questionIds: string[]) => {
+    // Find the corresponding questions from the 'questions' context using the provided IDs
+    const newQuestions = activeQuestions.filter((q) =>
+      questionIds.includes(q.id),
+    );
+
+    // Append the new questions to the existing questionPaper
+    const updatedQuestionPaper = [...questionPaper, ...newQuestions];
+
+    // Update the renderContent with the new questionPaper
+    const updatedRenderContent = {
+      ...renderContent,
+      archivedQuestionPaper: {
+        ...renderContent.archivedQuestionPaper,
+        content: updatedQuestionPaper,
+      },
+    };
+
+    // Update the global store with the updated renderContent
+    handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
+
+    // Update the local state with the new questionPaper and renderContent
+    setQuestionPaper(updatedQuestionPaper);
+    setRenderContent(updatedRenderContent);
+    setAddedQuestions((prevAddedQuestions) => [
+      ...new Set([...prevAddedQuestions, ...questionIds]),
+    ]);
+  };
+
   const columns = [
     {
       title: 'S.No',
@@ -199,6 +236,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
       title: 'Answer Key',
       dataIndex: 'answerText',
       key: 'answerText',
+      width: '30%',
       render: renderAnswerKey,
     },
     {
@@ -328,6 +366,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
               ghost
               type="primary"
               onClick={() => {
+                setAddedQuestions([]);
                 generateQuestionPaper();
                 console.log('quesion paper generated');
               }}
@@ -346,6 +385,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
                   ...renderContent,
                   status: 'Submitted',
                 });
+                setAddedQuestions([]);
                 navigate(-1);
               }}
               style={{ marginLeft: '20px' }}
@@ -369,7 +409,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
                 renderContent.archivedQuestionPaper.syllabusSections
               }
               columns={columns}
-              replaceQuestion={replaceQuestion}
+              addQuestionsToPaper={addQuestionsToPaper}
             />
           )}
         </div>

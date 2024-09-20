@@ -48,6 +48,7 @@ import {
 
 interface AppContextProps {
   questions: any[];
+  activeQuestions: any[];
   settings: any;
   examiners: any[];
   linkedQuestions: any[];
@@ -202,6 +203,12 @@ export function AppProvider({ children }: AppProviderProps) {
     };
     fetchUserActivityLogs();
   }, []);
+
+  const activeQuestions = useMemo(() => {
+    return questions.filter(
+      (question) => !question.isDeleted && question.isLatestVersion,
+    );
+  }, [questions]);
 
   // const handleAddExaminer = async (newExaminers) => {
   //   // Assuming you have a function to add examiners to the backend
@@ -437,6 +444,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const contextValue = useMemo(
     () => ({
       questions,
+      activeQuestions,
       settings,
       examiners,
       reviewPanels,
@@ -472,6 +480,7 @@ export function AppProvider({ children }: AppProviderProps) {
     }),
     [
       questions,
+      activeQuestions,
       settings,
       examiners,
       reviewPanels,
