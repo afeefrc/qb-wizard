@@ -69,6 +69,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
   const [examinerAssignmentStatus, setExaminerAssignmentStatus] = useState(
     renderContent.status,
   );
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -389,6 +390,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
                 navigate(-1);
               }}
               style={{ marginLeft: '20px' }}
+              disabled={isSubmitDisabled}
             >
               Submit to Training Incharge
             </Button>
@@ -410,6 +412,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
               }
               columns={columns}
               addQuestionsToPaper={addQuestionsToPaper}
+              setIsSubmitDisabled={setIsSubmitDisabled}
             />
           )}
         </div>

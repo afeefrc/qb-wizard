@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Table, Typography, Button } from 'antd';
 import { SyncOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import QuestionPaperPDF from '../utils/QuestionPaperPDF';
@@ -11,111 +11,252 @@ interface QuestionPaperDisplayProps {
   syllabusSections: any[];
   columns: any[];
   addQuestionsToPaper: (questionIds: string[]) => void;
+  setIsSubmitDisabled: (disabled: boolean) => void;
 }
+
+interface RenderSectionProps {
+  section: {
+    syllabusSectionId: string;
+    questions: any[];
+  };
+  columns: any[];
+  validateSectionMarks: (
+    questions: any[],
+    section: any,
+  ) => { isValid: boolean; message: string };
+  handleAddButtonClick: (sectionId: string) => void;
+  syllabusSections: any[];
+}
+
+const RenderSection = React.memo(
+  ({
+    section,
+    columns,
+    validateSectionMarks,
+    handleAddButtonClick,
+    syllabusSections,
+  }: RenderSectionProps) => {
+    const sectionMarksValidation = validateSectionMarks(
+      section.questions,
+      section,
+    );
+    return (
+      <div key={section.syllabusSectionId}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            padding: '10px 0px',
+            paddingRight: '20px',
+          }}
+        >
+          <Title level={4}>
+            Syllabus Section:{' '}
+            {syllabusSections.find((s) => s.id === section.syllabusSectionId)
+              ?.title || section.syllabusSectionId}
+          </Title>
+          <Button
+            type="primary"
+            ghost
+            icon={<PlusSquareOutlined />}
+            onClick={() => handleAddButtonClick(section.syllabusSectionId)}
+          >
+            Add question to this section
+          </Button>
+        </div>
+        <Table
+          dataSource={section.questions.sort((a, b) => a.marks - b.marks)}
+          columns={columns}
+          rowKey="id"
+          pagination={false}
+        />
+        <div
+          style={{
+            textAlign: 'right',
+            marginTop: '10px',
+            marginBottom: '5px',
+            paddingRight: '20px',
+          }}
+        >
+          Total Marks for this Section:{' '}
+          {section.questions.reduce((sum, question) => sum + question.marks, 0)}
+        </div>
+        <div
+          style={{
+            textAlign: 'right',
+            paddingRight: '20px',
+          }}
+        >
+          {!sectionMarksValidation.isValid && (
+            <Typography.Text type="danger" style={{ marginLeft: '10px' }}>
+              {sectionMarksValidation.message}
+            </Typography.Text>
+          )}
+        </div>
+      </div>
+    );
+  },
+);
 
 function QuestionPaperDisplay({
   questionPaper,
   syllabusSections,
   columns,
   addQuestionsToPaper,
+  setIsSubmitDisabled,
 }: QuestionPaperDisplayProps) {
   const [drawerVisible, setDrawerVisible] = useState<boolean>(false);
   const [currentSectionId, setCurrentSectionId] = useState<any>(null);
-  const [invalidMarksSections, setInvalidMarksSections] = useState<any[]>([]);
 
-  const partAMarks = useMemo(() => {
-    return questionPaper.reduce((sum, question) => {
+  const validateSectionMarks = useCallback(
+    (questions: any[], syllabusSection: any) => {
+      const sectionMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+      const { minWeightage, maxWeightage } = syllabusSection;
+      if (sectionMarks < minWeightage) {
+        return {
+          isValid: false,
+          message: `Total marks (${sectionMarks}) are below the minimum required (${minWeightage})`,
+        };
+      }
+      if (sectionMarks > maxWeightage) {
+        return {
+          isValid: false,
+          message: `Total marks (${sectionMarks}) exceed the maximum allowed (${maxWeightage})`,
+        };
+      }
+      return { isValid: true, message: '' };
+    },
+    [],
+  );
+
+  const [partAMarks, partBMarks] = useMemo(() => {
+    let partA = 0;
+    let partB = 0;
+    questionPaper.forEach((question) => {
       const section = syllabusSections.find(
         (s) => s.id === question.syllabusSectionId,
       );
-      return section && section.questionPart === 1 ? sum + question.marks : sum;
-    }, 0);
+      if (section) {
+        if (section.questionPart === 1) partA += question.marks;
+        else if (section.questionPart === 2) partB += question.marks;
+      }
+    });
+    return [partA, partB];
   }, [questionPaper, syllabusSections]);
 
-  const partBMarks = useMemo(() => {
-    return questionPaper.reduce((sum, question) => {
-      const section = syllabusSections.find(
-        (s) => s.id === question.syllabusSectionId,
-      );
-      return section && section.questionPart === 2 ? sum + question.marks : sum;
-    }, 0);
-  }, [questionPaper, syllabusSections]);
+  const totalMarks = useMemo(
+    () => partAMarks + partBMarks,
+    [partAMarks, partBMarks],
+  );
 
-  const totalMarks = useMemo(() => {
-    return partAMarks + partBMarks;
-  }, [partAMarks, partBMarks]);
+  const invalidMarksSections = useMemo(() => {
+    const sectionMap = new Map();
 
-  /**
-   * Checks if the total marks for a section are within the min and max weightage constraints.
-   *
-   * @param {any[]} questions - The list of questions in the section.
-   * @param {any} syllabusSection - The syllabus section containing min and max weightage.
-   * @returns {{ isValid: boolean; message: string }} - Validation result and message.
-   */
-  const validateSectionMarks = (questions: any[], syllabusSection: any) => {
-    const sectionMarks = questions.reduce((sum, q) => sum + q.marks, 0);
-    const { minWeightage, maxWeightage } = syllabusSection;
-    if (sectionMarks < minWeightage) {
-      return {
-        isValid: false,
-        message: `Total marks (${sectionMarks}) are below the minimum required (${minWeightage})`,
-      };
-    }
-    if (sectionMarks > maxWeightage) {
-      return {
-        isValid: false,
-        message: `Total marks (${sectionMarks}) exceed the maximum allowed (${maxWeightage})`,
-      };
-    }
-    return { isValid: true, message: '' };
-  };
-
-  useEffect(() => {
-    const newInvalidMarksSections = questionPaper.reduce((acc, item) => {
+    questionPaper.forEach((item) => {
       const section = syllabusSections.find(
         (s) => s.id === item.syllabusSectionId,
       );
       if (section) {
-        const existingSection = acc.find(
-          (s) => s.syllabusSectionId === item.syllabusSectionId,
-        );
-        if (existingSection) {
-          existingSection.questions.push(item);
-        } else {
-          acc.push({
+        if (!sectionMap.has(item.syllabusSectionId)) {
+          sectionMap.set(item.syllabusSectionId, {
             syllabusSectionId: item.syllabusSectionId,
-            questions: [item],
+            questions: [],
             serialNumber: section.serialNumber,
             minWeightage: section.minWeightage,
             maxWeightage: section.maxWeightage,
           });
         }
+        sectionMap.get(item.syllabusSectionId).questions.push(item);
       }
-      return acc;
-    }, [] as any[]);
+    });
 
-    const validations = newInvalidMarksSections.map((section) =>
-      validateSectionMarks(section.questions, section),
-    );
-
-    const filteredInvalidSections = newInvalidMarksSections
-      .map((section, index) => ({
+    return Array.from(sectionMap.values())
+      .map((section) => ({
         section,
-        validation: validations[index],
+        validation: validateSectionMarks(section.questions, section),
       }))
       .filter(({ validation }) => !validation.isValid)
       .map(({ section, validation }) => ({
         syllabusSectionId: section.syllabusSectionId,
         message: validation.message,
       }));
+  }, [questionPaper, syllabusSections, validateSectionMarks]);
 
-    setInvalidMarksSections(filteredInvalidSections);
-  }, [questionPaper, syllabusSections]);
+  useEffect(() => {
+    setIsSubmitDisabled(
+      invalidMarksSections.length > 0 ||
+        partAMarks !== 100 ||
+        partBMarks !== 50,
+    );
+  }, [invalidMarksSections, partAMarks, partBMarks, setIsSubmitDisabled]);
 
-  const handleAddButtonClick = (sectionId: any) => {
+  const handleAddButtonClick = useCallback((sectionId: any) => {
     setCurrentSectionId(sectionId);
     setDrawerVisible(true);
-  };
+  }, []);
+
+  const renderQuestionPaper = useCallback(() => {
+    const sectionMap = new Map();
+
+    questionPaper.forEach((item) => {
+      const section = syllabusSections.find(
+        (s) => s.id === item.syllabusSectionId,
+      );
+      if (section) {
+        if (!sectionMap.has(section.questionPart)) {
+          sectionMap.set(section.questionPart, new Map());
+        }
+        const partMap = sectionMap.get(section.questionPart);
+        if (!partMap.has(item.syllabusSectionId)) {
+          partMap.set(item.syllabusSectionId, {
+            ...section,
+            questions: [],
+          });
+        }
+        partMap.get(item.syllabusSectionId).questions.push(item);
+      }
+    });
+
+    return ['Part A', 'Part B'].map((part, partIndex) => (
+      <div key={part}>
+        <Title level={3}>{part}</Title>
+        {Array.from(sectionMap.get(partIndex + 1) || [])
+          .sort(
+            (a, b) => (a[1] as any).serialNumber - (b[1] as any).serialNumber,
+          )
+          .map(([syllabusSectionId, section]: [string, any]) => (
+            <RenderSection
+              key={syllabusSectionId}
+              section={section}
+              columns={columns}
+              validateSectionMarks={validateSectionMarks}
+              handleAddButtonClick={handleAddButtonClick}
+              syllabusSections={syllabusSections}
+            />
+          ))}
+        <div
+          style={{
+            textAlign: 'right',
+            marginTop: '20px',
+            marginBottom: '40px',
+            fontWeight: 'bold',
+            paddingRight: '20px',
+          }}
+        >
+          Total Marks for {part}: {partIndex === 0 ? partAMarks : partBMarks}
+        </div>
+      </div>
+    ));
+  }, [
+    questionPaper,
+    syllabusSections,
+    columns,
+    validateSectionMarks,
+    handleAddButtonClick,
+    partAMarks,
+    partBMarks,
+  ]);
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -128,136 +269,9 @@ function QuestionPaperDisplay({
           style={{
             overflowY: 'auto',
             maxHeight: '800px',
-            // width: '90%',
-            // padding: '0px 40px',
           }}
         >
-          {['Part A', 'Part B'].map((part, partIndex) => (
-            <div key={part}>
-              <Title level={3}>{part}</Title>
-              {questionPaper
-                .reduce((acc, item) => {
-                  const section = syllabusSections.find(
-                    (s) => s.id === item.syllabusSectionId,
-                  );
-                  if (section && section.questionPart === partIndex + 1) {
-                    const existingSection = acc.find(
-                      (s) => s.syllabusSectionId === item.syllabusSectionId,
-                    );
-                    if (existingSection) {
-                      existingSection.questions.push(item);
-                    } else {
-                      acc.push({
-                        syllabusSectionId: item.syllabusSectionId,
-                        questions: [item],
-                        serialNumber: section.serialNumber,
-                        minWeightage: section.minWeightage,
-                        maxWeightage: section.maxWeightage,
-                      });
-                    }
-                  }
-                  return acc;
-                }, [])
-                .sort((a, b) => a.serialNumber - b.serialNumber)
-                .map((section) => {
-                  const sectionMarksValidation = validateSectionMarks(
-                    section.questions,
-                    section,
-                  );
-                  return (
-                    <div key={section.syllabusSectionId}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-end',
-                          padding: '10px 0px',
-                          paddingRight: '20px',
-                          // backgroundColor: 'lightgray',
-                          // borderRadius: '10px',
-                        }}
-                      >
-                        <Title level={4}>
-                          Syllabus Section:{' '}
-                          {syllabusSections.find(
-                            (s) => s.id === section.syllabusSectionId,
-                          )?.title || section.syllabusSectionId}
-                        </Title>
-                        <Button
-                          type="primary"
-                          ghost
-                          icon={<PlusSquareOutlined />}
-                          onClick={() => {
-                            handleAddButtonClick(section.syllabusSectionId);
-                            // call prop function to add question to this section
-                          }}
-                        >
-                          Add question to this section
-                        </Button>
-                      </div>
-                      <Table
-                        dataSource={section.questions.sort(
-                          (a, b) => a.marks - b.marks,
-                        )}
-                        columns={columns}
-                        rowKey="id"
-                        pagination={false}
-                      />
-                      <div
-                        style={{
-                          textAlign: 'right',
-                          marginTop: '10px',
-                          marginBottom: '5px',
-                          paddingRight: '20px',
-                        }}
-                      >
-                        Total Marks for this Section:{' '}
-                        {section.questions.reduce(
-                          (sum, question) => sum + question.marks,
-                          0,
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          textAlign: 'right',
-                          // marginTop: '10px',
-                          // marginBottom: '20px',
-                          paddingRight: '20px',
-                        }}
-                      >
-                        {!sectionMarksValidation.isValid && (
-                          <Typography.Text
-                            type="danger"
-                            style={{ marginLeft: '10px' }}
-                          >
-                            {sectionMarksValidation.message}
-                          </Typography.Text>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              <div
-                style={{
-                  textAlign: 'right',
-                  marginTop: '20px',
-                  marginBottom: '40px',
-                  fontWeight: 'bold',
-                  paddingRight: '20px',
-                }}
-              >
-                Total Marks for {part}:{' '}
-                {questionPaper
-                  .filter((q) => {
-                    const section = syllabusSections.find(
-                      (s) => s.id === q.syllabusSectionId,
-                    );
-                    return section && section.questionPart === partIndex + 1;
-                  })
-                  .reduce((sum, question) => sum + question.marks, 0)}
-              </div>
-            </div>
-          ))}
+          {renderQuestionPaper()}
           <div
             style={{
               marginTop: '20px',
@@ -286,4 +300,4 @@ function QuestionPaperDisplay({
   );
 }
 
-export default QuestionPaperDisplay;
+export default React.memo(QuestionPaperDisplay);
