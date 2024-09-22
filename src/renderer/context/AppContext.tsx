@@ -94,6 +94,7 @@ interface AppContextProps {
   handleDeleteSyllabusSection: (id: number) => Promise<void>;
   handleAddUserActivityLog: (newUserActivityLog: any) => Promise<void>;
   handleGetAllUserActivityLogs: () => Promise<void>;
+  userActivityLogs: any[];
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);

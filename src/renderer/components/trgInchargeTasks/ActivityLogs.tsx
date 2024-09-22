@@ -1,127 +1,93 @@
 import React from 'react';
-import { Table, Tag } from 'antd';
+import { Tag, List } from 'antd';
+import { format } from 'date-fns';
+import { AppContext } from '../../context/AppContext';
 
-interface ActivityLogsProps {
-  logs: string[];
-}
+// interface ActivityLogsProps {
+//   logs: string[];
+// }
 
-function ActivityLogs(logs: ActivityLogsProps) {
-  const dataSource = [
-    {
-      key: '2024-08-01',
-      log: 'Trg incharge Created a Task: Review panel for ADC, panel members: 1, 2, 3',
-      task: 'Question Bank',
-      status: 'Initiated',
-      comment: '',
-    },
-    {
-      key: '2025-08-05 09:12:11',
-      log: 'Trg incharge Created a Task: Question paper assignment, examiner: 1',
-      task: 'Question Paper',
-      status: 'Initiated',
-      comment: '',
-    },
-    {
-      key: '2025-08-05 09:12:11',
-      log: 'Task in progress: Qestion paper assignment, examiner: 1',
-      task: 'Question Paper',
-      status: 'In Progress',
-      comment: '',
-    },
-    {
-      key: '2024-08-08 09:12:11',
-      log: 'Task completed: Qestion paper assignment, examiner: 1',
-      task: 'Question Paper',
-      status: 'Completed',
-      comment: '',
-    },
-    {
-      key: '2024-08-09 09:12:11',
-      log: 'Question Paper Approved by Trg incharge: Qestion paper assignment, examiner: 1',
-      task: 'Question Paper',
-      status: 'Approved',
-      comment: '',
-    },
-  ];
+function ActivityLogs() {
+  const appContext = React.useContext(AppContext);
+  const { userActivityLogs } = appContext || {};
 
-  const columns = [
-    {
-      title: 'Timestamp',
-      dataIndex: 'key',
-      key: 'key',
-    },
-    {
-      title: 'log',
-      dataIndex: 'log',
-      key: 'log',
-      width: '40%',
-    },
-    {
-      title: 'Task',
-      dataIndex: 'task',
-      key: 'task',
-      render: (task: string) => (
-        <Tag color={task === 'Question Bank' ? 'purple' : 'volcano'}>{task}</Tag>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-    },
-    {
-      title: 'comment',
-      dataIndex: 'comment',
-      key: 'comment',
-    },
-  ];
+  // console.log(userActivityLogs);
+
+  const targetTypeLabels = {
+    questionBank: <Tag color="geekblue">Question Bank</Tag>,
+    questionPaper: <Tag color="volcano">Question Paper</Tag>,
+  };
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
-      {/* <ul>
-        {logs.map((log, index) => (
-          <li key={index}>{log}</li>
-        ))}
-      </ul> */}
-      <Table
-        dataSource={dataSource}
-        columns={columns}
-        style={{ width: '95%', margin: 0 }}
-      />
-      {/* <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-start',
-        }}
-      >
-        <Timeline
-          style={{ width: '40%' }}
-          mode="left"
-          items={[
-            {
-              label: '2024-08-01',
-              children: '',
-            },
-            {
-              label: '2025-08-05 09:12:11',
-              children: '',
-            },
-            {
-              label: '2025-08-05 09:12:11',
-              children:
-                'Task in progress: Qestion paper assignment, examiner: 1',
-            },
-            {
-              label: '2024-08-08 09:12:11',
-              children: '',
-            },
-            {
-              label: '2024-08-08 09:12:11',
-              children: '',
-            },
-          ]}
+      <div style={{ width: '80%', margin: 0, padding: 10 }}>
+        {/* Custom header row */}
+        <div
+          style={{
+            display: 'flex',
+            fontWeight: 'bold',
+            marginBottom: '10px',
+            padding: '0 8px',
+          }}
+        >
+          <div style={{ width: '20%', padding: '0 5px' }}>Timestamp</div>
+          <div style={{ width: '40%', padding: '0 5px' }}>Action</div>
+          <div style={{ width: '15%', padding: '0 5px' }}>User</div>
+          <div style={{ width: '25%', padding: '0 5px' }}>Task</div>
+          <div style={{ width: '15%', padding: '0 5px' }}>Comment</div>
+        </div>
+
+        <List
+          itemLayout="horizontal"
+          dataSource={userActivityLogs}
+          pagination={false}
+          renderItem={(item: any) => (
+            <List.Item
+              style={{
+                display: 'flex',
+                padding: '8px',
+              }}
+            >
+              <div style={{ width: '20%', padding: '0 5px' }}>
+                <List.Item.Meta
+                  description={`${format(
+                    new Date(item.activityTime),
+                    'dd/MM/yyyy HH:mm:ss',
+                  )}`}
+                />
+              </div>
+              <div style={{ width: '40%', padding: '0 5px' }}>
+                <List.Item.Meta
+                  title={` ${item.action}`}
+                  description={`${item.description}`}
+                />
+              </div>
+              <div style={{ width: '15%', padding: '0 5px' }}>
+                <List.Item.Meta
+                  title={`${item.user}`}
+                  // description={
+                  //   item.members ? `Panel members: ${item.members}` : ''
+                  // }
+                />
+              </div>
+              <div style={{ width: '25%', padding: '0 5px' }}>
+                <List.Item.Meta
+                  description={
+                    targetTypeLabels[
+                      item.targetType as keyof typeof targetTypeLabels
+                    ] || item.targetType
+                  }
+                />
+              </div>
+              <div style={{ width: '15%', padding: '0 5px' }}>
+                {item.comment && (
+                  <List.Item.Meta description={`${item.comment}`} />
+                )}
+              </div>
+            </List.Item>
+          )}
         />
-      </div> */}
+      </div>
     </div>
   );
 }
