@@ -1,8 +1,10 @@
-import React, { useContext, useMemo } from 'react';
-import { Table, Tag, Empty, Typography, Collapse } from 'antd';
+import React, { useContext, useMemo, useRef } from 'react';
+import { Table, Tag, Empty, Typography, Collapse, Button } from 'antd';
 import { EditTwoTone, DeleteTwoTone } from '@ant-design/icons';
 import type { TableColumnsType, TableProps } from 'antd';
+import ExportQuestionBank from './utils/ExportQuestionBank';
 import { AppContext } from '../context/AppContext';
+import { useUser } from '../context/UserContext';
 import { renderAnswerKey } from './utils/tableRenderers';
 
 const { Text } = Typography;
@@ -64,6 +66,8 @@ function QuestionBankDisplay({
     handleDeleteQuestion,
     handleUpdateQuestion,
   } = appContext || {};
+
+  const { user } = useUser();
 
   // Filter syllabusSections by unitName
   const filteredSyllabusSections = useMemo(() => {
@@ -217,6 +221,21 @@ function QuestionBankDisplay({
         alignItems: 'center',
       }}
     >
+      {user?.role === 'trg-incharge' && (
+        <div
+          style={{
+            display: 'flex',
+            width: '100%',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <ExportQuestionBank
+            questions={filteredQuestions}
+            syllabusSections={filteredSyllabusSections}
+            unitName={unitName}
+          />
+        </div>
+      )}
       <div
         style={{
           flex: 1,

@@ -40,8 +40,9 @@ const RenderSection = React.memo(
       section.questions,
       section,
     );
+
     return (
-      <div key={section.syllabusSectionId}>
+      <div key={section.id}>
         <div
           style={{
             display: 'flex',
@@ -53,14 +54,14 @@ const RenderSection = React.memo(
         >
           <Title level={4}>
             Syllabus Section:{' '}
-            {syllabusSections.find((s) => s.id === section.syllabusSectionId)
-              ?.title || section.syllabusSectionId}
+            {syllabusSections.find((s) => s.id === section.id)?.title ||
+              section.id}
           </Title>
           <Button
             type="primary"
             ghost
             icon={<PlusSquareOutlined />}
-            onClick={() => handleAddButtonClick(section.syllabusSectionId)}
+            onClick={() => handleAddButtonClick(section.id)}
           >
             Add question to this section
           </Button>
