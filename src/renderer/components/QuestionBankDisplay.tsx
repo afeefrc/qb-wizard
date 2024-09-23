@@ -109,7 +109,7 @@ function QuestionBankDisplay({
           ? record.serialNumber.toString().padStart(3, '0')
           : '****';
         // Assuming record has a 'year' field. If not, adjust accordingly.
-        return `${record.unitName}/${record.year || '00'}/${serialPart}`;
+        return `${record.unitName}.${record.year || '00'}.${serialPart}`;
       },
       width: '10%',
       sorter: (a: any, b: any) => a.serialNumber - b.serialNumber,
