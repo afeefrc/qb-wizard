@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Select, DatePicker, Space } from 'antd';
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Select,
+  DatePicker,
+  Space,
+  Alert,
+} from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -8,6 +17,9 @@ import { AppContext } from '../../context/AppContext';
 type CreateReviewPanelProps = {
   unit?: string;
   close: () => void;
+  editValues?: any;
+  mode?: 'create' | 'edit' | 'forward';
+  onForwarded: () => void;
 };
 
 const formItemLayout = {
@@ -31,22 +43,25 @@ const formItemLayoutWithOutLabel = {
 function CreateReviewPanel({
   unit = '',
   close,
-  editValues, //bring in the content if editing. if null it means we are creating a new panel
+  mode = 'create' | 'edit' | 'forward', // create or edit
+  editValues, // bring in the content if editing. if null it means we are creating a new panel
   // setEditBtnPressed, //set the edit button to true/false
+  onForwarded,
 }: CreateReviewPanelProps) {
   const appContext = React.useContext(AppContext);
   const {
     handleAddReviewPanel,
     handleUpdateReviewPanel,
     examiners,
+    reviewPanels,
     handleAddUserActivityLog,
   } = appContext || {};
   const [form] = Form.useForm();
   const [selectedValues, setSelectedValues] = useState([]);
-  // const [chairman, setChairman] = useState('');
+  const [panelExistsAlertVisible, setPanelExistsAlertVisible] = useState(false);
 
   useEffect(() => {
-    if (editValues) {
+    if (mode === 'edit' && editValues) {
       console.log('editValues', editValues);
       const data = {
         unit: editValues.unit,
@@ -59,7 +74,7 @@ function CreateReviewPanel({
       };
       form.setFieldsValue(data);
     }
-  }, [editValues, form]);
+  }, [editValues, form, mode]);
 
   const handleSelectChange = (value, index) => {
     const newSelectedValues = [...selectedValues];
@@ -84,6 +99,17 @@ function CreateReviewPanel({
     examiners.find((e) => e.id === id)?.examinerName || id;
 
   const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+    if (mode === 'create') {
+      const existingPanel = reviewPanels.find(
+        (panel) => panel.unit === unit && !panel.isArchived,
+      );
+
+      if (existingPanel) {
+        setPanelExistsAlertVisible(true);
+        return;
+      }
+    }
+
     const content = {
       unit: unit,
       members: [values.chairman, ...values.names],
@@ -92,22 +118,39 @@ function CreateReviewPanel({
       comments_initiate: values.comments || '',
       deadline: values.date?.toDate() || null,
     };
+
     handleAddReviewPanel(content);
     handleAddUserActivityLog({
       user: 'TRG Incharge',
       action: `Question bank review process for ${unit}`,
       targetType: 'questionBank',
       unit: unit,
-      description: `Created review panel. Members: ${getExaminerName(values.chairman)} (Chairman), ${values.names.map(getExaminerName).join(', ')}`,
+      description: `Created new review panel. ${
+        mode === 'forward' &&
+        'Forwarded question bank review task to the new panel'
+      }. Members: ${getExaminerName(values.chairman)} (Chairman), ${values.names.map(getExaminerName).join(', ')}`,
     });
+
+    // invoke onForwarded if mode is forward to close current panel and navigate
+    if (mode === 'forward') {
+      onForwarded();
+    }
+
     form.resetFields();
-    close();
+    if (mode === 'create') {
+      close();
+    }
   };
 
   const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (
     errorInfo,
   ) => {
     console.log('Failed:', errorInfo);
+  };
+
+  const onReset = () => {
+    form.resetFields();
+    setPanelExistsAlertVisible(false);
   };
 
   const handleUpdateBtn = () => {
@@ -128,6 +171,55 @@ function CreateReviewPanel({
   const handleCancelBtn = () => {
     form.resetFields();
     close();
+  };
+
+  // Render the action buttons based on the mode
+  const renderActionButtons = () => {
+    switch (mode) {
+      case 'create':
+        return (
+          <>
+            <Button type="primary" htmlType="submit">
+              Create
+            </Button>
+            <Button htmlType="button" onClick={onReset}>
+              Reset
+            </Button>
+            <Button
+              htmlType="button"
+              type="primary"
+              danger
+              onClick={handleCancelBtn}
+            >
+              Close
+            </Button>
+          </>
+        );
+      case 'edit':
+        return (
+          <>
+            <Button type="primary" onClick={handleUpdateBtn}>
+              Update
+            </Button>
+            <Button htmlType="button" onClick={handleCancelBtn}>
+              Cancel
+            </Button>
+          </>
+        );
+      case 'forward':
+        return (
+          <>
+            <Button type="primary" htmlType="submit">
+              Forward
+            </Button>
+            <Button htmlType="button" onClick={handleCancelBtn}>
+              Cancel
+            </Button>
+          </>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -217,7 +309,7 @@ function CreateReviewPanel({
                             .toLowerCase()
                             .includes(input.toLowerCase())
                         }
-                        options={filteredOptions(index + 1)} //+1 because we have already reserved first member (chairman)
+                        options={filteredOptions(index + 1)} // +1 because we have already reserved first member (chairman)
                         onChange={(value) =>
                           handleSelectChange(value, index + 1)
                         }
@@ -262,30 +354,18 @@ function CreateReviewPanel({
           >
             <DatePicker />
           </Form.Item>
+          {panelExistsAlertVisible && (
+            <Alert
+              message={`A panel already exists for ${unit}. Edit or Delete the existing panel to create a new one.`}
+              type="error"
+              showIcon
+              closable
+              onClose={() => setPanelExistsAlertVisible(false)}
+              style={{ marginBottom: '20px' }}
+            />
+          )}
           <Form.Item style={{ display: 'flex', justifyContent: 'center' }}>
-            <Space>
-              {editValues === undefined ? (
-                <>
-                  <Button type="primary" htmlType="submit">
-                    Create
-                  </Button>
-                  <Button htmlType="reset">Reset</Button>
-                </>
-              ) : (
-                <>
-                  <Button type="primary" onClick={handleUpdateBtn}>
-                    Update
-                  </Button>
-                  <Button htmlType="button" onClick={handleCancelBtn}>
-                    Cancel
-                  </Button>
-                </>
-              )}
-              {/* <Button type="primary" htmlType="submit">
-                Create
-              </Button>
-              <Button htmlType="reset">Reset</Button> */}
-            </Space>
+            <Space>{renderActionButtons()}</Space>
           </Form.Item>
         </Form>
       </Card>

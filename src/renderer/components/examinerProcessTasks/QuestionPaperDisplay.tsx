@@ -3,6 +3,7 @@ import { Table, Typography, Button } from 'antd';
 import { SyncOutlined, PlusSquareOutlined } from '@ant-design/icons';
 import QuestionPaperPDF from '../utils/QuestionPaperPDF';
 import AddQuestionDrawer from './AddQuestionDrawer';
+import { useUser } from '../../context/UserContext';
 
 const { Title } = Typography;
 
@@ -26,6 +27,7 @@ interface RenderSectionProps {
   ) => { isValid: boolean; message: string };
   handleAddButtonClick: (sectionId: string) => void;
   syllabusSections: any[];
+  user: any;
 }
 
 const RenderSection = React.memo(
@@ -35,6 +37,7 @@ const RenderSection = React.memo(
     validateSectionMarks,
     handleAddButtonClick,
     syllabusSections,
+    user,
   }: RenderSectionProps) => {
     const sectionMarksValidation = validateSectionMarks(
       section.questions,
@@ -48,7 +51,7 @@ const RenderSection = React.memo(
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-end',
-            padding: '10px 0px',
+            padding: '5px 0px',
             paddingRight: '20px',
           }}
         >
@@ -57,14 +60,16 @@ const RenderSection = React.memo(
             {syllabusSections.find((s) => s.id === section.id)?.title ||
               section.id}
           </Title>
-          <Button
-            type="primary"
-            ghost
-            icon={<PlusSquareOutlined />}
-            onClick={() => handleAddButtonClick(section.id)}
-          >
-            Add question to this section
-          </Button>
+          {user?.role === 'examiner' && (
+            <Button
+              type="primary"
+              ghost
+              icon={<PlusSquareOutlined />}
+              onClick={() => handleAddButtonClick(section.id)}
+            >
+              Add question to this section
+            </Button>
+          )}
         </div>
         <Table
           dataSource={section.questions.sort((a, b) => a.marks - b.marks)}
@@ -107,6 +112,7 @@ function QuestionPaperDisplay({
   addQuestionsToPaper,
   setIsSubmitDisabled,
 }: QuestionPaperDisplayProps) {
+  const { user } = useUser();
   const [drawerVisible, setDrawerVisible] = useState<boolean>(false);
   const [currentSectionId, setCurrentSectionId] = useState<any>(null);
 
@@ -185,12 +191,14 @@ function QuestionPaperDisplay({
   }, [questionPaper, syllabusSections, validateSectionMarks]);
 
   useEffect(() => {
-    setIsSubmitDisabled(
-      invalidMarksSections.length > 0 ||
-        partAMarks !== 100 ||
-        partBMarks !== 50,
-    );
-  }, [invalidMarksSections, partAMarks, partBMarks, setIsSubmitDisabled]);
+    if (user?.role === 'examiner') {
+      setIsSubmitDisabled(
+        invalidMarksSections.length > 0 ||
+          partAMarks !== 100 ||
+          partBMarks !== 50,
+      );
+    }
+  }, [invalidMarksSections, partAMarks, partBMarks, setIsSubmitDisabled, user]);
 
   const handleAddButtonClick = useCallback((sectionId: any) => {
     setCurrentSectionId(sectionId);
@@ -234,6 +242,7 @@ function QuestionPaperDisplay({
               validateSectionMarks={validateSectionMarks}
               handleAddButtonClick={handleAddButtonClick}
               syllabusSections={syllabusSections}
+              user={user}
             />
           ))}
         <div
@@ -257,6 +266,7 @@ function QuestionPaperDisplay({
     handleAddButtonClick,
     partAMarks,
     partBMarks,
+    user,
   ]);
 
   return (

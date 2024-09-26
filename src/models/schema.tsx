@@ -106,6 +106,7 @@ export const reviewPanelSchema = {
     //   !context.members.length || context.members.includes(value), // Ensure chairman is in members or empty if members is empty
   },
   status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'in process', 'submitted', 'approved', 'rejected'
+  isArchived: { type: 'boolean', default: false },
   content: { type: 'array', default: [] },
   deadline: { type: 'date', default: null },
   comments_initiate: { type: 'string', default: '' },

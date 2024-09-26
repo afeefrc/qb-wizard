@@ -28,6 +28,9 @@ function ActivityLogs() {
       key: 'activityTime',
       render: (activityTime: string) =>
         format(new Date(activityTime), 'dd/MM/yyyy HH:mm:ss'),
+      sorter: (a, b) =>
+        new Date(b.activityTime).getTime() - new Date(a.activityTime).getTime(),
+      defaultSortOrder: 'descend',
     },
     {
       title: 'Action',

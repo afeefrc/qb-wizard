@@ -63,7 +63,11 @@ function TrgIncharge() {
       '2': {
         title: menuTitles[2],
         component: (
-          <CreateReviewPanel unit={BtnPressed.BtnName} close={handleClose} />
+          <CreateReviewPanel
+            unit={BtnPressed.BtnName}
+            close={handleClose}
+            mode="create"
+          />
         ),
       },
       '3': {

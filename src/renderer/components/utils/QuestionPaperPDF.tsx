@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'antd';
-import { FilePdfOutlined, DownloadOutlined } from '@ant-design/icons';
+import {
+  FilePdfOutlined,
+  DownloadOutlined,
+  FilePdfTwoTone,
+  DownSquareTwoTone,
+} from '@ant-design/icons';
 
 import {
   Document,
@@ -416,11 +421,20 @@ function QuestionPaperPDF({
 
   return (
     <div>
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ margin: '10px 0px' }}>
         <Button
-          icon={<FilePdfOutlined />}
+          icon={<FilePdfTwoTone twoToneColor="#eb2f96" />}
           onClick={showModal}
-          style={{ marginRight: '10px' }}
+          style={{
+            margin: '10px 0px',
+            backgroundColor: '#f5f8fe',
+            opacity: 0.6,
+            padding: '25px 20px',
+            borderRadius: '10px',
+            border: '0.25px solid #d9d9d9',
+            boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease',
+          }}
         >
           View PDF
         </Button>
@@ -434,7 +448,18 @@ function QuestionPaperPDF({
           fileName="question_paper.pdf"
         >
           {({ blob, url, loading, error }) => (
-            <Button icon={<DownloadOutlined />} disabled={loading}>
+            <Button
+              icon={<DownSquareTwoTone twoToneColor="#eb2f96" />}
+              disabled={loading}
+              style={{
+                margin: '10px 5px',
+                backgroundColor: '#f5f8fe',
+                padding: '25px 20px',
+                borderRadius: '10px',
+                border: '0.25px solid #d9d9d9',
+                boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
+              }}
+            >
               Download PDF
             </Button>
           )}

@@ -286,19 +286,19 @@ function QuestionBankEditTask({
         const serialPart = record.serialNumber
           ? record.serialNumber.toString().padStart(3, '0')
           : '****';
-        return `${record.unitName}/${record.year}/${serialPart}`;
+        return `${record.unitName}.${record.year}.${serialPart}`;
       },
       width: '8%',
       showSorterTooltip: { target: 'full-header' },
-      defaultSortOrder: 'ascend',
+      defaultSortOrder: 'descend',
       sorter: (a: any, b: any) => {
         if (a.serialNumber === undefined && b.serialNumber === undefined)
           return 0;
         if (a.serialNumber === undefined) return 1;
         if (b.serialNumber === undefined) return -1;
-        return a.serialNumber - b.serialNumber;
+        return a.serialNumber - b.serialNumber; // Changed to b - a for descending order
       },
-      sortDirections: ['ascend', 'descend'],
+      sortDirections: ['descend', 'ascend'],
     },
     {
       title: 'Question',

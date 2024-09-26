@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Divider, Button } from 'antd';
+import { Divider, Typography, Empty } from 'antd';
 import DashboardCard from './DashBoardCardComponent';
 import ApprovalProcessPage from './trgInchargeTasks/ApprovalProcessPage';
 import QPapprovalProcessPage from './trgInchargeTasks/QPapprovalProcessPage';
@@ -12,6 +12,8 @@ import BodyContentCard from './BodyContentCard';
 // interface DashBoardProps {
 //   contentList: string[];
 // }
+
+const { Title } = Typography;
 
 function DashBoard() {
   const appContext = React.useContext(AppContext);
@@ -33,7 +35,7 @@ function DashBoard() {
     setSelectedContent(null);
   };
 
-  console.log('examinerAssignments', examinerAssignments);
+  // console.log('examinerAssignments', examinerAssignments);
 
   // const cardShell = {
   //   reviewPanelsCard: {
@@ -46,16 +48,23 @@ function DashBoard() {
   //   },
   // }; // Add other cards as needed;
 
+  // TODO: Add a filter to reviewPanels where field isArchived is false
+
+  // Filter out archived review panels
+  const filteredReviewPanels = reviewPanels?.filter(
+    (panel) => !panel.isArchived,
+  );
+
   let renderContents = null;
   if (user && (user.role === 'review-panel' || user.role === 'trg-incharge')) {
     renderContents =
       user.role === 'review-panel'
-        ? reviewPanels?.filter(
+        ? filteredReviewPanels?.filter(
             (panel) =>
               panel.status.toLowerCase() === 'initiated' ||
               panel.status.toLowerCase() === 'in progress',
           )
-        : reviewPanels;
+        : filteredReviewPanels;
   }
 
   let examinerAssignmentsContents = null;
@@ -108,91 +117,94 @@ function DashBoard() {
 
   return (
     <div className="scroll-view">
-      <div>Dash Board</div>
-      {renderContents && (
-        <Divider
-          orientation="right"
-          // plain
-          style={{
-            borderRadius: '5px',
-            padding: '0px 10px',
-            color: 'rgba(0, 0, 0, 0.6)',
-            fontStyle: 'italic',
-            // backgroundColor: '#002C58',
-          }}
-        >
-          Question Bank Review Tasks
-        </Divider>
-      )}
-
-      {renderContents?.map(
-        (renderContent, index) => (
-          console.log('renderContent', renderContent),
-          (
-            <DashboardCard
-              key={index}
-              content={renderContent}
-              onClick={() => {
-                console.log(`card clicked ${renderContent.unit}`);
-                if (user?.role === 'review-panel') {
-                  handleNavigation('/review-process', {
-                    unit: renderContent.unit,
-                    renderContent,
-                  });
-                }
-                if (
-                  user?.role === 'trg-incharge' &&
-                  renderContent.status.toLowerCase() === 'submitted'
-                ) {
-                  setCurrentView('QBapprovalProcess');
-                  setSelectedContent(renderContent);
-                }
-              }}
-              cardType={'reviewPanel'}
-            />
-          )
-        ),
-      )}
-      {examinerAssignmentsContents && (
-        <Divider
-          orientation="right"
-          // plain
-          style={{
-            borderRadius: '5px',
-            padding: '0px 10px',
-            color: 'rgba(0, 0, 0, 0.6)',
-            fontStyle: 'italic',
-            // backgroundColor: '#002C58',
-          }}
-        >
-          Question Paper Preparation Tasks
-        </Divider>
-      )}
-
-      {examinerAssignmentsContents
-        ?.filter((content) => content.status.toLowerCase() !== 'approved')
-        .map((renderContent, index) => (
-          <DashboardCard
-            key={index}
-            content={renderContent}
-            onClick={(unit) => {
-              if (user?.role === 'examiner') {
-                handleNavigation('/examiner-process', {
-                  unit,
-                  renderContent,
-                });
-              }
-              if (
-                user?.role === 'trg-incharge' &&
-                renderContent.status.toLowerCase() === 'submitted'
-              ) {
-                setCurrentView('QPapprovalProcess');
-                setSelectedContent(renderContent);
-              }
+      {(!renderContents || renderContents.length === 0) &&
+      (!examinerAssignmentsContents ||
+        examinerAssignmentsContents.length === 0) ? (
+        <>
+          <Divider />
+          <Empty
+            description="No Tasks available"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            imageStyle={{
+              height: 75,
             }}
-            cardType={'questionPaperAssignment'}
           />
-        ))}
+        </>
+      ) : (
+        <>
+          {renderContents && renderContents.length > 0 && (
+            <>
+              <Title level={4} style={{ color: '#002C58' }}>
+                Question Bank Review Tasks
+              </Title>
+              {renderContents.map(
+                (renderContent, index) => (
+                  console.log('renderContent', renderContent),
+                  (
+                    <DashboardCard
+                      key={index}
+                      content={renderContent}
+                      onClick={() => {
+                        console.log(`card clicked ${renderContent.unit}`);
+                        if (user?.role === 'review-panel') {
+                          handleNavigation('/review-process', {
+                            unit: renderContent.unit,
+                            renderContent,
+                          });
+                        }
+                        if (
+                          user?.role === 'trg-incharge' &&
+                          renderContent.status.toLowerCase() === 'submitted'
+                        ) {
+                          setCurrentView('QBapprovalProcess');
+                          setSelectedContent(renderContent);
+                        }
+                      }}
+                      cardType={'reviewPanel'}
+                    />
+                  )
+                ),
+              )}
+            </>
+          )}
+
+          {examinerAssignmentsContents &&
+            examinerAssignmentsContents.length > 0 && (
+              <>
+                <Divider />
+                <Title level={4} style={{ color: '#002C58' }}>
+                  Question Paper Preparation Tasks
+                </Title>
+                {examinerAssignmentsContents
+                  .filter(
+                    (content) => content.status.toLowerCase() !== 'approved',
+                  )
+                  .map((renderContent, index) => (
+                    <DashboardCard
+                      key={index}
+                      content={renderContent}
+                      onClick={(unit) => {
+                        if (user?.role === 'examiner') {
+                          handleNavigation('/examiner-process', {
+                            unit,
+                            renderContent,
+                          });
+                        }
+                        if (
+                          user?.role === 'trg-incharge' &&
+                          renderContent.status.toLowerCase() === 'submitted'
+                        ) {
+                          setCurrentView('QPapprovalProcess');
+                          setSelectedContent(renderContent);
+                        }
+                      }}
+                      cardType={'questionPaperAssignment'}
+                    />
+                  ))}
+              </>
+            )}
+        </>
+      )}
     </div>
   );
 }

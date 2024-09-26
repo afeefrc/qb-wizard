@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Button, Tabs, Tag, message } from 'antd';
 import type { TabsProps } from 'antd';
 import { AppContext } from '../../context/AppContext';
 import SyllabusSectionList from '../reviewProcessTasks/SyllabusSectionList';
 import QuestionBankEditTask from '../reviewProcessTasks/QuestionBankEditTask';
+import CreateReviewPanel from './createReviewPanel';
 
 interface RenderContent {
   id: string;
@@ -34,11 +35,12 @@ function ApprovalProcessPage({
   } = appContext || {};
 
   const [messageApi, contextHolder] = message.useMessage();
+  const [isForwardedBtnPressed, setIsForwardedBtnPressed] = useState(false);
 
-  const successMessage = () => {
+  const successMessage = (messageContent: string = 'Operation successful') => {
     messageApi.open({
       type: 'success',
-      content: 'This is a success message',
+      content: messageContent,
     });
   };
 
@@ -63,6 +65,27 @@ function ApprovalProcessPage({
       children: <QuestionBankEditTask unitName={content.unit} />,
     },
   ];
+
+  const handleForwardToNewReviewPanel = () => {
+    handleUpdateReviewPanel(content.id, {
+      status: 'Forwarded',
+      isArchived: true,
+    });
+    handleAddUserActivityLog({
+      user: 'Trg Incharge',
+      action: `Question bank review process for ${content.unit}`,
+      targetType: 'questionBank',
+      unit: content.unit,
+      description: `Terminated the review panel. Members: ${matchingChairman?.examinerName} (Chairman), ${matchingExaminers
+        .map((examiner: any) => examiner.examinerName)
+        .join(', ')}`,
+    });
+    successMessage('Forwarded to new Review Panel');
+
+    setTimeout(() => {
+      onClose();
+    }, 1000);
+  };
 
   return (
     <div
@@ -141,10 +164,10 @@ function ApprovalProcessPage({
                     .map((examiner: any) => examiner.examinerName)
                     .join(', ')}`,
                 });
-                successMessage();
+                successMessage('Question Bank updation sent back to the panel');
                 setTimeout(() => {
                   onClose();
-                }, 500);
+                }, 1000);
               }}
               style={{ marginLeft: '20px' }}
             >
@@ -153,16 +176,20 @@ function ApprovalProcessPage({
             <Button
               ghost
               type="primary"
-              onClick={() => {}} // TODO: Add logic for forwarding to new review panel and log
+              onClick={() => setIsForwardedBtnPressed(true)}
               style={{ marginLeft: '25px' }}
             >
-              Foward to new Review Panel
+              Forward to new Review Panel
             </Button>
             <Button
               type="primary"
               onClick={() => {
                 handleApplyAllPendingChanges();
-                handleDeleteReviewPanel(content.id);
+                // handleDeleteReviewPanel(content.id);
+                handleUpdateReviewPanel(content.id, {
+                  status: 'Approved',
+                  isArchived: true,
+                });
                 handleAddUserActivityLog({
                   user: 'Trg Incharge',
                   action: `Question bank review process for ${content.unit}`,
@@ -171,7 +198,7 @@ function ApprovalProcessPage({
                   description:
                     'Question bank updated and approved by Training Incharge',
                 });
-                successMessage();
+                successMessage('Question Bank updation approved');
                 // Delay closing to allow the message to be shown
                 setTimeout(() => {
                   onClose();
@@ -187,6 +214,17 @@ function ApprovalProcessPage({
               Approve Question Bank
             </Button>
           </div>
+          {isForwardedBtnPressed && (
+            <div>
+              <CreateReviewPanel
+                unit={content.unit}
+                close={() => setIsForwardedBtnPressed(false)}
+                mode="forward"
+                onForwarded={handleForwardToNewReviewPanel}
+                // editValues={content}
+              />
+            </div>
+          )}
         </Card>
       </div>
 

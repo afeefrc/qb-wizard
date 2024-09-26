@@ -52,6 +52,7 @@ interface AppContextProps {
   settings: any;
   examiners: any[];
   examinerAssignments: any[];
+  reviewPanels: any[];
   linkedQuestions: any[];
   handleDeleteQuestion: (deleteId: number, updatedChange: any) => Promise<void>;
   handleAddPendingChange: (change: any) => Promise<void>;

@@ -73,6 +73,8 @@ function DashboardCard({ content, onClick, cardType }: CardProps) {
         return 'success';
       case 'submitted':
         return 'orange';
+      case 'approved':
+        return 'green';
       // case 'rejected':
       //   return 'red';
       default:
@@ -194,6 +196,7 @@ function DashboardCard({ content, onClick, cardType }: CardProps) {
                   close={() => {
                     setEditBtnPressed(false);
                   }}
+                  mode="edit"
                   editValues={content}
                 />
               </div>
