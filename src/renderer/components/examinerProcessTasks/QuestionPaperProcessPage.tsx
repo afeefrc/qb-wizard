@@ -390,7 +390,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
                 navigate(-1);
               }}
               style={{ marginLeft: '20px' }}
-              disabled={isSubmitDisabled}
+              // disabled={isSubmitDisabled}
             >
               Submit to Training Incharge
             </Button>

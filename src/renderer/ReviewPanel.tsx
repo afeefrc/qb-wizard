@@ -7,6 +7,7 @@ import MenuList from './components/MenuAntd';
 import './RolePage.css'; // Import the CSS file for styling
 import { useUser } from './context/UserContext';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
+import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
 
 function ReviewPanel() {
   const navigate = useNavigate();
@@ -52,9 +53,7 @@ function ReviewPanel() {
       },
       '2': {
         title: menuTitles[2],
-        component: (
-          <Empty description={`Under development ${BtnPressed.BtnName}`} />
-        ),
+        component: <ActivityLogs unitName={BtnPressed.BtnName} />,
       },
       // '3': {
       //   title: 'Assign examiner to prepare Question Paper',

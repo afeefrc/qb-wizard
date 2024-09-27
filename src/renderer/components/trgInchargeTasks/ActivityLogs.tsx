@@ -4,9 +4,21 @@ import type { TableColumnsType, TableProps } from 'antd';
 import { format, isWithinInterval } from 'date-fns';
 import { AppContext } from '../../context/AppContext';
 
-function ActivityLogs() {
+interface ActivityLogsProps {
+  unitName?: string;
+}
+
+function ActivityLogs({ unitName }: ActivityLogsProps) {
   const appContext = React.useContext(AppContext);
   const { userActivityLogs } = appContext || {};
+
+  // Filter userActivityLogs based on unitName
+  const filteredLogs = React.useMemo(() => {
+    if (unitName && userActivityLogs) {
+      return userActivityLogs.filter((log) => log.unit === unitName);
+    }
+    return userActivityLogs;
+  }, [userActivityLogs, unitName]);
 
   const targetTypeLabels = {
     questionBank: (
@@ -30,7 +42,7 @@ function ActivityLogs() {
         format(new Date(activityTime), 'dd/MM/yyyy HH:mm:ss'),
       sorter: (a, b) =>
         new Date(b.activityTime).getTime() - new Date(a.activityTime).getTime(),
-      defaultSortOrder: 'descend',
+      defaultSortOrder: 'ascend',
     },
     {
       title: 'Action',
@@ -97,10 +109,10 @@ function ActivityLogs() {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <div style={{ width: '85%', margin: 0, padding: 10 }}>
+      <div style={{ width: '85%', marginBottom: 150, padding: 10 }}>
         <Table
           columns={columns}
-          dataSource={userActivityLogs}
+          dataSource={filteredLogs}
           rowKey={(record) => record.activityTime}
           pagination={{ pageSize: 30 }}
         />

@@ -12,7 +12,7 @@ import ExaminerAssignment from './components/trgInchargeTasks/AssignExaminer';
 import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
 import QuestionLogs from './components/trgInchargeTasks/QuestionLogs';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
-import ViewQuestionPapers from './components/ViewQuestionPapers';
+import ViewQuestionPapers from './components/trgInchargeTasks/ViewQuestionPapers';
 // import { useUser } from './context/UserContext';
 
 const trgInchargeMenuTitles = [
