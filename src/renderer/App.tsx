@@ -7,7 +7,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 // import icon from '../../assets/icon.svg';
-import logo from '../../assets/logo2.svg';
+import logo from '../../assets/logo.svg';
 import './App.css';
 import Examiner from './Examiner';
 import ReviewPanel from './ReviewPanel';

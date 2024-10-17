@@ -365,7 +365,7 @@ flex-direction: column;
 .station-settings-edit-container {
   display: flex;
   flex-direction: column;
-  /* background-color: #002c5849; */
+  width: 30%;
 }
 .station-settings-btn-container{
   display: flex;

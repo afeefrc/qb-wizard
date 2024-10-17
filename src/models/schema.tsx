@@ -90,6 +90,7 @@ export const examinerListSchema = {
   },
   // examinerValidity: { type: 'date', default: null },
   isIncharge: { type: 'boolean', default: false },
+  isArchived: { type: 'boolean', default: false },
   createdAt: { type: 'date', default: () => new Date() },
   updatedAt: { type: 'date', default: () => new Date() },
 };

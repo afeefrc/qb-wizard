@@ -38,8 +38,12 @@ function QPapprovalProcessPage({
   onClose,
 }: QPapprovalProcessPageProps): React.ReactElement {
   const appContext = React.useContext(AppContext);
-  const { examiners, syllabusSections, handleUpdateExaminerAssignment } =
-    appContext || {};
+  const {
+    examiners,
+    syllabusSections,
+    handleUpdateExaminerAssignment,
+    handleAddUserActivityLog,
+  } = appContext || {};
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -164,6 +168,14 @@ function QPapprovalProcessPage({
                   ...content,
                   status: 'In Progress',
                 });
+                handleAddUserActivityLog({
+                  user: 'TRG Incharge',
+                  action: `Question paper preparation for ${content.unit}`,
+                  targetType: 'questionPaper',
+                  unit: content.unit,
+                  description:
+                    'Question paper return back to examiner for revision',
+                });
                 successMessage();
                 setTimeout(() => {
                   onClose();
@@ -181,11 +193,17 @@ function QPapprovalProcessPage({
                   ...content,
                   status: 'Approved',
                 });
+                handleAddUserActivityLog({
+                  user: 'TRG Incharge',
+                  action: `Question paper preparation for ${content.unit}`,
+                  targetType: 'questionPaper',
+                  unit: content.unit,
+                  description: 'Question paper approved by TRG Incharge',
+                });
                 successMessage();
                 setTimeout(() => {
                   onClose();
                 }, 500);
-                console.log('Approve Question Bank');
               }}
               style={{ marginLeft: '25px' }}
             >

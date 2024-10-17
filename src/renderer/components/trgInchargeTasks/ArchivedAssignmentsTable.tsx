@@ -1,9 +1,26 @@
-import React from 'react';
-import { Table, Button, Space } from 'antd';
-// import { ExaminerAssignment } from '../../types/examinerAssignment';
+import React, { useState, useContext } from 'react';
+import {
+  Table,
+  Button,
+  Space,
+  List,
+  Form,
+  Select,
+  Input,
+  Row,
+  Col,
+  Empty,
+  Typography,
+} from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import QuestionPaperPDF from '../utils/QuestionPaperPDF';
+import { AppContext } from '../../context/AppContext';
+import { useUser } from '../../context/UserContext';
 
+const { Option } = Select;
+const { TextArea } = Input;
+const { Text } = Typography;
 interface ExaminerAssignment {
   id: string;
   unit: string;
@@ -30,11 +47,145 @@ interface ArchivedAssignmentsTableProps {
   onRestore: (assignment: ExaminerAssignment) => void;
 }
 
+interface ExpandedRowContentProps {
+  record: ExaminerAssignment;
+  feedback: any;
+  examiners: any;
+  handleAddComment: any;
+  handleDeleteComment: any;
+  user: any;
+  closeExpanded: (id: string) => void;
+}
+
+function ExpandedRowContent({
+  record,
+  feedback,
+  examiners,
+  handleAddComment,
+  handleDeleteComment,
+  user,
+  closeExpanded,
+}: ExpandedRowContentProps) {
+  const [form] = Form.useForm();
+
+  const getExaminerName = (examinerId: string) => {
+    const examiner = examiners?.find((examiner) => examiner.id === examinerId);
+    return examiner
+      ? `${examiner.examinerName} ${examiner.examinerDesignation} (ATM)`.trim()
+      : examinerId;
+  };
+
+  const handleFeedbackSubmit = (
+    values: { examiner: string; comment: string },
+    recordId: string,
+  ) => {
+    if (values.examiner && values.comment) {
+      handleAddComment('questionPaperComments', {
+        examinerId: values.examiner,
+        comment: values.comment,
+        examinerAssignmentId: recordId,
+      });
+      form.resetFields();
+    }
+  };
+
+  return (
+    <Row gutter={16}>
+      <Col span={12}>
+        <List
+          dataSource={(feedback?.questionPaperComments || []).filter(
+            (comment) => comment.examinerAssignmentId === record.id,
+          )}
+          locale={{ emptyText: <Empty description="No feedback yet" /> }}
+          header={<Text>Evaluation Feedback</Text>}
+          renderItem={(item: any) => (
+            <List.Item
+              actions={[
+                user.role === 'trg-incharge' && (
+                  <Button
+                    onClick={() =>
+                      handleDeleteComment('questionPaperComments', item.id)
+                    }
+                    type="link"
+                    danger
+                  >
+                    Delete
+                  </Button>
+                ),
+              ].filter(Boolean)}
+            >
+              <List.Item.Meta
+                title={getExaminerName(item.examinerId)}
+                description={item.comment}
+              />
+            </List.Item>
+          )}
+        />
+      </Col>
+      <Col span={12}>
+        <Form
+          form={form}
+          onFinish={(values) => handleFeedbackSubmit(values, record.id)}
+          layout="vertical"
+        >
+          <Form.Item name="examiner" label="Examiner (Evaluation)">
+            <Select placeholder="Select your name">
+              {examiners?.map((examiner) => (
+                <Option key={examiner.id} value={examiner.id}>
+                  {getExaminerName(examiner.id)}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="comment" label="Feedback">
+            <TextArea rows={4} placeholder="Enter your feedback" />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                Add Feedback
+              </Button>
+              <Button
+                icon={<CloseOutlined />}
+                onClick={() => closeExpanded(record.id)}
+                type="default"
+              >
+                Close
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Col>
+    </Row>
+  );
+}
+
 function ArchivedAssignmentsTable({
   assignments,
   onView,
   onRestore,
 }: ArchivedAssignmentsTableProps) {
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const appContext = useContext(AppContext);
+  const { feedback, examiners, handleAddComment, handleDeleteComment } =
+    appContext || {};
+  const { user } = useUser();
+  const [form] = Form.useForm();
+
+  const toggleExpand = (recordId: string) => {
+    setExpandedRowKeys((prevKeys) =>
+      prevKeys.includes(recordId)
+        ? prevKeys.filter((key) => key !== recordId)
+        : [...prevKeys, recordId],
+    );
+  };
+
+  const closeExpanded = (recordId: string) => {
+    setExpandedRowKeys((prevKeys) =>
+      prevKeys.filter((key) => key !== recordId),
+    );
+  };
+
   const columns = [
     {
       title: 'Unit',
@@ -91,19 +242,45 @@ function ArchivedAssignmentsTable({
       key: 'actions',
       width: '30%',
       render: (_: any, record: ExaminerAssignment) => (
-        // <Space size="middle">
-        //   <Button onClick={() => onView(record)}>View</Button>
-        //   <Button onClick={() => onRestore(record)}>Restore</Button>
-        // </Space>
-        <QuestionPaperPDF
-          examinerAssignmentId={record.id}
-          downloadButtonDisabled
-        />
+        <Space direction="horizontal">
+          <QuestionPaperPDF
+            examinerAssignmentId={record.id}
+            downloadButtonDisabled
+          />
+          <Button
+            onClick={() => toggleExpand(record.id)}
+            style={{ padding: '20px', borderRadius: '10px' }}
+          >
+            Feedback
+          </Button>
+        </Space>
       ),
     },
   ];
 
-  return <Table dataSource={assignments} columns={columns} rowKey="id" />;
+  return (
+    <Table
+      dataSource={assignments}
+      columns={columns}
+      rowKey="id"
+      expandable={{
+        expandedRowKeys,
+        expandedRowRender: (record) => (
+          <ExpandedRowContent
+            record={record}
+            feedback={feedback}
+            examiners={examiners}
+            handleAddComment={handleAddComment}
+            handleDeleteComment={handleDeleteComment}
+            user={user}
+            closeExpanded={closeExpanded}
+          />
+        ),
+        rowExpandable: (record) => true,
+        showExpandColumn: false,
+      }}
+    />
+  );
 }
 
 export default ArchivedAssignmentsTable;

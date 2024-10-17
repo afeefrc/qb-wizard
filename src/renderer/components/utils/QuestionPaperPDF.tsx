@@ -721,8 +721,14 @@ function QuestionPaperPDF({
     totalMarks,
     examinationDate: (() => {
       const date = examinerAssignment?.archivedQuestionPaper?.examinationDate;
-      if (date && dayjs.isDayjs(date)) {
-        return date.format('DD/MM/YYYY');
+      if (date) {
+        // Try to parse the date with dayjs
+        const parsedDate = dayjs(date);
+
+        // Check if the parsed date is valid
+        if (parsedDate.isValid()) {
+          return parsedDate.format('DD/MM/YYYY');
+        }
       }
       return '*** Not assigned ***';
     })(),

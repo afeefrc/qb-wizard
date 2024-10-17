@@ -9,6 +9,8 @@ import {
   Popconfirm,
   InputNumber,
   Input,
+  message,
+  Modal,
 } from 'antd';
 import {
   FilePdfOutlined,
@@ -59,8 +61,10 @@ function IssueQuestionPaper({
   const {
     examiners,
     handleUpdateExaminerAssignment,
+    handleDeleteExaminerAssignment,
     settings,
     examinerAssignments,
+    handleAddUserActivityLog,
   } = appContext || {};
 
   // const invigilator = Form.useWatch('invigilator', form);
@@ -153,14 +157,65 @@ function IssueQuestionPaper({
     ],
   );
 
-  // Separate effect to handle customSerialNumber changes
-  // useEffect(() => {
-  //   if (customSerialNumber !== null && serialNumber !== null) {
-  //     setSerialNumber(
-  //       (prevSerialNumber) => prevSerialNumber + customSerialNumber,
-  //     );
-  //   }
-  // }, [customSerialNumber]);
+  const handleReturnToExaminer = useCallback(() => {
+    try {
+      const updatedAssignment = {
+        ...assignment,
+        status: 'In Progress',
+        isArchived: false,
+      };
+      handleUpdateExaminerAssignment(updatedAssignment.id, updatedAssignment);
+      handleAddUserActivityLog({
+        user: 'TRG Incharge',
+        action: `Returned question paper for ${assignment.unit} to examiner`,
+        targetType: 'questionPaper',
+        unit: assignment.unit,
+        description: `Question paper returned to examiner for revision`,
+      });
+      message.success('Question paper returned to examiner successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error returning question paper to examiner:', error);
+      message.error('Failed to return question paper to examiner');
+    }
+  }, [
+    assignment,
+    handleUpdateExaminerAssignment,
+    handleAddUserActivityLog,
+    onClose,
+  ]);
+
+  const handleCancelQuestionPaper = useCallback(() => {
+    Modal.confirm({
+      title: 'Are you sure you want to cancel this question paper?',
+      content: 'This action cannot be undone.',
+      onOk: () => {
+        try {
+          handleDeleteExaminerAssignment(assignment.id);
+          handleAddUserActivityLog({
+            user: 'TRG Incharge',
+            action: `Cancelled question paper for ${assignment.unit}`,
+            targetType: 'questionPaper',
+            unit: assignment.unit,
+            description: `Question paper cancelled and deleted`,
+          });
+          message.success('Question paper cancelled successfully');
+          onClose();
+        } catch (error) {
+          console.error('Error cancelling question paper:', error);
+          message.error('Failed to cancel question paper');
+        }
+      },
+      onCancel() {
+        // Do nothing if canceled
+      },
+    });
+  }, [
+    assignment,
+    handleDeleteExaminerAssignment,
+    handleAddUserActivityLog,
+    onClose,
+  ]);
 
   const handleSubmit = (values: any) => {
     console.log('values', values);
@@ -191,6 +246,14 @@ function IssueQuestionPaper({
       };
       console.log('updatedAssignment', updatedAssignment);
       handleUpdateExaminerAssignment(updatedAssignment.id, updatedAssignment);
+      handleAddUserActivityLog({
+        user: 'TRG Incharge',
+        action: `Issued question paper for ${assignment.unit}`,
+        targetType: 'questionPaper',
+        unit: assignment.unit,
+        description: `Question paper issued to invigilator, Serial number assigned: ${year}/${assignment.unit}/${newSerialNumber?.toString().padStart(3, '0') || 'N/A'}`,
+      });
+      message.success('Question paper issued successfully');
       onClose();
     } catch (error) {
       console.error('Error in handleSubmit:', error);
@@ -323,7 +386,7 @@ function IssueQuestionPaper({
                 size="small"
                 style={{ margin: '10px 15px 10px 0px', padding: '15px' }}
                 icon={<UndoOutlined />}
-                onClick={() => console.log('Return back to examiner')}
+                onClick={handleReturnToExaminer}
               >
                 Return back to examiner
               </Button>
@@ -333,7 +396,7 @@ function IssueQuestionPaper({
                 style={{ margin: '10px 15px 10px 0px', padding: '15px' }}
                 size="small"
                 icon={<CloseCircleOutlined />}
-                onClick={() => console.log('Cancel this Question Paper')}
+                onClick={handleCancelQuestionPaper}
               >
                 Cancel this Paper
               </Button>

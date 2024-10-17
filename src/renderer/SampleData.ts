@@ -27,21 +27,20 @@ export const getUnitNameById = (id) => {
 
 export const designationList = ['JGM', 'DGM', 'AGM', 'SM', 'MGR', 'AM', 'JE'];
 
-export const stations = [
-  {
-    code: 'VOBL',
-    name: 'Kempegowda International Airport',
-    city: 'Bangalore',
-  },
-  {
-    code: 'VIDP',
-    name: 'Station Two Name',
-    city: 'City Two',
-  },
-  {
-    code: 'VABB',
-    name: 'Station Three Name',
-    city: 'City Three',
-  },
-];
-
+// export const stations = [
+//   {
+//     code: 'VOBL',
+//     name: 'Kempegowda International Airport',
+//     city: 'Bangalore',
+//   },
+//   {
+//     code: 'VIDP',
+//     name: 'Station Two Name',
+//     city: 'City Two',
+//   },
+//   {
+//     code: 'VABB',
+//     name: 'Station Three Name',
+//     city: 'City Three',
+//   },
+// ];

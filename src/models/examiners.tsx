@@ -57,28 +57,40 @@ const isExaminerEmpIdUnique = async (
   return !result; // If result is null, the id is unique
 };
 
-
 // Add a new examiner
 export const addExaminer = async (item) => {
   try {
-    // Check if examinerEmpId is unique before proceeding
-    const isUnique = await isExaminerEmpIdUnique(item.examinerEmpId);
-    if (!isUnique) {
-      return 'Examiner with the same employee Id already exists. Edit or delete the existing examiner.';
-    }
-
     const db = await initDB();
     const tx = db.transaction(EXAMINER_STORE_NAME, 'readwrite');
     const store = tx.objectStore(EXAMINER_STORE_NAME);
+    const index = store.index('examinerEmpId');
+
+    // Check if examiner with the same examinerEmpId exists
+    const existingExaminer = await index.get(item.examinerEmpId);
+
+    if (existingExaminer) {
+      if (existingExaminer.isArchived) {
+        // If examiner exists and is archived, update all fields and unarchive
+        const updatedExaminer = {
+          ...existingExaminer,
+          ...item,
+          isArchived: false,
+          updatedAt: new Date(),
+        };
+        const validatedExaminer =
+          validateAndSetDefaultsForExaminer(updatedExaminer);
+        await store.put(validatedExaminer);
+        await tx.done;
+        return 'Examiner unarchived and updated successfully';
+      } else {
+        // If examiner exists and is not archived, return an error
+        return 'Examiner with the same employee Id already exists. Edit or delete the existing examiner.';
+      }
+    }
+
+    // If examiner doesn't exist, add a new one
     const validatedItem = validateAndSetDefaultsForExaminer(item);
     const cloneableItem = removeUncloneableProperties(validatedItem);
-    // Check for uniqueness of examinerEmpId
-    // const isUnique = await isExaminerEmpIdUnique(cloneableItem.examinerEmpId);
-    // console.log('isUnique:', isUnique);
-    // if (!isUnique) {
-    //   return 'Examiner with the same employee Id already exists. Edit or delete the existing examiner.';
-    // }
-
     await store.add(cloneableItem);
     await tx.done;
     return 'Examiner added successfully';

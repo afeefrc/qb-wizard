@@ -58,6 +58,7 @@ function QuestionPaperProcessPage(): React.ReactElement {
     activeQuestions,
     syllabusSections,
     handleUpdateExaminerAssignment,
+    handleAddUserActivityLog,
   } = appContext || {};
 
   const state = location.state as LocationState;
@@ -784,6 +785,18 @@ function QuestionPaperProcessPage(): React.ReactElement {
                     addedQuestions: [],
                   },
                 });
+                handleAddUserActivityLog({
+                  user: `${
+                    examiners.find(
+                      (examiner) => examiner.id === renderContent.examiner,
+                    )?.examinerName
+                  }`,
+                  action: `Question paper preparation for ${renderContent.unit}`,
+                  targetType: 'questionPaper',
+                  unit: renderContent.unit,
+                  description:
+                    'Question paper prepared and submitted to Training Incharge',
+                });
                 navigate(-1);
               }}
               style={{ marginLeft: '20px' }}
@@ -909,8 +922,19 @@ function QuestionPaperProcessPage(): React.ReactElement {
                     setExaminerAssignmentStatus(
                       checked ? 'In Progress' : 'Initiated',
                     );
-                    handleUpdateExaminerAssignment(renderContent.id, {
+                    handleUpdateExaminerAssignment(state.renderContent.id, {
                       status: checked ? 'In Progress' : 'Initiated',
+                    });
+                    handleAddUserActivityLog({
+                      user: `${
+                        examiners.find(
+                          (examiner) => examiner.id === renderContent.examiner,
+                        )?.examinerName
+                      }`,
+                      action: `Question paper preparation for ${state.renderContent.unit}`,
+                      targetType: 'questionPaper',
+                      unit: state.renderContent.unit,
+                      description: 'Question paper preparation process started',
                     });
                   }}
                 />

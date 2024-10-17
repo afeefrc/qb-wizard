@@ -9,6 +9,7 @@ import './RolePage.css'; // Import the CSS file for styling
 import { useUser } from './context/UserContext';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
 import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
+import ViewQBFeedback from './components/reviewProcessTasks/ViewQBFeedback';
 
 function ReviewPanel() {
   const navigate = useNavigate();
@@ -48,9 +49,7 @@ function ReviewPanel() {
       },
       '1': {
         title: menuTitles[1],
-        component: (
-          <Empty description={`Under development ${BtnPressed.BtnName}`} />
-        ),
+        component: <ViewQBFeedback unitName={BtnPressed.BtnName || ''} />,
       },
       '2': {
         title: menuTitles[2],

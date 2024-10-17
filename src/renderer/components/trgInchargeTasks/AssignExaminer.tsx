@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Select, DatePicker, Space } from 'antd';
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Select,
+  DatePicker,
+  Space,
+  FormProps,
+} from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -39,6 +48,7 @@ function ExaminerAssignment({
     handleAddExaminerAssignment,
     handleUpdateExaminerAssignment,
     examiners,
+    handleAddUserActivityLog,
   } = appContext || {};
   const [form] = Form.useForm();
   const [selectedValues, setSelectedValues] = useState([]);
@@ -90,6 +100,16 @@ function ExaminerAssignment({
     };
     console.log('content', content);
     handleAddExaminerAssignment(content);
+    handleAddUserActivityLog({
+      user: 'TRG Incharge',
+      action: `Question paper preparation for ${unit}`,
+      targetType: 'questionPaper',
+      unit: unit,
+      description: `Assigned examiner to prepare question paper for ${unit}. Examiner: ${
+        examiners.find((examiner) => examiner.id === values.examiner)
+          ?.examinerName
+      }`,
+    });
     form.resetFields();
     close();
   };

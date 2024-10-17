@@ -148,7 +148,10 @@ export function AppProvider({ children }: AppProviderProps) {
   const fetchExaminers = useCallback(async () => {
     try {
       const allExaminers = await getAllExaminers();
-      setExaminers(allExaminers);
+      const activeExaminers = allExaminers.filter(
+        (examiner) => !examiner.isArchived,
+      );
+      setExaminers(activeExaminers);
     } catch (error) {
       console.error('Failed to fetch examiners', error);
     }

@@ -254,27 +254,40 @@ function DatabaseBackupRestore() {
   };
 
   return (
-    <Space>
-      <Button
-        icon={<DownloadOutlined />}
-        onClick={exportDatabase}
-        loading={isExporting}
-      >
-        Backup Database
-      </Button>
-      <Upload
-        accept=".json"
-        showUploadList={false}
-        beforeUpload={(file) => {
-          importDatabase(file);
-          return false;
-        }}
-      >
-        <Button icon={<UploadOutlined />} loading={isImporting}>
-          Restore Database
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+      }}
+    >
+      <div style={{ height: 300 }}>
+        <Button
+          icon={<DownloadOutlined />}
+          onClick={exportDatabase}
+          loading={isExporting}
+          style={{ margin: '25px', padding: '25px' }}
+        >
+          Backup Database
         </Button>
-      </Upload>
-    </Space>
+        <Upload
+          accept=".json"
+          showUploadList={false}
+          beforeUpload={(file) => {
+            importDatabase(file);
+            return false;
+          }}
+        >
+          <Button
+            icon={<UploadOutlined />}
+            loading={isImporting}
+            style={{ margin: '25px', padding: '25px' }}
+          >
+            Restore Database
+          </Button>
+        </Upload>
+      </div>
+    </div>
   );
 }
 
