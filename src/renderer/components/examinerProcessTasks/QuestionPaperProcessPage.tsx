@@ -17,6 +17,7 @@ import QuestionPaperDisplay from './QuestionPaperDisplay';
 import QuestionPaperDisplay2 from './QuestionPaperDisplay2';
 import QuestionPaperPDF from '../utils/QuestionPaperPDF';
 import { renderAnswerKey } from '../utils/tableRenderers';
+import generateArchivedQuestionPaper from './questionPaperGenerator';
 
 interface LocationState {
   unit: string;
@@ -62,9 +63,10 @@ function QuestionPaperProcessPage(): React.ReactElement {
   const state = location.state as LocationState;
   const { unit } = state;
   const [renderContent, setRenderContent] = useState<any>(state.renderContent);
-  const [questionPaper, setQuestionPaper] = useState<any[]>(
-    renderContent.archivedQuestionPaper.content,
-  );
+  // Remove this line:
+  // const [questionPaper, setQuestionPaper] = useState<any[]>(
+  //   renderContent.archivedQuestionPaper.content,
+  // );
   // Ids of questions that are added to the paper
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [examinerAssignmentStatus, setExaminerAssignmentStatus] = useState(
@@ -89,71 +91,123 @@ function QuestionPaperProcessPage(): React.ReactElement {
   };
 
   const generateQuestionPaper = () => {
-    const filteredQuestions = questions.filter((q) => q.unitName === unit);
-    const filteredSyllabusSections = syllabusSections.filter(
-      (s) => s.unitName === unit,
-    );
+    // const filteredQuestions = questions.filter((q) => q.unitName === unit);
+    // const filteredSyllabusSections = syllabusSections.filter(
+    //   (s) => s.unitName === unit,
+    // );
 
-    const generatePart = (partQuestions, targetMarks) => {
-      let partPaper = [];
-      let partTotalMarks = 0;
+    // const generatePart = (partQuestions, targetMarks) => {
+    //   let partPaper = [];
+    //   let partTotalMarks = 0;
 
-      const mandatoryQuestions = partQuestions.filter((q) => q.mandatory);
-      const nonMandatoryQuestions = partQuestions.filter((q) => !q.mandatory);
+    //   const mandatoryQuestions = partQuestions.filter((q) => q.mandatory);
+    //   const nonMandatoryQuestions = partQuestions.filter((q) => !q.mandatory);
 
-      partPaper = [...mandatoryQuestions];
-      partTotalMarks = mandatoryQuestions.reduce((sum, q) => sum + q.marks, 0);
+    //   partPaper = [...mandatoryQuestions];
+    //   partTotalMarks = mandatoryQuestions.reduce((sum, q) => sum + q.marks, 0);
 
-      const isValidQuestion = (question) => {
-        if (partPaper.some((q) => q.id === question.id)) return false;
-        if (!question.linkedQuestion || question.linkedQuestion.length === 0)
-          return true;
-        return !question.linkedQuestion.some((id) =>
-          partPaper.some((q) => q.id === id),
-        );
-      };
+    //   const isValidQuestion = (question) => {
+    //     if (partPaper.some((q) => q.id === question.id)) return false;
+    //     if (!question.linkedQuestion || question.linkedQuestion.length === 0)
+    //       return true;
+    //     return !question.linkedQuestion.some((id) =>
+    //       partPaper.some((q) => q.id === id),
+    //     );
+    //   };
 
-      while (partTotalMarks < targetMarks) {
-        const remainingMarks = targetMarks - partTotalMarks;
-        const validQuestions = nonMandatoryQuestions.filter(
-          (q) => isValidQuestion(q) && q.marks <= remainingMarks,
-        );
-        if (validQuestions.length === 0) break;
+    //   while (partTotalMarks < targetMarks) {
+    //     const remainingMarks = targetMarks - partTotalMarks;
+    //     const validQuestions = nonMandatoryQuestions.filter(
+    //       (q) => isValidQuestion(q) && q.marks <= remainingMarks,
+    //     );
+    //     if (validQuestions.length === 0) break;
 
-        const randomQuestion =
-          validQuestions[Math.floor(Math.random() * validQuestions.length)];
-        partPaper.push(randomQuestion);
-        partTotalMarks += randomQuestion.marks;
-      }
+    //     const randomQuestion =
+    //       validQuestions[Math.floor(Math.random() * validQuestions.length)];
+    //     partPaper.push(randomQuestion);
+    //     partTotalMarks += randomQuestion.marks;
+    //   }
 
-      return partPaper;
-    };
+    //   return partPaper;
+    // };
 
-    const partASections = filteredSyllabusSections.filter(
-      (s) => s.questionPart === 1,
-    );
-    const partBSections = filteredSyllabusSections.filter(
-      (s) => s.questionPart === 2,
-    );
+    // const partASections = filteredSyllabusSections.filter(
+    //   (s) => s.questionPart === 1,
+    // );
+    // const partBSections = filteredSyllabusSections.filter(
+    //   (s) => s.questionPart === 2,
+    // );
 
-    const partAQuestions = filteredQuestions.filter((q) =>
-      partASections.some((s) => s.id === q.syllabusSectionId),
-    );
-    const partBQuestions = filteredQuestions.filter((q) =>
-      partBSections.some((s) => s.id === q.syllabusSectionId),
-    );
+    // const partAQuestions = filteredQuestions.filter((q) =>
+    //   partASections.some((s) => s.id === q.syllabusSectionId),
+    // );
+    // const partBQuestions = filteredQuestions.filter((q) =>
+    //   partBSections.some((s) => s.id === q.syllabusSectionId),
+    // );
 
-    const partA = generatePart(partAQuestions, 100);
-    const partB = generatePart(partBQuestions, 50);
+    // const partA = generatePart(partAQuestions, 100);
+    // const partB = generatePart(partBQuestions, 50);
 
-    // below is the upadte to implement the questionPaperBySections
-    const questionPaperBySections = {
-      'Part A': {},
-      'Part B': {},
-    };
+    // // below is the upadte to implement the questionPaperBySections
+    // const questionPaperBySections = {
+    //   'Part A': {},
+    //   'Part B': {},
+    // };
+    // // const processQuestions = (part, questions, sections) => {
+    // //   let globalQuestionNumber = 1;
+
+    // //   // Sort sections by serialNumber
+    // //   const sortedSections = sections.sort(
+    // //     (a, b) => a.serialNumber - b.serialNumber,
+    // //   );
+
+    // //   sortedSections.forEach((section) => {
+    // //     const sectionId = section.id;
+    // //     const sectionQuestions = questions.filter(
+    // //       (q) => q.syllabusSectionId === sectionId,
+    // //     );
+
+    // //     if (sectionQuestions.length === 0) return;
+
+    // //     questionPaperBySections[part][sectionId] = {};
+
+    // //     // Group fillInTheBlanks questions
+    // //     const fillInTheBlanks = sectionQuestions.filter(
+    // //       (q) => q.questionType === 'fillInTheBlanks',
+    // //     );
+    // //     if (fillInTheBlanks.length > 0) {
+    // //       questionPaperBySections[part][sectionId][globalQuestionNumber] =
+    // //         fillInTheBlanks;
+    // //       globalQuestionNumber++;
+    // //     }
+
+    // //     // Group trueFalse questions
+    // //     const trueFalse = sectionQuestions.filter(
+    // //       (q) => q.questionType === 'trueFalse',
+    // //     );
+    // //     if (trueFalse.length > 0) {
+    // //       questionPaperBySections[part][sectionId][globalQuestionNumber] =
+    // //         trueFalse;
+    // //       globalQuestionNumber++;
+    // //     }
+
+    // //     // Process other question types
+    // //     sectionQuestions
+    // //       .filter(
+    // //         (q) =>
+    // //           q.questionType !== 'fillInTheBlanks' &&
+    // //           q.questionType !== 'trueFalse',
+    // //       )
+    // //       .forEach((question) => {
+    // //         questionPaperBySections[part][sectionId][globalQuestionNumber] = [
+    // //           question,
+    // //         ];
+    // //         globalQuestionNumber++;
+    // //       });
+    // //   });
+    // // };;
+
     // const processQuestions = (part, questions, sections) => {
-    //   let globalQuestionNumber = 1;
-
     //   // Sort sections by serialNumber
     //   const sortedSections = sections.sort(
     //     (a, b) => a.serialNumber - b.serialNumber,
@@ -167,16 +221,21 @@ function QuestionPaperProcessPage(): React.ReactElement {
 
     //     if (sectionQuestions.length === 0) return;
 
-    //     questionPaperBySections[part][sectionId] = {};
+    //     questionPaperBySections[part][sectionId] = {
+    //       sectionInfo: section,
+    //       questions: [],
+    //     };
 
     //     // Group fillInTheBlanks questions
     //     const fillInTheBlanks = sectionQuestions.filter(
     //       (q) => q.questionType === 'fillInTheBlanks',
     //     );
     //     if (fillInTheBlanks.length > 0) {
-    //       questionPaperBySections[part][sectionId][globalQuestionNumber] =
-    //         fillInTheBlanks;
-    //       globalQuestionNumber++;
+    //       questionPaperBySections[part][sectionId].questions.push({
+    //         type: 'group',
+    //         questionType: 'fillInTheBlanks',
+    //         questions: fillInTheBlanks,
+    //       });
     //     }
 
     //     // Group trueFalse questions
@@ -184,9 +243,11 @@ function QuestionPaperProcessPage(): React.ReactElement {
     //       (q) => q.questionType === 'trueFalse',
     //     );
     //     if (trueFalse.length > 0) {
-    //       questionPaperBySections[part][sectionId][globalQuestionNumber] =
-    //         trueFalse;
-    //       globalQuestionNumber++;
+    //       questionPaperBySections[part][sectionId].questions.push({
+    //         type: 'group',
+    //         questionType: 'trueFalse',
+    //         questions: trueFalse,
+    //       });
     //     }
 
     //     // Process other question types
@@ -197,88 +258,39 @@ function QuestionPaperProcessPage(): React.ReactElement {
     //           q.questionType !== 'trueFalse',
     //       )
     //       .forEach((question) => {
-    //         questionPaperBySections[part][sectionId][globalQuestionNumber] = [
+    //         questionPaperBySections[part][sectionId].questions.push({
+    //           type: 'single',
     //           question,
-    //         ];
-    //         globalQuestionNumber++;
+    //         });
     //       });
     //   });
-    // };;
+    // };
+    // processQuestions('Part A', partA, partASections);
+    // processQuestions('Part B', partB, partBSections);
 
-    const processQuestions = (part, questions, sections) => {
-      // Sort sections by serialNumber
-      const sortedSections = sections.sort(
-        (a, b) => a.serialNumber - b.serialNumber,
-      );
+    // const updatedRenderContent = {
+    //   ...renderContent,
+    //   // questionPaper: [...partA, ...partB],
+    //   archivedQuestionPaper: {
+    //     content: [...partA, ...partB],
+    //     syllabusSections: [...partASections, ...partBSections],
+    //     questionPaperBySections,
+    //     addedQuestions: [],
+    //   },
+    // };
 
-      sortedSections.forEach((section) => {
-        const sectionId = section.id;
-        const sectionQuestions = questions.filter(
-          (q) => q.syllabusSectionId === sectionId,
-        );
-
-        if (sectionQuestions.length === 0) return;
-
-        questionPaperBySections[part][sectionId] = {
-          sectionInfo: section,
-          questions: [],
-        };
-
-        // Group fillInTheBlanks questions
-        const fillInTheBlanks = sectionQuestions.filter(
-          (q) => q.questionType === 'fillInTheBlanks',
-        );
-        if (fillInTheBlanks.length > 0) {
-          questionPaperBySections[part][sectionId].questions.push({
-            type: 'group',
-            questionType: 'fillInTheBlanks',
-            questions: fillInTheBlanks,
-          });
-        }
-
-        // Group trueFalse questions
-        const trueFalse = sectionQuestions.filter(
-          (q) => q.questionType === 'trueFalse',
-        );
-        if (trueFalse.length > 0) {
-          questionPaperBySections[part][sectionId].questions.push({
-            type: 'group',
-            questionType: 'trueFalse',
-            questions: trueFalse,
-          });
-        }
-
-        // Process other question types
-        sectionQuestions
-          .filter(
-            (q) =>
-              q.questionType !== 'fillInTheBlanks' &&
-              q.questionType !== 'trueFalse',
-          )
-          .forEach((question) => {
-            questionPaperBySections[part][sectionId].questions.push({
-              type: 'single',
-              question,
-            });
-          });
-      });
-    };
-    processQuestions('Part A', partA, partASections);
-    processQuestions('Part B', partB, partBSections);
+    const archivedQuestionPaper = generateArchivedQuestionPaper(
+      questions,
+      syllabusSections,
+      unit,
+    );
 
     const updatedRenderContent = {
       ...renderContent,
-      // questionPaper: [...partA, ...partB],
-      archivedQuestionPaper: {
-        content: [...partA, ...partB],
-        syllabusSections: [...partASections, ...partBSections],
-        questionPaperBySections,
-        addedQuestions: [],
-      },
+      archivedQuestionPaper,
     };
-    // console.log('questionPaperBySections', questionPaperBySections);
+
     handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
-    setQuestionPaper([...partA, ...partB]);
     // update the local state with the new render content
     setRenderContent(updatedRenderContent);
   };
@@ -748,12 +760,15 @@ function QuestionPaperProcessPage(): React.ReactElement {
               type="primary"
               onClick={() => {
                 generateQuestionPaper();
-                console.log('quesion paper generated');
+                console.log('question paper generated');
               }}
               style={{ marginLeft: '20px' }}
             >
               <CompassTwoTone twoToneColor="#eb2f96" />
-              {questionPaper.length > 0
+              {renderContent.archivedQuestionPaper.questionPaperBySections &&
+              Object.keys(
+                renderContent.archivedQuestionPaper.questionPaperBySections,
+              ).length > 0
                 ? 'Regenerate Question Paper'
                 : 'Generate Question Paper'}
             </Button>
@@ -810,23 +825,26 @@ function QuestionPaperProcessPage(): React.ReactElement {
             />
           )} */}
           <div>
-            {renderContent.archivedQuestionPaper.questionPaperBySections && (
-              <QuestionPaperDisplay2
-                questionPaperBySections={
-                  renderContent?.archivedQuestionPaper
-                    ?.questionPaperBySections || {}
-                }
-                syllabusSections={
-                  renderContent?.archivedQuestionPaper?.syllabusSections || []
-                }
-                // columns={columns}
-                addQuestionsToPaper={addQuestionsToPaper}
-                addedQuestions={addedQuestions}
-                removeQuestionFromPaper={removeQuestionFromPaper}
-                replaceQuestion={replaceQuestion}
-                setIsSubmitDisabled={setIsSubmitDisabled}
-              />
-            )}
+            {renderContent.archivedQuestionPaper.questionPaperBySections &&
+              Object.keys(
+                renderContent.archivedQuestionPaper.questionPaperBySections,
+              ).length > 0 && (
+                <QuestionPaperDisplay2
+                  questionPaperBySections={
+                    renderContent.archivedQuestionPaper.questionPaperBySections
+                  }
+                  syllabusSections={
+                    renderContent.archivedQuestionPaper.syllabusSections
+                  }
+                  addQuestionsToPaper={addQuestionsToPaper}
+                  addedQuestions={
+                    renderContent.archivedQuestionPaper.addedQuestions
+                  }
+                  removeQuestionFromPaper={removeQuestionFromPaper}
+                  replaceQuestion={replaceQuestion}
+                  setIsSubmitDisabled={setIsSubmitDisabled}
+                />
+              )}
           </div>
         </div>
       </div>
