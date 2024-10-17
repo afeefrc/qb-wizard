@@ -8,6 +8,7 @@ import {
   Button,
   Form,
   Alert,
+  Image,
 } from 'antd';
 import { CommentOutlined } from '@ant-design/icons';
 import type { TableColumnsType } from 'antd';
@@ -66,6 +67,26 @@ const renderQuestionContent = (text: string, record: ColumnDataType) => {
     );
   }
   return <Text style={{ fontSize: '16px', fontWeight: 400 }}>{text}</Text>;
+};
+
+const renderImage = (record: ColumnDataType) => {
+  if (record.image && record.image instanceof Blob) {
+    const imageUrl = URL.createObjectURL(record.image);
+    console.log('Image URL created:', imageUrl); // Debugging log
+    return (
+      <div style={{ marginTop: '10px' }}>
+        <Image
+          src={imageUrl}
+          alt="Question Image"
+          style={{ maxWidth: '100%', maxHeight: '200px' }}
+          onError={(e) => {
+            console.error('Error loading image:', e);
+          }}
+        />
+      </div>
+    );
+  }
+  return null;
 };
 
 function QuestionBankDisplay({
@@ -208,6 +229,7 @@ function QuestionBankDisplay({
       render: (text: string, record: ColumnDataType) => (
         <div>
           {renderQuestionContent(text, record)}
+          {renderImage(record)}
           <div style={{ textAlign: 'right', marginTop: '0px', padding: 0 }}>
             {(() => {
               const commentCount =

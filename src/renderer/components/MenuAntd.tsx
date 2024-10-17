@@ -119,6 +119,10 @@ function MenuList({
               children: [
                 { key: 'settings-examinerList', label: 'List of Examiners' },
                 { key: 'settings-stationSettings', label: 'Station Settings' },
+                {
+                  key: 'settings-databaseBackupRestore',
+                  label: 'Database Backup/Restore',
+                },
               ],
             },
             {

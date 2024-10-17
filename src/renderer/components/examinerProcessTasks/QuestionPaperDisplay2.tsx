@@ -1,14 +1,32 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Typography, Button, Divider, Tag, Empty } from 'antd';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useContext,
+} from 'react';
+import {
+  Typography,
+  Button,
+  Divider,
+  Tag,
+  Empty,
+  Alert,
+  Form,
+  Image,
+} from 'antd';
 import {
   SyncOutlined,
   // CompassTwoTone,
   PlusSquareOutlined,
   DeleteOutlined,
+  CommentOutlined,
 } from '@ant-design/icons';
 // import QuestionPaperPDF from '../utils/QuestionPaperPDF';
 import AddQuestionDrawer from './AddQuestionDrawer';
 import { renderAnswerKey } from '../utils/tableRenderers';
+import QuestionFeedbackSection from '../QuestionFeedbackSection';
+import { AppContext } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
 
 const { Title } = Typography;
@@ -44,6 +62,7 @@ function toRoman(num: number): string {
 interface Question {
   id: string;
   questionText: string;
+  image: Blob | null;
   answerText: string;
   marks: number;
   questionType: string;
@@ -174,6 +193,29 @@ interface QuestionPaperDisplay2Props {
 //   },
 // );
 
+// Utilities related to question feedbacks
+// Inside the QuestionPaperDisplay2 component, add these hooks and state
+
+const renderImage = (question: Question) => {
+  if (question.image && question.image instanceof Blob) {
+    const imageUrl = URL.createObjectURL(question.image);
+    // console.log('Image URL created:', imageUrl); // Debugging log
+    return (
+      <div style={{ marginTop: '10px' }}>
+        <Image
+          src={imageUrl}
+          alt="Question Image"
+          style={{ maxWidth: '100%', maxHeight: '200px' }}
+          onError={(e) => {
+            console.error('Error loading image:', e);
+          }}
+        />
+      </div>
+    );
+  }
+  return null;
+};
+
 function RenderQuestionActions({
   question,
   replaceQuestion,
@@ -253,7 +295,7 @@ function RenderSingleQuestion({
           removeQuestionFromPaper={removeQuestionFromPaper}
         />
       </div>
-
+      {renderImage(question)}
       <Divider style={{ margin: '10px' }} />
     </Typography.Text>
   );
@@ -321,6 +363,7 @@ function RenderGroupedQuestions({
                 removeQuestionFromPaper={removeQuestionFromPaper}
               />
             </div>
+            {renderImage(question)}
             <Divider style={{ margin: '10px' }} />
           </Typography.Text>
         </div>
@@ -338,6 +381,8 @@ function QuestionPaperDisplay2({
   replaceQuestion,
   setIsSubmitDisabled,
 }: QuestionPaperDisplay2Props) {
+  const appContext = useContext(AppContext);
+  const { feedback, examiners } = appContext || {};
   const { user } = useUser();
   const [drawerVisible, setDrawerVisible] = useState<boolean>(false);
   const [currentSectionId, setCurrentSectionId] = useState<any>(null);
@@ -383,13 +428,13 @@ function QuestionPaperDisplay2({
       if (sectionMarks < minWeightage) {
         return {
           isValid: false,
-          message: `Total marks (${sectionMarks}) are below the minimum required (${minWeightage})`,
+          message: `Total marks in this section (${sectionMarks}) is below the minimum weightage (${minWeightage})`,
         };
       }
       if (sectionMarks > maxWeightage) {
         return {
           isValid: false,
-          message: `Total marks (${sectionMarks}) exceed the maximum allowed (${maxWeightage})`,
+          message: `Total marks in this section (${sectionMarks}) exceeds the maximum weightage (${maxWeightage})`,
         };
       }
       return { isValid: true, message: '' };
@@ -427,9 +472,10 @@ function QuestionPaperDisplay2({
   useEffect(() => {
     if (user?.role === 'examiner') {
       setIsSubmitDisabled(
-        invalidMarksSections.length > 0 ||
-          partAMarks !== 100 ||
-          partBMarks !== 50,
+        // invalidMarksSections.length > 0 ||
+        //   partAMarks !== 100 ||
+        //   partBMarks !== 50,
+        partAMarks !== 100 || partBMarks !== 50,
       );
     }
   }, [invalidMarksSections, partAMarks, partBMarks, setIsSubmitDisabled, user]);
@@ -513,6 +559,26 @@ function QuestionPaperDisplay2({
                       >
                         Total Marks in the section: {sectionMarks}
                       </Typography.Text>
+                      {invalidMarksSections.find(
+                        (s) => s.syllabusSectionId === sectionId,
+                      ) && (
+                        <Alert
+                          showIcon
+                          message={
+                            invalidMarksSections.find(
+                              (s) => s.syllabusSectionId === sectionId,
+                            )?.message
+                          }
+                          type="error"
+                        />
+                        // <Typography.Text type="danger">
+                        //   {
+                        //     invalidMarksSections.find(
+                        //       (s) => s.syllabusSectionId === sectionId,
+                        //     )?.message
+                        //   }
+                        // </Typography.Text>
+                      )}
                     </div>
                   </div>
                   <Divider style={{ borderWidth: 1, borderColor: '#000' }} />

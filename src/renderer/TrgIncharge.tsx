@@ -14,6 +14,7 @@ import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
 import QuestionLogs from './components/trgInchargeTasks/QuestionLogs';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
 import ViewQuestionPapers from './components/ViewQuestionPapers';
+import DatabaseBackupRestore from '../models/DatabaseBackupRestore';
 // import { useUser } from './context/UserContext';
 
 const trgInchargeMenuTitles = [
@@ -83,6 +84,12 @@ function TrgIncharge() {
         }
         if (BtnPressed.BtnName === 'stationSettings') {
           return { component: <StationSettings />, title: 'Station Settings' };
+        }
+        if (BtnPressed.BtnName === 'databaseBackupRestore') {
+          return {
+            component: <DatabaseBackupRestore />,
+            title: 'Database Backup Restore',
+          };
         }
         return null;
       })(),

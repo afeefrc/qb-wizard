@@ -787,10 +787,18 @@ function QuestionPaperProcessPage(): React.ReactElement {
                 navigate(-1);
               }}
               style={{ marginLeft: '20px' }}
-              // disabled={isSubmitDisabled}
+              disabled={isSubmitDisabled}
             >
               Submit to Training Incharge
             </Button>
+            {isSubmitDisabled && (
+              <Alert
+                showIcon
+                message="Please ensure total marks are correct."
+                type="error"
+                style={{ width: '90%', marginTop: '10px' }}
+              />
+            )}
           </div>
         </Card>
 
@@ -825,26 +833,23 @@ function QuestionPaperProcessPage(): React.ReactElement {
             />
           )} */}
           <div>
-            {renderContent.archivedQuestionPaper.questionPaperBySections &&
-              Object.keys(
-                renderContent.archivedQuestionPaper.questionPaperBySections,
-              ).length > 0 && (
-                <QuestionPaperDisplay2
-                  questionPaperBySections={
-                    renderContent.archivedQuestionPaper.questionPaperBySections
-                  }
-                  syllabusSections={
-                    renderContent.archivedQuestionPaper.syllabusSections
-                  }
-                  addQuestionsToPaper={addQuestionsToPaper}
-                  addedQuestions={
-                    renderContent.archivedQuestionPaper.addedQuestions
-                  }
-                  removeQuestionFromPaper={removeQuestionFromPaper}
-                  replaceQuestion={replaceQuestion}
-                  setIsSubmitDisabled={setIsSubmitDisabled}
-                />
-              )}
+            {renderContent?.archivedQuestionPaper?.questionPaperBySections && (
+              <QuestionPaperDisplay2
+                questionPaperBySections={
+                  renderContent.archivedQuestionPaper.questionPaperBySections
+                }
+                syllabusSections={
+                  renderContent.archivedQuestionPaper.syllabusSections || []
+                }
+                addQuestionsToPaper={addQuestionsToPaper}
+                addedQuestions={
+                  renderContent.archivedQuestionPaper.addedQuestions || []
+                }
+                removeQuestionFromPaper={removeQuestionFromPaper}
+                replaceQuestion={replaceQuestion}
+                setIsSubmitDisabled={setIsSubmitDisabled}
+              />
+            )}
           </div>
         </div>
       </div>

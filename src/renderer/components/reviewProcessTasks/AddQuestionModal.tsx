@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Button, Tabs } from 'antd';
+import {
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Button,
+  Tabs,
+  Upload,
+  message,
+} from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import type { RcFile, UploadFile } from 'antd/es/upload/interface';
 
 const { TabPane } = Tabs;
 
@@ -7,6 +19,10 @@ interface AddQuestionModalProps {
   visible: boolean;
   onCancel: () => void;
   onSubmit: (values: any) => void;
+}
+
+interface ImageFile extends UploadFile {
+  blob?: Blob;
 }
 
 function AddQuestionModal({
@@ -17,6 +33,7 @@ function AddQuestionModal({
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState('oneWord');
   const [mcqOptions, setMcqOptions] = useState<string[]>([]);
+  const [imageFile, setImageFile] = useState<ImageFile | null>(null);
 
   const handleSubmit = () => {
     // Get all form fields
@@ -51,6 +68,7 @@ function AddQuestionModal({
         const submissionData = {
           questionType: activeTab,
           ...activeTabFields,
+          image: imageFile?.blob || null,
         };
 
         // Handle the True/False case
@@ -62,6 +80,7 @@ function AddQuestionModal({
         onSubmit(submissionData);
         form.resetFields();
         setMcqOptions([]);
+        setImageFile(null);
       })
       .catch((error) => {
         console.error('Form validation failed:', error);
@@ -73,6 +92,39 @@ function AddQuestionModal({
     setMcqOptions([]);
     form.resetFields();
   };
+
+  const handleImageUpload = (file: RcFile) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('You can only upload image files!');
+      return false;
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      message.error('Image must be smaller than 2MB!');
+      return false;
+    }
+
+    setImageFile({
+      uid: file.uid,
+      name: file.name,
+      status: 'done',
+      blob: file, // Store the actual file (Blob) here
+    });
+    return false; // Prevent default upload behavior
+  };
+
+  const renderImageUpload = () => (
+    <Form.Item name="image" label="Upload Image">
+      <Upload
+        accept="image/*"
+        beforeUpload={handleImageUpload}
+        fileList={imageFile ? [imageFile] : []}
+      >
+        <Button icon={<UploadOutlined />}>Click to Upload</Button>
+      </Upload>
+    </Form.Item>
+  );
 
   return (
     <Modal
@@ -109,6 +161,7 @@ function AddQuestionModal({
             <Form.Item name="marks" label="Marks" rules={[{ required: true }]}>
               <InputNumber min={1} />
             </Form.Item>
+            {renderImageUpload()}
           </Form>
         </TabPane>
         <TabPane tab="MCQ" key="mcq">
@@ -198,6 +251,7 @@ function AddQuestionModal({
             <Form.Item name="marks" label="Marks" rules={[{ required: true }]}>
               <InputNumber min={1} />
             </Form.Item>
+            {renderImageUpload()}
           </Form>
         </TabPane>
         <TabPane tab="Short Answer" key="shortAnswer">
@@ -219,6 +273,7 @@ function AddQuestionModal({
             <Form.Item name="marks" label="Marks" rules={[{ required: true }]}>
               <InputNumber min={1} />
             </Form.Item>
+            {renderImageUpload()}
           </Form>
         </TabPane>
         <TabPane tab="Long Answer" key="longAnswer">
@@ -242,6 +297,7 @@ function AddQuestionModal({
             <Form.Item name="marks" label="Marks" rules={[{ required: true }]}>
               <InputNumber min={1} />
             </Form.Item>
+            {renderImageUpload()}
           </Form>
         </TabPane>
         <TabPane tab="True/False" key="trueFalse">
@@ -304,6 +360,7 @@ function AddQuestionModal({
             >
               <InputNumber min={1} />
             </Form.Item>
+            {renderImageUpload()}
           </Form>
         </TabPane>
         <TabPane tab="Fill in the Blanks" key="fillInTheBlanks">
@@ -375,6 +432,7 @@ function AddQuestionModal({
             >
               <InputNumber min={1} />
             </Form.Item>
+            {renderImageUpload()}
           </Form>
         </TabPane>
         <TabPane tab="Match the Following" key="matchTheFollowing">
@@ -468,6 +526,7 @@ function AddQuestionModal({
             >
               <InputNumber min={1} />
             </Form.Item>
+            {renderImageUpload()}
           </Form>
         </TabPane>
       </Tabs>

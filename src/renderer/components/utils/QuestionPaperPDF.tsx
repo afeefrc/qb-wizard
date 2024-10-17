@@ -11,6 +11,7 @@ import {
   PDFDownloadLink,
   Image,
   Font,
+  Image as PDFImage,
 } from '@react-pdf/renderer';
 import { renderAnswerKey } from './tableRenderers';
 import { unitsFullNames } from '../../SampleData';
@@ -250,6 +251,15 @@ const styles = StyleSheet.create({
     color: 'grey',
   },
 });
+
+function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 // Water mark
 function Watermark({ pdfType, status }) {
@@ -526,23 +536,33 @@ function PDFContent({
                           </View>
                           <View style={styles.questionTextContainer}>
                             {questionItem?.type === 'single' ? (
-                              <View style={styles.questionRow}>
-                                <Text style={styles.questionText}>
-                                  {pdfType === 'answerKey' ? (
-                                    renderPDFAnswerKey(
-                                      questionItem.question?.answerText,
-                                      questionItem.question,
-                                    )
-                                  ) : (
-                                    <Text style={styles.questionText}>
-                                      {questionItem.question?.questionText ||
-                                        'No question text'}
-                                    </Text>
-                                  )}
-                                </Text>
-                                <Text style={styles.marks}>
-                                  {questionItem.question?.marks || 0} Marks
-                                </Text>
+                              <View style={styles.questionContent}>
+                                <View style={styles.questionRow}>
+                                  <Text style={styles.questionText}>
+                                    {pdfType === 'answerKey' ? (
+                                      renderPDFAnswerKey(
+                                        questionItem.question?.answerText,
+                                        questionItem.question,
+                                      )
+                                    ) : (
+                                      <Text style={styles.questionText}>
+                                        {questionItem.question?.questionText ||
+                                          'No question text'}
+                                      </Text>
+                                    )}
+                                  </Text>
+                                  <Text style={styles.marks}>
+                                    {questionItem.question?.marks || 0} Marks
+                                  </Text>
+                                </View>
+                                {questionItem.question?.image && (
+                                  <PDFImage
+                                    src={blobToDataURL(
+                                      questionItem.question.image,
+                                    )}
+                                    style={styles.questionImage}
+                                  />
+                                )}
                               </View>
                             ) : (
                               <>
@@ -553,31 +573,39 @@ function PDFContent({
                                 </Text>
                                 {questionItem?.questions?.map(
                                   (subQuestion, subIndex) => (
-                                    <View
-                                      key={subIndex}
-                                      style={styles.subQuestionRow}
-                                    >
-                                      <Text style={styles.questionText}>
+                                    <View style={styles.questionContent}>
+                                      <View
+                                        key={subIndex}
+                                        style={styles.subQuestionRow}
+                                      >
                                         <Text style={styles.questionText}>
-                                          {String.fromCharCode(97 + subIndex)}.
-                                          {'  '}
-                                        </Text>
-                                        {'  '}
-                                        {pdfType === 'answerKey' ? (
-                                          renderPDFAnswerKey(
-                                            subQuestion?.answerText,
-                                            subQuestion,
-                                          )
-                                        ) : (
                                           <Text style={styles.questionText}>
-                                            {subQuestion?.questionText ||
-                                              'No question text'}
+                                            {String.fromCharCode(97 + subIndex)}
+                                            .{'  '}
                                           </Text>
-                                        )}
-                                      </Text>
-                                      <Text style={styles.marks}>
-                                        {subQuestion?.marks || 0} Marks
-                                      </Text>
+                                          {'  '}
+                                          {pdfType === 'answerKey' ? (
+                                            renderPDFAnswerKey(
+                                              subQuestion?.answerText,
+                                              subQuestion,
+                                            )
+                                          ) : (
+                                            <Text style={styles.questionText}>
+                                              {subQuestion?.questionText ||
+                                                'No question text'}
+                                            </Text>
+                                          )}
+                                        </Text>
+                                        <Text style={styles.marks}>
+                                          {subQuestion?.marks || 0} Marks
+                                        </Text>
+                                      </View>
+                                      {subQuestion?.image && (
+                                        <PDFImage
+                                          src={blobToDataURL(subQuestion.image)}
+                                          style={styles.questionImage}
+                                        />
+                                      )}
                                     </View>
                                   ),
                                 )}

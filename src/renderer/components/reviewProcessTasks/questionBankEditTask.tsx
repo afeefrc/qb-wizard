@@ -1,4 +1,10 @@
-import React, { useContext, useMemo, useState, useCallback } from 'react';
+import React, {
+  useContext,
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react';
 import {
   Button,
   Table,
@@ -10,6 +16,7 @@ import {
   Alert,
   List,
   Empty,
+  Image,
 } from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
 import {
@@ -36,6 +43,7 @@ interface ColumnDataType {
   id: string;
   serialNumber: string;
   questionText: string;
+  image?: Blob;
   answerText: string;
   marks: number;
   questionType: string;
@@ -83,6 +91,26 @@ const renderQuestionContent = (text: string, record: ColumnDataType) => {
   return <Text style={{ fontSize: '16px', fontWeight: 400 }}>{text}</Text>;
 };
 
+const renderImage = (record: ColumnDataType) => {
+  if (record.image && record.image instanceof Blob) {
+    const imageUrl = URL.createObjectURL(record.image);
+    console.log('Image URL created:', imageUrl); // Debugging log
+    return (
+      <div style={{ marginTop: '10px' }}>
+        <Image
+          src={imageUrl}
+          alt="Question Image"
+          style={{ maxWidth: '100%', maxHeight: '200px' }}
+          onError={(e) => {
+            console.error('Error loading image:', e);
+          }}
+        />
+      </div>
+    );
+  }
+  return null;
+};
+
 function QuestionBankEditTask({
   unitName = '',
 }: QuestionBankEditTaskProps): React.ReactElement {
@@ -117,6 +145,19 @@ function QuestionBankEditTask({
 
   // console.log('pendingChanges', pendingChanges);
   // console.log('questions', questions);
+
+  // In your component:
+  useEffect(() => {
+    return () => {
+      // Revoke all object URLs when the component unmounts
+      questions.forEach((question) => {
+        if (question.image && question.image instanceof Blob) {
+          console.log(question.image.name);
+          URL.revokeObjectURL(URL.createObjectURL(question.image));
+        }
+      });
+    };
+  }, [questions]);
 
   // question comments related states and functions
   const [showQuestionComments, setShowQuestionComments] = useState<{
@@ -637,6 +678,7 @@ function QuestionBankEditTask({
               </div>
             </>
           )}
+          {renderImage(record)}
           {/* question feedback comments section */}
           <div style={{ textAlign: 'right', marginTop: '0px', padding: 0 }}>
             {(() => {

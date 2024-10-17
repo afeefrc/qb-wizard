@@ -417,7 +417,7 @@ const ListOfExaminers: React.FC = () => {
                       ?.map(
                         (unitItem) =>
                           `${unitItem.unit?.toUpperCase()}, ${
-                            unitItem.validityDate
+                            unitItem.validityDate instanceof Date
                               ? `Valid upto ${unitItem.validityDate.toLocaleDateString('en-IN')}`
                               : 'Validity date not available'
                           }`,

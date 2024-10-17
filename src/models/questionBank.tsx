@@ -432,19 +432,6 @@ export const applyAllPendingChanges = async () => {
   }
 };
 
-// Function to handle image upload and convert it to a Blob
-export const handleImageUpload = async (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const blob = new Blob([reader.result], { type: file.type });
-      resolve(blob);
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
-};
-
 // Link questions
 export const addLinkedQuestions = async (questionId, linkedQuestionIds) => {
   const db = await initDB();
@@ -481,4 +468,17 @@ export const updateLinkedQuestions = async (
   const store = tx.objectStore(LINKED_QUESTIONS_STORE);
   await store.put({ id, questionId, linkedQuestionIds });
   await tx.done;
+};
+
+// Function to handle image upload and convert it to a Blob
+export const handleImageUpload = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const blob = new Blob([reader.result], { type: file.type });
+      resolve(blob);
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
 };
