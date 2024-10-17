@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Empty } from 'antd';
+import { Empty, Space } from 'antd';
+import { HomeFilled } from '@ant-design/icons';
 import MenuList from './components/MenuAntd';
 import BodyContentCard from './components/BodyContentCard';
 import DashBoard from './components/DashBoard';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
+import ViewQuestionPapers from './components/ViewQuestionPapers';
 import './RolePage.css'; // Import the CSS file for styling
 import { useUser } from './context/UserContext';
 
@@ -45,9 +47,7 @@ function Examiner() {
       },
       '1': {
         title: menuTitles[1],
-        component: (
-          <Empty description={`Under development ${BtnPressed.BtnName}`} />
-        ),
+        component: <ViewQuestionPapers unitName={BtnPressed.BtnName || ''} />,
       },
       '2': {
         title: menuTitles[2],
@@ -94,7 +94,10 @@ function Examiner() {
       <div className="rolepage-header">
         <div className="button-container">
           <button type="button" onClick={handleBackClick}>
-            Back to Home
+            <Space>
+              <HomeFilled style={{ padding: '0px 5px', color: '#002C58' }} />
+              Back to Home
+            </Space>
           </button>
         </div>
         <div className="rolepage-title">Examiners&#39; section</div>

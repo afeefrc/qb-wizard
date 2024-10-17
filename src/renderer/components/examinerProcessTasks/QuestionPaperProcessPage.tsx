@@ -14,6 +14,8 @@ import {
 import { SyncOutlined, CompassTwoTone } from '@ant-design/icons';
 import { AppContext } from '../../context/AppContext';
 import QuestionPaperDisplay from './QuestionPaperDisplay';
+import QuestionPaperDisplay2 from './QuestionPaperDisplay2';
+import QuestionPaperPDF from '../utils/QuestionPaperPDF';
 import { renderAnswerKey } from '../utils/tableRenderers';
 
 interface LocationState {
@@ -64,12 +66,14 @@ function QuestionPaperProcessPage(): React.ReactElement {
     renderContent.archivedQuestionPaper.content,
   );
   // Ids of questions that are added to the paper
-  const [addedQuestions, setAddedQuestions] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [examinerAssignmentStatus, setExaminerAssignmentStatus] = useState(
     renderContent.status,
   );
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
+
+  const addedQuestions =
+    renderContent.archivedQuestionPaper.addedQuestions || [];
 
   const handleBackClick = () => {
     navigate(-1);
@@ -142,130 +146,506 @@ function QuestionPaperProcessPage(): React.ReactElement {
     const partA = generatePart(partAQuestions, 100);
     const partB = generatePart(partBQuestions, 50);
 
+    // below is the upadte to implement the questionPaperBySections
+    const questionPaperBySections = {
+      'Part A': {},
+      'Part B': {},
+    };
+    // const processQuestions = (part, questions, sections) => {
+    //   let globalQuestionNumber = 1;
+
+    //   // Sort sections by serialNumber
+    //   const sortedSections = sections.sort(
+    //     (a, b) => a.serialNumber - b.serialNumber,
+    //   );
+
+    //   sortedSections.forEach((section) => {
+    //     const sectionId = section.id;
+    //     const sectionQuestions = questions.filter(
+    //       (q) => q.syllabusSectionId === sectionId,
+    //     );
+
+    //     if (sectionQuestions.length === 0) return;
+
+    //     questionPaperBySections[part][sectionId] = {};
+
+    //     // Group fillInTheBlanks questions
+    //     const fillInTheBlanks = sectionQuestions.filter(
+    //       (q) => q.questionType === 'fillInTheBlanks',
+    //     );
+    //     if (fillInTheBlanks.length > 0) {
+    //       questionPaperBySections[part][sectionId][globalQuestionNumber] =
+    //         fillInTheBlanks;
+    //       globalQuestionNumber++;
+    //     }
+
+    //     // Group trueFalse questions
+    //     const trueFalse = sectionQuestions.filter(
+    //       (q) => q.questionType === 'trueFalse',
+    //     );
+    //     if (trueFalse.length > 0) {
+    //       questionPaperBySections[part][sectionId][globalQuestionNumber] =
+    //         trueFalse;
+    //       globalQuestionNumber++;
+    //     }
+
+    //     // Process other question types
+    //     sectionQuestions
+    //       .filter(
+    //         (q) =>
+    //           q.questionType !== 'fillInTheBlanks' &&
+    //           q.questionType !== 'trueFalse',
+    //       )
+    //       .forEach((question) => {
+    //         questionPaperBySections[part][sectionId][globalQuestionNumber] = [
+    //           question,
+    //         ];
+    //         globalQuestionNumber++;
+    //       });
+    //   });
+    // };;
+
+    const processQuestions = (part, questions, sections) => {
+      // Sort sections by serialNumber
+      const sortedSections = sections.sort(
+        (a, b) => a.serialNumber - b.serialNumber,
+      );
+
+      sortedSections.forEach((section) => {
+        const sectionId = section.id;
+        const sectionQuestions = questions.filter(
+          (q) => q.syllabusSectionId === sectionId,
+        );
+
+        if (sectionQuestions.length === 0) return;
+
+        questionPaperBySections[part][sectionId] = {
+          sectionInfo: section,
+          questions: [],
+        };
+
+        // Group fillInTheBlanks questions
+        const fillInTheBlanks = sectionQuestions.filter(
+          (q) => q.questionType === 'fillInTheBlanks',
+        );
+        if (fillInTheBlanks.length > 0) {
+          questionPaperBySections[part][sectionId].questions.push({
+            type: 'group',
+            questionType: 'fillInTheBlanks',
+            questions: fillInTheBlanks,
+          });
+        }
+
+        // Group trueFalse questions
+        const trueFalse = sectionQuestions.filter(
+          (q) => q.questionType === 'trueFalse',
+        );
+        if (trueFalse.length > 0) {
+          questionPaperBySections[part][sectionId].questions.push({
+            type: 'group',
+            questionType: 'trueFalse',
+            questions: trueFalse,
+          });
+        }
+
+        // Process other question types
+        sectionQuestions
+          .filter(
+            (q) =>
+              q.questionType !== 'fillInTheBlanks' &&
+              q.questionType !== 'trueFalse',
+          )
+          .forEach((question) => {
+            questionPaperBySections[part][sectionId].questions.push({
+              type: 'single',
+              question,
+            });
+          });
+      });
+    };
+    processQuestions('Part A', partA, partASections);
+    processQuestions('Part B', partB, partBSections);
+
     const updatedRenderContent = {
       ...renderContent,
       // questionPaper: [...partA, ...partB],
       archivedQuestionPaper: {
         content: [...partA, ...partB],
         syllabusSections: [...partASections, ...partBSections],
+        questionPaperBySections,
+        addedQuestions: [],
       },
     };
+    // console.log('questionPaperBySections', questionPaperBySections);
     handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
     setQuestionPaper([...partA, ...partB]);
     // update the local state with the new render content
     setRenderContent(updatedRenderContent);
   };
 
-  // function to replace a question with another question
-  /**
-   * Replaces a question in the questionPaper array, updates the global store using handleUpdateExaminerAssignment,
-   * and updates the local state variables questionPaper and renderContent.
-   *
-   * @param {string} questionId - The ID of the question to be replaced.
-   * @param {any} newQuestion - The new question object to replace the existing one.
-   */
-  const replaceQuestion = (questionId: string, newQuestion: any) => {
-    // Replace the question in the local questionPaper state
-    const updatedQuestionPaper = questionPaper.map((question) =>
-      question.id === questionId ? newQuestion : question,
-    );
-    // Update the renderContent with the new questionPaper
-    const updatedRenderContent = {
-      ...renderContent,
-      archivedQuestionPaper: {
-        ...renderContent.archivedQuestionPaper,
-        content: updatedQuestionPaper,
-      },
-    };
+  // // function to replace a question with another question
+  // /**
+  //  * Replaces a question in the questionPaper array, updates the global store using handleUpdateExaminerAssignment,
+  //  * and updates the local state variables questionPaper and renderContent.
+  //  *
+  //  * @param {string} questionId - The ID of the question to be replaced.
+  //  * @param {any} newQuestion - The new question object to replace the existing one.
+  //  */
+  // const replaceQuestion = (questionId: string, newQuestion: any) => {
+  //   // Replace the question in the local questionPaper state
+  //   const updatedQuestionPaper = questionPaper.map((question) =>
+  //     question.id === questionId ? newQuestion : question,
+  //   );
+  //   // Update the renderContent with the new questionPaper
+  //   const updatedRenderContent = {
+  //     ...renderContent,
+  //     archivedQuestionPaper: {
+  //       ...renderContent.archivedQuestionPaper,
+  //       content: updatedQuestionPaper,
+  //     },
+  //   };
 
-    // update the store
-    handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
-    // update the local state
-    setQuestionPaper(updatedQuestionPaper);
-    setRenderContent(updatedRenderContent);
-  };
+  //   // update the store
+  //   handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
+  //   // update the local state
+  //   setQuestionPaper(updatedQuestionPaper);
+  //   setRenderContent(updatedRenderContent);
+  // };
 
   /**
    * Adds a new question to the questionPaper array, updates the global store using handleUpdateExaminerAssignment,
    * and updates the local state variables questionPaper and renderContent.
    *
    */
-  const addQuestionsToPaper = (questionIds: string[]) => {
-    // Find the corresponding questions from the 'questions' context using the provided IDs
-    const newQuestions = activeQuestions.filter((q) =>
-      questionIds.includes(q.id),
-    );
+  const addQuestionsToPaper = (newQuestions: Question[]) => {
+    const updatedQuestionPaperBySections = {
+      ...renderContent.archivedQuestionPaper.questionPaperBySections,
+    };
 
-    // Append the new questions to the existing questionPaper
-    const updatedQuestionPaper = [...questionPaper, ...newQuestions];
+    newQuestions.forEach((question) => {
+      const section = syllabusSections.find(
+        (s) => s.id === question.syllabusSectionId,
+      );
+      if (!section) {
+        console.error(`Section not found for question: ${question.id}`);
+        return; // Skip this question if we can't find its section
+      }
 
-    // Update the renderContent with the new questionPaper
+      const part = section.questionPart === 1 ? 'Part A' : 'Part B';
+      const sectionId = question.syllabusSectionId;
+
+      if (!updatedQuestionPaperBySections[part][sectionId]) {
+        updatedQuestionPaperBySections[part][sectionId] = {
+          sectionInfo: section,
+          questions: [],
+        };
+      }
+
+      const sectionQuestions =
+        updatedQuestionPaperBySections[part][sectionId].questions;
+
+      switch (question.questionType) {
+        case 'fillInTheBlanks':
+        case 'trueFalse':
+          // Find existing group for this question type
+          let group = sectionQuestions.find(
+            (q) =>
+              q.type === 'group' && q.questionType === question.questionType,
+          );
+          if (!group) {
+            // If no group exists, create a new one
+            group = {
+              type: 'group',
+              questionType: question.questionType,
+              questions: [],
+            };
+            sectionQuestions.push(group);
+          }
+          // Add the question to the group
+          group.questions.push(question);
+          break;
+        default:
+          // For all other types, add as a single question
+          sectionQuestions.push({ type: 'single', question: question });
+      }
+    });
+
     const updatedRenderContent = {
       ...renderContent,
       archivedQuestionPaper: {
         ...renderContent.archivedQuestionPaper,
-        content: updatedQuestionPaper,
+        questionPaperBySections: updatedQuestionPaperBySections,
+        addedQuestions: [
+          ...new Set([
+            ...(renderContent.archivedQuestionPaper.addedQuestions || []),
+            ...newQuestions.map((q) => q.id),
+          ]),
+        ],
       },
     };
 
     // Update the global store with the updated renderContent
     handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
 
-    // Update the local state with the new questionPaper and renderContent
-    setQuestionPaper(updatedQuestionPaper);
+    // Update the local state with the new renderContent
     setRenderContent(updatedRenderContent);
-    setAddedQuestions((prevAddedQuestions) => [
-      ...new Set([...prevAddedQuestions, ...questionIds]),
-    ]);
   };
 
-  const columns = [
-    {
-      title: 'S.No',
-      dataIndex: 'serialNumber',
-      key: 'serialNumber',
-      render: (text, record, index) => index + 1,
-    },
-    {
-      title: 'Question',
-      dataIndex: 'questionText',
-      key: 'questionText',
-      width: '35%',
-      render: (text) => <Typography.Text strong>{text}</Typography.Text>,
-    },
-    {
-      title: 'Answer Key',
-      dataIndex: 'answerText',
-      key: 'answerText',
-      width: '30%',
-      render: renderAnswerKey,
-    },
-    {
-      title: 'Marks',
-      dataIndex: 'marks',
-      key: 'marks',
-    },
-    {
-      title: 'Type',
-      dataIndex: 'questionType',
-      key: 'questionType',
-    },
-    {
-      title: 'Difficulty',
-      dataIndex: 'difficultyLevel',
-      key: 'difficultyLevel',
-    },
-    {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      render: (text, record) => (
-        <Button type="default" onClick={() => console.log('Edit')}>
-          <SyncOutlined /> Recycle
-        </Button>
+  const removeQuestionFromPaper = (questionId: string) => {
+    console.log('Removing question with ID:', questionId);
+
+    const updatedQuestionPaperBySections = JSON.parse(
+      JSON.stringify(
+        renderContent.archivedQuestionPaper.questionPaperBySections,
       ),
-    },
-  ];
+    );
+    let questionRemoved = false;
+
+    for (const part of ['Part A', 'Part B'] as const) {
+      for (const sectionId in updatedQuestionPaperBySections[part]) {
+        const section = updatedQuestionPaperBySections[part][sectionId];
+
+        section.questions = section.questions.reduce(
+          (acc: any[], item: any) => {
+            if (item.type === 'single') {
+              if (item.question.id !== questionId) {
+                acc.push(item);
+              } else {
+                questionRemoved = true;
+              }
+            } else if (item.type === 'group') {
+              const updatedGroupQuestions = item.questions.filter(
+                (q: Question) => q.id !== questionId,
+              );
+              if (updatedGroupQuestions.length !== item.questions.length) {
+                questionRemoved = true;
+              }
+              if (updatedGroupQuestions.length > 0) {
+                acc.push({ ...item, questions: updatedGroupQuestions });
+              }
+            } else {
+              acc.push(item);
+            }
+            return acc;
+          },
+          [],
+        );
+
+        // Remove the section if it becomes empty
+        if (section.questions.length === 0) {
+          delete updatedQuestionPaperBySections[part][sectionId];
+        }
+      }
+
+      // Remove the part if it becomes empty
+      if (Object.keys(updatedQuestionPaperBySections[part]).length === 0) {
+        delete updatedQuestionPaperBySections[part];
+      }
+    }
+
+    if (questionRemoved) {
+      const updatedRenderContent = {
+        ...renderContent,
+        archivedQuestionPaper: {
+          ...renderContent.archivedQuestionPaper,
+          questionPaperBySections: updatedQuestionPaperBySections,
+          addedQuestions:
+            renderContent.archivedQuestionPaper.addedQuestions.filter(
+              (id) => id !== questionId,
+            ),
+        },
+      };
+
+      console.log('Updated question paper:', updatedQuestionPaperBySections);
+      handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
+      setRenderContent(updatedRenderContent);
+    } else {
+      console.warn(
+        `Question with id ${questionId} not found in the question paper.`,
+      );
+    }
+  };
+
+  const replaceQuestion = (questionId: string) => {
+    // First, find the question to be replaced
+    let questionToReplace: Question | null = null;
+    let questionPart: 'Part A' | 'Part B' | null = null;
+    let questionSectionId: string | null = null;
+
+    const updatedQuestionPaperBySections = JSON.parse(
+      JSON.stringify(
+        renderContent.archivedQuestionPaper.questionPaperBySections,
+      ),
+    );
+
+    // Find the question to replace
+    outerLoop: for (const part of ['Part A', 'Part B'] as const) {
+      for (const sectionId in updatedQuestionPaperBySections[part]) {
+        const section = updatedQuestionPaperBySections[part][sectionId];
+        for (const item of section.questions) {
+          if (item.type === 'single' && item.question.id === questionId) {
+            questionToReplace = item.question;
+            questionPart = part;
+            questionSectionId = sectionId;
+            break outerLoop;
+          } else if (item.type === 'group') {
+            const foundQuestion = item.questions.find(
+              (q) => q.id === questionId,
+            );
+            if (foundQuestion) {
+              questionToReplace = foundQuestion;
+              questionPart = part;
+              questionSectionId = sectionId;
+              break outerLoop;
+            }
+          }
+        }
+      }
+    }
+
+    if (!questionToReplace || !questionPart || !questionSectionId) {
+      console.error(
+        `Question with id ${questionId} not found in the question paper.`,
+      );
+      return;
+    }
+
+    // Get all questions for this unit
+    const unitQuestions = questions.filter((q) => q.unitName === unit);
+
+    // Helper function to check if a question is already in the paper
+    const isQuestionInPaper = (qId: string): boolean => {
+      for (const part of ['Part A', 'Part B'] as const) {
+        for (const sectionId in updatedQuestionPaperBySections[part]) {
+          const section = updatedQuestionPaperBySections[part][sectionId];
+          for (const item of section.questions) {
+            if (item.type === 'single' && item.question.id === qId) {
+              return true;
+            } else if (
+              item.type === 'group' &&
+              item.questions.some((q) => q.id === qId)
+            ) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    };
+
+    const prospectiveQuestions = unitQuestions.filter(
+      (q) =>
+        q.id !== questionId && // Exclude the current question
+        q.marks === questionToReplace!.marks && // Same marks
+        q.syllabusSectionId === questionToReplace!.syllabusSectionId && // Same section
+        !q.linkedQuestion?.includes(questionId) && // Not linked to the current question
+        !isQuestionInPaper(q.id) && // Not already in the paper (using our new helper function)
+        !unitQuestions.some((uq) => uq.linkedQuestion?.includes(q.id)) && // Not linked to any question in the paper
+        ((questionToReplace!.questionType === 'fillInTheBlanks' &&
+          q.questionType === 'fillInTheBlanks') ||
+          (questionToReplace!.questionType === 'trueFalse' &&
+            q.questionType === 'trueFalse') ||
+          (questionToReplace!.questionType !== 'fillInTheBlanks' &&
+            questionToReplace!.questionType !== 'trueFalse' &&
+            q.questionType !== 'fillInTheBlanks' &&
+            q.questionType !== 'trueFalse')),
+    );
+
+    if (prospectiveQuestions.length === 0) {
+      console.error(`No suitable replacement found for question ${questionId}`);
+      return;
+    }
+
+    // Randomly select a replacement question
+    const replacementQuestion =
+      prospectiveQuestions[
+        Math.floor(Math.random() * prospectiveQuestions.length)
+      ];
+
+    // Replace the question in the structure
+    const section =
+      updatedQuestionPaperBySections[questionPart][questionSectionId];
+    section.questions = section.questions.map((item) => {
+      if (item.type === 'single' && item.question.id === questionId) {
+        return { type: 'single', question: replacementQuestion };
+      } else if (item.type === 'group') {
+        item.questions = item.questions.map((q) =>
+          q.id === questionId ? replacementQuestion : q,
+        );
+        return item;
+      }
+      return item;
+    });
+
+    // Update the render content
+    const updatedRenderContent = {
+      ...renderContent,
+      archivedQuestionPaper: {
+        ...renderContent.archivedQuestionPaper,
+        questionPaperBySections: updatedQuestionPaperBySections,
+        addedQuestions: [
+          ...renderContent.archivedQuestionPaper.addedQuestions.filter(
+            (id) => id !== questionId,
+          ),
+          replacementQuestion.id,
+        ],
+      },
+    };
+
+    // Update the global store with the updated renderContent
+    handleUpdateExaminerAssignment(renderContent.id, updatedRenderContent);
+
+    // Update the local state with the new renderContent
+    setRenderContent(updatedRenderContent);
+  };
+
+  // const columns = [
+  //   {
+  //     title: 'S.No',
+  //     dataIndex: 'serialNumber',
+  //     key: 'serialNumber',
+  //     render: (text, record, index) => index + 1,
+  //   },
+  //   {
+  //     title: 'Question',
+  //     dataIndex: 'questionText',
+  //     key: 'questionText',
+  //     width: '35%',
+  //     render: (text) => <Typography.Text strong>{text}</Typography.Text>,
+  //   },
+  //   {
+  //     title: 'Answer Key',
+  //     dataIndex: 'answerText',
+  //     key: 'answerText',
+  //     width: '30%',
+  //     render: renderAnswerKey,
+  //   },
+  //   {
+  //     title: 'Marks',
+  //     dataIndex: 'marks',
+  //     key: 'marks',
+  //   },
+  //   {
+  //     title: 'Type',
+  //     dataIndex: 'questionType',
+  //     key: 'questionType',
+  //   },
+  //   {
+  //     title: 'Difficulty',
+  //     dataIndex: 'difficultyLevel',
+  //     key: 'difficultyLevel',
+  //   },
+  //   {
+  //     title: 'Action',
+  //     dataIndex: 'action',
+  //     key: 'action',
+  //     render: (text, record) => (
+  //       <Button type="default" onClick={() => console.log('Edit')}>
+  //         <SyncOutlined /> Recycle
+  //       </Button>
+  //     ),
+  //   },
+  // ];
 
   const handleOk = () => {
     setIsModalOpen(false);
@@ -367,7 +747,6 @@ function QuestionPaperProcessPage(): React.ReactElement {
               ghost
               type="primary"
               onClick={() => {
-                setAddedQuestions([]);
                 generateQuestionPaper();
                 console.log('quesion paper generated');
               }}
@@ -385,8 +764,11 @@ function QuestionPaperProcessPage(): React.ReactElement {
                 handleUpdateExaminerAssignment(renderContent.id, {
                   ...renderContent,
                   status: 'Submitted',
+                  archivedQuestionPaper: {
+                    ...renderContent.archivedQuestionPaper,
+                    addedQuestions: [],
+                  },
                 });
-                setAddedQuestions([]);
                 navigate(-1);
               }}
               style={{ marginLeft: '20px' }}
@@ -400,11 +782,23 @@ function QuestionPaperProcessPage(): React.ReactElement {
         <div
           style={{
             display: 'flex',
-            justifyContent: 'center',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
             alignItems: 'center',
           }}
         >
-          {questionPaper.length > 0 && (
+          <div style={{ width: '90%' }}>
+            <QuestionPaperPDF
+              // questionPaperBySections={
+              //   renderContent.archivedQuestionPaper.questionPaperBySections
+              // }
+              // syllabusSections={
+              //   renderContent.archivedQuestionPaper.syllabusSections
+              // }
+              examinerAssignmentId={renderContent.id}
+            />
+          </div>
+          {/* {questionPaper.length > 0 && (
             <QuestionPaperDisplay
               questionPaper={questionPaper}
               syllabusSections={
@@ -414,7 +808,26 @@ function QuestionPaperProcessPage(): React.ReactElement {
               addQuestionsToPaper={addQuestionsToPaper}
               setIsSubmitDisabled={setIsSubmitDisabled}
             />
-          )}
+          )} */}
+          <div>
+            {renderContent.archivedQuestionPaper.questionPaperBySections && (
+              <QuestionPaperDisplay2
+                questionPaperBySections={
+                  renderContent?.archivedQuestionPaper
+                    ?.questionPaperBySections || {}
+                }
+                syllabusSections={
+                  renderContent?.archivedQuestionPaper?.syllabusSections || []
+                }
+                // columns={columns}
+                addQuestionsToPaper={addQuestionsToPaper}
+                addedQuestions={addedQuestions}
+                removeQuestionFromPaper={removeQuestionFromPaper}
+                replaceQuestion={replaceQuestion}
+                setIsSubmitDisabled={setIsSubmitDisabled}
+              />
+            )}
+          </div>
         </div>
       </div>
       <Modal

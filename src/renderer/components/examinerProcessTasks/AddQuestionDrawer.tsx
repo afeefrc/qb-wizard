@@ -81,9 +81,22 @@ function AddQuestionDrawer({
 
   const rowSelection = {
     type: 'checkbox' as const,
-    selectedRowKeys: selectedQuestions,
-    onChange: (selectedRowKeys: React.Key[]) => {
-      setSelectedQuestions(selectedRowKeys as string[]);
+    selectedRowKeys: selectedQuestions.map((q) => q.id),
+    onSelect: (record: Question, selected: boolean) => {
+      setSelectedQuestions((prev) =>
+        selected ? [...prev, record] : prev.filter((q) => q.id !== record.id),
+      );
+    },
+    onSelectAll: (
+      selected: boolean,
+      selectedRows: Question[],
+      changeRows: Question[],
+    ) => {
+      setSelectedQuestions((prev) =>
+        selected
+          ? [...new Set([...prev, ...selectedRows])]
+          : prev.filter((q) => !changeRows.some((cr) => cr.id === q.id)),
+      );
     },
   };
 

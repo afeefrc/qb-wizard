@@ -17,6 +17,7 @@ export const EXAMINER_ASSIGNMENT_STORE = 'examiner-assignment';
 export const SYLLABUS_SECTIONS_STORE = 'syllabus-sections';
 export const LINKED_QUESTIONS_STORE = 'linked-questions';
 export const USER_ACTIVITY_LOG_STORE = 'user-activity-log';
+export const FEEDBACK_STORE = 'feedback';
 
 export const initDB = async () => {
   return openDB(DB_NAME, DB_VERSION, {
@@ -116,6 +117,21 @@ export const initDB = async () => {
           keyPath: 'id',
           autoIncrement: true,
         });
+      }
+      if (!db.objectStoreNames.contains(FEEDBACK_STORE)) {
+        const feedbackStore = db.createObjectStore(FEEDBACK_STORE, {
+          keyPath: 'id',
+        });
+
+        // Initialize with a single entry if in development or production as needed
+        const initialFeedback = {
+          id: 'singleFeedbackEntry',
+          questionBankComments: [], // Initialize with empty comments
+          questionPaperComments: [], // Initialize with empty comments
+          questionComment: [], // Initialize with empty comments
+        };
+
+        feedbackStore.add(initialFeedback);
       }
     },
   });

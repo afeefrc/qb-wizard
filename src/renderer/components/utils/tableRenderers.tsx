@@ -14,12 +14,18 @@ interface ColumnDataType {
 /* column definitions for an Ant Design Table, typically has a signature :
 (text: string, record: ColumnDataType, index: number) => React.ReactNode
 */
+
 export const renderAnswerKey = (
   text: string,
   record: ColumnDataType,
+  style = {
+    fontSize: '16px',
+    fontWeight: 400,
+    fontStyle: 'none',
+  },
   // index: number,
 ) => {
-  const answerStyle = { fontSize: '16px', fontWeight: 400 };
+  const answerStyle = style;
 
   switch (record.questionType) {
     case 'mcq':
@@ -56,7 +62,8 @@ export const renderAnswerKey = (
 
     case 'fillInTheBlanks':
       return (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0px' }}>
+        // <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0px' }}>
+        <>
           {record.answerList?.map((answer, index) => (
             <Text
               key={index}
@@ -70,7 +77,8 @@ export const renderAnswerKey = (
               {index < record.answerList.length - 1 && ', '}
             </Text>
           ))}
-        </div>
+          {/* </div> */}
+        </>
       );
 
     default:

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Form,
   Select,
@@ -7,6 +7,8 @@ import {
   DatePicker,
   Alert,
   Popconfirm,
+  InputNumber,
+  Input,
 } from 'antd';
 import {
   FilePdfOutlined,
@@ -16,48 +18,190 @@ import {
 import { AppContext } from '../../context/AppContext';
 
 interface QuestionPaper {
-  id: string;
-  questionPaper: string;
-  subject: string;
+  content: [];
+  syllabusSections: [];
   examiner: string;
+  archivedAt: string;
+  invigilatorWithDesignation: string;
+  examinerWithDesignation: string;
+  examinationDate: string;
+  year: number;
+  serialNumber: number;
+}
+
+interface Assignment {
+  id: string;
+  examiner: string;
+  examiner_invigilator: string;
+  isArchived: boolean;
+  status: string;
+  unit: string;
+  archivedQuestionPaper: QuestionPaper;
 }
 
 interface IssueQuestionPaperProps {
-  paper: QuestionPaper;
+  // paper: QuestionPaper;
+  assignment: Assignment;
   onClose: () => void;
-  onUpdate: (updatedPaper: QuestionPaper) => void;
+  // onUpdate: (updatedPaper: QuestionPaper) => void;
 }
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 function IssueQuestionPaper({
-  paper,
+  // paper,
+  assignment,
   onClose,
-  onUpdate,
+  // onUpdate,
 }: IssueQuestionPaperProps) {
   const [form] = Form.useForm();
   const appContext = React.useContext(AppContext);
-  const { examinerAssignments, examiners } = appContext || {};
+  const {
+    examiners,
+    handleUpdateExaminerAssignment,
+    settings,
+    examinerAssignments,
+  } = appContext || {};
 
-  const invigilator = Form.useWatch('invigilator', form);
+  // const invigilator = Form.useWatch('invigilator', form);
   const examinationDate = Form.useWatch('examinationDate', form);
 
-  const [showWarning, setShowWarning] = useState(false);
+  // const [showWarning, setShowWarning] = useState(false);
+  const [showSkipSerialNumber, setShowSkipSerialNumber] = useState(false);
+  const [customSerialNumber, setCustomSerialNumber] = useState<number | null>(
+    null,
+  );
+  // const [skipComment, setSkipComment] = useState<string | null>('');
+  const [serialNumber, setSerialNumber] = useState<number | null>(
+    assignment.archivedQuestionPaper.serialNumber || null,
+  );
+  const [year, setYear] = useState<number | null>(
+    new Date(examinationDate).getFullYear() ||
+      new Date(
+        assignment.archivedQuestionPaper.examinationDate,
+      ).getFullYear() ||
+      new Date().getFullYear(),
+  );
+
+  let newSerialNumber = serialNumber;
+
+  useEffect(() => {
+    if (examinationDate) {
+      setYear(new Date(examinationDate).getFullYear());
+    } else {
+      setYear(new Date().getFullYear());
+    }
+  }, [examinationDate]);
+
+  // Use an effect to update serialNumber when necessary
+  useEffect(() => {
+    if (serialNumber === null) {
+      // Find the maximum serial number for the year
+      const maxSerialNumber = examinerAssignments?.reduce((max, a) => {
+        if (
+          a.archivedQuestionPaper &&
+          a.archivedQuestionPaper.examinationDate &&
+          new Date(a.archivedQuestionPaper.examinationDate).getFullYear() ===
+            year
+        ) {
+          return Math.max(max, a.archivedQuestionPaper.serialNumber || 0);
+        }
+        return max;
+      }, 0);
+
+      setSerialNumber(maxSerialNumber + 1);
+    }
+  }, [examinerAssignments, year, serialNumber]);
+
+  const createExaminerNameWithDesignation = useCallback(
+    (examinerId: string) => {
+      if (!examiners) return null;
+
+      const examiner = examiners.find((e) => e.id === examinerId);
+      if (!examiner) return null;
+
+      return `${examiner.examinerName}, ${examiner.examinerDesignation} (ATM)`;
+    },
+    [examiners],
+  );
+
+  const generateDocumentNumber = useCallback(
+    (assignment: Assignment) => {
+      const stationCode = settings?.stationCode;
+      // let newSerialNumber = serialNumber;
+
+      if (newSerialNumber === null) {
+        // This case should not occur as serialNumber is initialized in the useEffect
+        console.warn('Serial number is null when generating document number');
+        newSerialNumber = 1;
+      }
+
+      // Apply customSerialNumber if it exists
+      if (customSerialNumber !== null) {
+        newSerialNumber += customSerialNumber;
+      }
+
+      const paddedSerialNumber = newSerialNumber.toString().padStart(3, '0');
+      return `AAI/${stationCode}/ATM/TRG/${year}/${assignment.unit}-${paddedSerialNumber}`;
+    },
+    [
+      serialNumber,
+      customSerialNumber,
+      year,
+      settings?.stationCode,
+      examinationDate,
+    ],
+  );
+
+  // Separate effect to handle customSerialNumber changes
+  // useEffect(() => {
+  //   if (customSerialNumber !== null && serialNumber !== null) {
+  //     setSerialNumber(
+  //       (prevSerialNumber) => prevSerialNumber + customSerialNumber,
+  //     );
+  //   }
+  // }, [customSerialNumber]);
 
   const handleSubmit = (values: any) => {
-    if (!invigilator || !examinationDate) {
-      setShowWarning(true);
-      return;
+    console.log('values', values);
+    // if (!invigilator || !examinationDate) {
+    //   setShowWarning(true);
+    //   return;
+    // }
+    try {
+      const updatedAssignment = {
+        ...assignment,
+        examiner_invigilator: values.invigilator,
+        isArchived: true,
+        status: 'Archived',
+        archivedQuestionPaper: {
+          ...assignment.archivedQuestionPaper,
+          examinationDate: values.examinationDate?.toDate() || null, // Changed from values.archivedQuestionPaper.examinationDate
+          invigilatorWithDesignation: createExaminerNameWithDesignation(
+            values.invigilator,
+          ),
+          examinerWithDesignation: createExaminerNameWithDesignation(
+            assignment.examiner,
+          ),
+          archivedAt: new Date(),
+          year,
+          serialNumber: newSerialNumber,
+          skipComment: values.skipComment || null,
+        },
+      };
+      console.log('updatedAssignment', updatedAssignment);
+      handleUpdateExaminerAssignment(updatedAssignment.id, updatedAssignment);
+      onClose();
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
     }
-    const updatedPaper = { ...paper, ...values };
-    onUpdate(updatedPaper);
-    onClose();
-    console.log(values);
   };
 
   const handleReset = () => {
     form.resetFields();
-    setShowWarning(false);
+    form.setFieldValue('invigilator', null);
+    setCustomSerialNumber(null);
+    setShowSkipSerialNumber(false);
   };
 
   return (
@@ -71,7 +215,12 @@ function IssueQuestionPaper({
       >
         <Form
           form={form}
-          initialValues={paper}
+          initialValues={{
+            ...assignment.archivedQuestionPaper,
+            invigilator: assignment.examiner_invigilator,
+            examinationDate: null,
+            skipComment: '',
+          }}
           onFinish={handleSubmit}
           layout="horizontal"
           style={{
@@ -86,6 +235,7 @@ function IssueQuestionPaper({
               display: 'flex',
               flexDirection: 'row',
               justifyContent: 'space-between',
+              flexWrap: 'wrap',
               // backgroundColor: 'red',
               // marginBottom: '20px',
             }}
@@ -107,7 +257,7 @@ function IssueQuestionPaper({
                   paddingRight: '10px',
                 }}
               >
-                {paper.subject}
+                {assignment.unit}
               </Text>
               <div
                 style={{
@@ -120,7 +270,7 @@ function IssueQuestionPaper({
                 <Text
                   style={{ fontWeight: 'bold', fontSize: '16px', margin: 5 }}
                 >
-                  {paper.examiner}
+                  {createExaminerNameWithDesignation(assignment.examiner)}
                 </Text>
               </div>
             </div>
@@ -129,7 +279,9 @@ function IssueQuestionPaper({
               name="examinationDate"
               label="Date of Examination"
               required
-              // style={{ flex: 1, marginLeft: '10px' }}
+              rules={[
+                { required: true, message: 'Please select examination date' },
+              ]}
             >
               <DatePicker style={{ width: 200 }} />
             </Form.Item>
@@ -140,19 +292,25 @@ function IssueQuestionPaper({
               display: 'flex',
               flexDirection: 'row',
               justifyContent: 'space-between',
+              flexWrap: 'wrap',
             }}
           >
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'row',
+                flexWrap: 'wrap',
                 // marginLeft: '10px',
               }}
             >
               <Button
                 type="primary"
                 ghost
-                style={{ margin: '10px', marginLeft: '0px' }}
+                style={{
+                  margin: '10px 15px 10px 0px',
+                  padding: '15px',
+                }}
+                size="small"
                 icon={<FilePdfOutlined />}
                 onClick={() => console.log('View Question Paper')}
               >
@@ -162,7 +320,8 @@ function IssueQuestionPaper({
                 type="primary"
                 ghost
                 danger
-                style={{ margin: '10px' }}
+                size="small"
+                style={{ margin: '10px 15px 10px 0px', padding: '15px' }}
                 icon={<UndoOutlined />}
                 onClick={() => console.log('Return back to examiner')}
               >
@@ -171,7 +330,8 @@ function IssueQuestionPaper({
               <Button
                 type="primary"
                 danger
-                style={{ margin: '10px' }}
+                style={{ margin: '10px 15px 10px 0px', padding: '15px' }}
+                size="small"
                 icon={<CloseCircleOutlined />}
                 onClick={() => console.log('Cancel this Question Paper')}
               >
@@ -182,47 +342,145 @@ function IssueQuestionPaper({
               name="invigilator"
               label="Invigilator"
               required
+              rules={[{ required: true, message: 'Please select invigilator' }]}
               // style={{ flex: 1, marginRight: '10px' }}
             >
-              <Select style={{ width: 250 }}>
+              <Select
+                style={{ width: 250 }}
+                placeholder="Select a person"
+                showSearch
+              >
                 {examiners.map((examiner) => (
                   <Select.Option key={examiner.id} value={examiner.id}>
-                    {examiner.examinerName}, {examiner.examinerDesignation}{' '}
-                    (ATM)
+                    {createExaminerNameWithDesignation(examiner.id)}
                   </Select.Option>
                 ))}
               </Select>
             </Form.Item>
           </div>
 
-          <Form.Item
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-            }}
-          >
-            <Button onClick={handleReset}>Reset</Button>
-            {!showWarning ? (
-              <Popconfirm
-                title="Issue Question Paper"
-                description="Confirm to issue this question paper?"
-                onConfirm={form.submit}
-                okText="Yes"
-                cancelText="No"
+          <Form.Item>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'flex-start',
+                }}
               >
-                <Button type="primary" style={{ marginLeft: '10px' }}>
-                  Issue Question Paper
-                </Button>
-              </Popconfirm>
-            ) : (
-              <Button
-                type="primary"
-                onClick={() => setShowWarning(true)}
-                style={{ marginLeft: '10px' }}
-              >
-                Issue Question Paper
-              </Button>
-            )}
+                <Text style={{ alignSelf: 'flex-start', marginBottom: '5px' }}>
+                  Note: Next Document Number available:{' '}
+                  {generateDocumentNumber(assignment)}
+                </Text>
+                {!showSkipSerialNumber ? (
+                  <Button
+                    type="link"
+                    onClick={() => setShowSkipSerialNumber(true)}
+                    style={{
+                      boxShadow: 'none',
+                      fontStyle: 'italic',
+                      margin: '0px',
+                      padding: '0px',
+                    }}
+                  >
+                    skip serial number
+                  </Button>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <InputNumber
+                      min={1}
+                      placeholder="Select"
+                      value={customSerialNumber}
+                      // style={{ marginLeft: '10px' }}
+                      onChange={(value) => {
+                        // setCustomSerialNumber(value);
+                        setCustomSerialNumber(value);
+                        // setSerialNumber(
+                        //   (prevSerialNumber) => prevSerialNumber + value,
+                        // );
+                      }}
+                      addonAfter={
+                        <Button
+                          type="link"
+                          style={{
+                            boxShadow: 'none',
+                            fontStyle: 'italic',
+                            padding: '0px',
+                            margin: '0px',
+                          }}
+                          onClick={() => {
+                            setShowSkipSerialNumber(false);
+                            setCustomSerialNumber(null);
+                          }}
+                        >
+                          cancel
+                        </Button>
+                      }
+                    />
+                    <Form.Item
+                      name="skipComment"
+                      label="Comment"
+                      rules={[
+                        {
+                          required: showSkipSerialNumber,
+                          message: 'Please enter a comment',
+                        },
+                      ]}
+                      style={{
+                        margin: '0px',
+                        marginLeft: '10px',
+                        width: '100%',
+                      }}
+                    >
+                      <Input
+                        placeholder="Enter reason for skipping"
+                        // value={skipComment}
+                        // onChange={(e) => setSkipComment(e.target.value)}
+                      />
+                    </Form.Item>
+                  </div>
+                )}
+              </div>
+              <div>
+                <Button onClick={handleReset}>Reset</Button>
+                {/* {!showWarning ? ( */}
+                <Popconfirm
+                  title="Issue Question Paper"
+                  description="Confirm to issue this question paper?"
+                  onConfirm={form.submit}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="primary" style={{ marginLeft: '10px' }}>
+                    Issue Question Paper
+                  </Button>
+                </Popconfirm>
+                {/* ) : (
+                  <Button
+                    type="primary"
+                    onClick={() => setShowWarning(true)}
+                    style={{ marginLeft: '10px' }}
+                  >
+                    Issue Question Paper
+                  </Button>
+                )} */}
+              </div>
+            </div>
           </Form.Item>
           <div
             style={{
@@ -231,7 +489,7 @@ function IssueQuestionPaper({
               justifyContent: 'flex-end',
             }}
           >
-            {showWarning && (
+            {/* {showWarning && (
               <Alert
                 message="Please fill in all required fields"
                 type="error"
@@ -240,7 +498,7 @@ function IssueQuestionPaper({
                 onClose={() => setShowWarning(false)}
                 style={{ marginBottom: '20px', width: '25%' }}
               />
-            )}
+            )} */}
           </div>
         </Form>
       </div>

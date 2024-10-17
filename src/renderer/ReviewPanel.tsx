@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Empty, Button } from 'antd';
+import { Empty, Space } from 'antd';
+import { HomeFilled } from '@ant-design/icons';
 import DashBoard from './components/DashBoard';
 import BodyContentCard from './components/BodyContentCard';
 import MenuList from './components/MenuAntd';
@@ -97,7 +98,10 @@ function ReviewPanel() {
       <div className="rolepage-header">
         <div className="button-container">
           <button type="button" onClick={handleBackClick}>
-            Back to Home
+            <Space>
+              <HomeFilled style={{ padding: '0px 5px', color: '#002C58' }} />
+              Back to Home
+            </Space>
           </button>
         </div>
         <div className="rolepage-title">QB review panel section</div>

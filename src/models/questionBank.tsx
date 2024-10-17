@@ -84,6 +84,8 @@ export const addPendingChange = async (item) => {
   await tx.done;
 };
 
+// TODO: add a function to update a question in the question-bank
+
 // set isdelete true a question from the question-bank item and add to pending changes
 export const deleteQuestion = async (deleteId, updatedChange) => {
   const db = await initDB();

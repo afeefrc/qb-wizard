@@ -125,12 +125,35 @@ export const examinerAssignmentSchema = {
   examiner_invigilator: { type: 'string', default: '' },
   examiner_evaluation: { type: 'string', default: '' },
   status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'in process', 'submitted', 'approved', 'rejected'
+  // archivedQuestionPaper: {
+  //   type: 'object',
+  //   default: () => ({
+  //     // TODO: remove content, syllabusSections fields
+  //     content: { type: 'array', default: [] },
+  //     syllabusSections: { type: 'array', default: [] },
+  //     // Each key is a syllabus section ID
+  //     // Each value is an object where keys are question numbers and values are arrays of questions
+  //     questionPaperBySections: { type: 'object', default: {} },
+  //     archivedAt: { type: 'date', default: null },
+  //     examinerWithDesignation: { type: 'string', default: '' },
+  //     invigilatorWithDesignation: { type: 'string', default: '' },
+  //     examinationDate: { type: 'date', default: null },
+  //     year: { type: 'number', default: new Date().getFullYear() },
+  //     serialNumber: { type: 'number', default: 0 },
+  //   }),
+  // },
   archivedQuestionPaper: {
     type: 'object',
     default: () => ({
       content: [],
       syllabusSections: [],
+      questionPaperBySections: {},
       archivedAt: null,
+      examinerWithDesignation: '',
+      invigilatorWithDesignation: '',
+      examinationDate: null,
+      year: new Date().getFullYear(),
+      serialNumber: 0,
     }),
   },
   isArchived: { type: 'boolean', default: false },
@@ -189,4 +212,51 @@ export const userActivityLogSchema = {
   unit: { type: 'string', default: '' },
   description: { type: 'string', default: '' },
   activityTime: { type: 'date', default: () => new Date() },
+};
+
+export const feedbackSchema = {
+  id: { type: 'string', default: () => uuidv4() },
+  questionBankComments: {
+    type: 'array',
+    default: [],
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', default: () => uuidv4() },
+        examinerId: { type: 'string', default: '' },
+        unit: { type: 'string', default: '' },
+        comment: { type: 'string', default: '' },
+        commentTime: { type: 'date', default: () => new Date() },
+      },
+    },
+  },
+  questionPaperComments: {
+    type: 'array',
+    default: [],
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', default: () => uuidv4() },
+        examinerId: { type: 'string', default: '' },
+        examinerAssignmentId: { type: 'string', default: '' },
+        comment: { type: 'string', default: '' },
+        commentTime: { type: 'date', default: () => new Date() },
+      },
+    },
+  },
+  questionComment: {
+    type: 'array',
+    default: [],
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', default: () => uuidv4() },
+        questionId: { type: 'string', default: '' },
+        examinerId: { type: 'string', default: '' },
+        comment: { type: 'string', default: '' },
+        tags: { type: 'array', default: [] },
+        commentTime: { type: 'date', default: () => new Date() },
+      },
+    },
+  },
 };

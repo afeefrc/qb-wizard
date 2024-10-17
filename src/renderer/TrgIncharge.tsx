@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MenuList from './components/MenuAntd';
-import { Empty, message } from 'antd';
+import { Empty, message, Space } from 'antd';
+import { HomeFilled } from '@ant-design/icons';
 import DashBoard from './components/DashBoard';
 import ListOfExaminers from './components/ListOfExaminers';
 import StationSettings from './components/StationSettings';
@@ -12,7 +13,7 @@ import ExaminerAssignment from './components/trgInchargeTasks/AssignExaminer';
 import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
 import QuestionLogs from './components/trgInchargeTasks/QuestionLogs';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
-import ViewQuestionPapers from './components/trgInchargeTasks/ViewQuestionPapers';
+import ViewQuestionPapers from './components/ViewQuestionPapers';
 // import { useUser } from './context/UserContext';
 
 const trgInchargeMenuTitles = [
@@ -132,7 +133,10 @@ function TrgIncharge() {
       <div className="rolepage-header">
         <div className="button-container">
           <button type="button" onClick={handleBackClick}>
-            Back to Home
+            <Space>
+              <HomeFilled style={{ padding: '0px 5px', color: '#002C58' }} />
+              Back to Home
+            </Space>
           </button>
         </div>
         <div className="rolepage-title">Training incharge section</div>

@@ -1,8 +1,19 @@
-import React, { useContext, useMemo, useRef } from 'react';
-import { Table, Tag, Empty, Typography, Collapse, Button } from 'antd';
-import { EditTwoTone, DeleteTwoTone } from '@ant-design/icons';
-import type { TableColumnsType, TableProps } from 'antd';
+import React, { useContext, useMemo, useState, useCallback } from 'react';
+import {
+  Table,
+  Tag,
+  Empty,
+  Typography,
+  Collapse,
+  Button,
+  Form,
+  Alert,
+} from 'antd';
+import { CommentOutlined } from '@ant-design/icons';
+import type { TableColumnsType } from 'antd';
 import ExportQuestionBank from './utils/ExportQuestionBank';
+import QuestionFeedbackSection from './QuestionFeedbackSection';
+import QuestionBankFeedbackBtn from './QuestionBankFeedbackBtn';
 import { AppContext } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { renderAnswerKey } from './utils/tableRenderers';
@@ -23,6 +34,7 @@ interface ColumnDataType {
   answerList?: string[];
   correctOption?: string;
   mandatory?: boolean;
+  showCommentForm?: boolean;
 }
 
 interface QuestionBankDisplayProps {
@@ -63,8 +75,13 @@ function QuestionBankDisplay({
   const {
     questions,
     syllabusSections,
-    handleDeleteQuestion,
-    handleUpdateQuestion,
+    // examiners,
+    // handleDeleteQuestion,
+    // handleUpdateQuestion,
+    handleAddComment,
+    // handleDeleteAllComments,
+    handleDeleteComment,
+    feedback,
   } = appContext || {};
 
   const { user } = useUser();
@@ -99,6 +116,74 @@ function QuestionBankDisplay({
     return group;
   }, [filteredQuestions]);
 
+  const [commentFormVisibility, setCommentFormVisibility] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [form] = Form.useForm();
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+
+  const handleToggleComment = useCallback(
+    (record: ColumnDataType) => {
+      console.log('Toggle comment for:', record.id);
+      setCommentFormVisibility((prev) => {
+        const newVisibility = !prev[record.id];
+        setExpandedRowKeys(newVisibility ? [record.id] : []);
+
+        if (!newVisibility) {
+          // Reset form fields when closing the comment form
+          form.resetFields();
+        }
+
+        return { ...prev, [record.id]: newVisibility };
+      });
+    },
+    [form],
+  );
+
+  const handleSubmitComment = useCallback(
+    (values: { comment: string }, record: ColumnDataType) => {
+      handleAddComment('questionComment', {
+        questionId: record.id,
+        comment: values.comment,
+        examinerId: values.examiner,
+      });
+      // Here you would typically send the comment to your backend
+      // After successful submission, close the form
+      form.resetFields();
+    },
+    [form, handleAddComment],
+  );
+
+  const onDeleteComment = useCallback(
+    (commentId: string) => {
+      // Call the handleDeleteComment function from your context
+      handleDeleteComment('questionComment', commentId);
+    },
+    [handleDeleteComment],
+  );
+
+  const renderQuestionFeedbackSection = useCallback(
+    (record: ColumnDataType) => {
+      return (
+        <QuestionFeedbackSection
+          form={form}
+          onSubmit={(values) => handleSubmitComment(values, record)}
+          onCancel={() => handleToggleComment(record)}
+          questionId={record.id}
+          onDeleteComment={onDeleteComment}
+          canDeleteComment={user?.role === 'trg-incharge'}
+        />
+      );
+    },
+    [
+      form,
+      handleSubmitComment,
+      handleToggleComment,
+      onDeleteComment,
+      user?.role,
+    ],
+  );
+
   const columns: TableColumnsType<ColumnDataType> = [
     {
       title: 'Question ID',
@@ -120,8 +205,48 @@ function QuestionBankDisplay({
       dataIndex: 'questionText',
       key: 'questionText',
       width: '40%',
-      render: (text: string, record: ColumnDataType) =>
-        renderQuestionContent(text, record),
+      render: (text: string, record: ColumnDataType) => (
+        <div>
+          {renderQuestionContent(text, record)}
+          <div style={{ textAlign: 'right', marginTop: '0px', padding: 0 }}>
+            {(() => {
+              const commentCount =
+                feedback?.questionComment?.filter(
+                  (comment) => comment.questionId === record.id,
+                ).length || 0;
+              return commentCount > 0 ? (
+                <Alert
+                  message={`${commentCount} comment${commentCount !== 1 ? 's' : ''} available`}
+                  type="warning"
+                  style={{
+                    marginRight: '8px',
+                    padding: '0px 15px',
+                    fontSize: '12px',
+                    display: 'inline-block',
+                  }}
+                />
+              ) : null;
+            })()}
+            <Button
+              type="link"
+              icon={<CommentOutlined />}
+              onClick={() => handleToggleComment(record)}
+              style={{
+                padding: 0,
+                margin: 0,
+                color: 'darkblue',
+                opacity: 0.6,
+                boxShadow: 'none',
+                fontStyle: 'italic',
+              }}
+            >
+              {commentFormVisibility[record.id]
+                ? 'Hide Feedback'
+                : 'View/Add Feedback'}
+            </Button>
+          </div>
+        </div>
+      ),
     },
     {
       title: 'Answer Key',
@@ -134,7 +259,7 @@ function QuestionBankDisplay({
       title: 'Marks',
       dataIndex: 'marks',
       key: 'marks',
-      width: '10%',
+      width: '5%',
       sorter: (a: any, b: any) => a.marks - b.marks,
       sortDirections: ['ascend', 'descend'],
       render: (marks: number) => (
@@ -145,7 +270,7 @@ function QuestionBankDisplay({
       title: 'Question Type',
       dataIndex: 'questionType',
       key: 'questionType',
-      width: '10%',
+      width: '8%',
       render: (questionType: string) => {
         const typeMap: { [key: string]: string } = {
           oneWord: 'One Word',
@@ -163,7 +288,7 @@ function QuestionBankDisplay({
       title: 'Difficulty Level',
       dataIndex: 'difficultyLevel',
       key: 'difficultyLevel',
-      width: '10%',
+      width: '8%',
       render: (difficultyLevel: string) => {
         const colorMap: { [key: string]: string } = {
           easy: 'green',
@@ -185,31 +310,33 @@ function QuestionBankDisplay({
     //   title: 'Action',
     //   key: 'action',
     //   render: (_: any, record: ColumnDataType) => (
-    //     <div style={{ display: 'flex', gap: '8px' }}>
-    //       <Button
-    //         size="small"
-    //         type="link"
-    //         onClick={() =>
-    //           handleUpdateQuestion && handleUpdateQuestion(record.id)
-    //         }
-    //         style={{ padding: '0' }}
-    //       >
-    //         <EditTwoTone twoToneColor="#52c41a" /> Edit
-    //       </Button>
-    //       <Button
-    //         size="small"
-    //         type="link"
-    //         onClick={() =>
-    //           handleDeleteQuestion && handleDeleteQuestion(record.id)
-    //         }
-    //         style={{ padding: '0' }}
-    //       >
-    //         <DeleteTwoTone twoToneColor="#ff4d4f" /> Delete
-    //       </Button>
-    //     </div>
+    //     <Button
+    //       type="primary"
+    //       ghost
+    //       icon={<CommentOutlined />}
+    //       onClick={() => handleToggleComment(record)}
+    //       size="small"
+    //     >
+    //       {commentFormVisibility[record.id] ? 'Cancel' : 'Add Comment'}
+    //     </Button>
     //   ),
     // },
   ];
+
+  const expandableConfig = {
+    expandedRowRender: (record: ColumnDataType) =>
+      commentFormVisibility[record.id]
+        ? renderQuestionFeedbackSection(record)
+        : null,
+    expandedRowKeys,
+    onExpand: (expanded: boolean, record: ColumnDataType) => {
+      if (!expanded) {
+        handleToggleComment(record);
+      }
+    },
+    showExpandColumn: false,
+    // expandRowByClick: true,
+  };
 
   return (
     <div
@@ -244,6 +371,16 @@ function QuestionBankDisplay({
         }}
       >
         <div style={{ marginBottom: '250px' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              padding: '5px 10px',
+              marginBottom: '5px',
+            }}
+          >
+            <QuestionBankFeedbackBtn unitName={unitName} />
+          </div>
           {filteredQuestions.length > 0 ? (
             <Collapse
               accordion
@@ -263,6 +400,7 @@ function QuestionBankDisplay({
                       bordered
                       size="middle"
                       scroll={{ y: '50vh' }}
+                      expandable={expandableConfig}
                     />
                   ) : (
                     <Empty description="No questions found in this section" />

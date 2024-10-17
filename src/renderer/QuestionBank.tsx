@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
-import { Tabs } from 'antd';
+import { Tabs, Space } from 'antd';
+import { HomeFilled } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
 import './ToolbarPage.css'; // Import the CSS file for styling
@@ -32,13 +33,16 @@ function QuestionBank() {
       <div className="rolepage-header">
         <div className="button-container">
           <button type="button" onClick={handleBackClick}>
-            Back to Home
+            <Space>
+              <HomeFilled style={{ padding: '0px 5px', color: '#002C58' }} />
+              Back to Home
+            </Space>
           </button>
         </div>
         <div className="rolepage-title">Question Bank</div>
       </div>
       <div className="rolepage-container">
-        <div style={{ width: '95%', marginLeft: '2.5%' }}>
+        <div style={{ width: '95%' }}>
           <Tabs
             // type="card"
             size="large"

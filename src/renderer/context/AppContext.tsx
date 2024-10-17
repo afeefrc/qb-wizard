@@ -44,6 +44,10 @@ import {
   updateSyllabusSection,
   addUserActivityLog,
   getAllUserActivityLogs,
+  getFeedback,
+  addComment,
+  deleteAllComments,
+  deleteComment,
 } from '../../models';
 
 interface AppContextProps {
@@ -97,6 +101,11 @@ interface AppContextProps {
   handleAddUserActivityLog: (newUserActivityLog: any) => Promise<void>;
   handleGetAllUserActivityLogs: () => Promise<void>;
   userActivityLogs: any[];
+  feedback: any;
+  handleAddComment: (field: string, newComment: any) => Promise<void>;
+  handleDeleteComment: (field: string, commentId: string) => Promise<void>;
+  handleDeleteAllComments: (field: string) => Promise<void>;
+  handleGetFeedback: () => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -115,7 +124,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [pendingChanges, setPendingChanges] = useState<any[]>([]);
   const [linkedQuestions, setLinkedQuestions] = useState<any[]>([]);
   const [userActivityLogs, setUserActivityLogs] = useState<any[]>([]);
-
+  const [feedback, setFeedback] = useState<any>(null);
   useEffect(() => {
     const fetchQuestions = async () => {
       const allQuestions = await getQuestions();
@@ -205,6 +214,14 @@ export function AppProvider({ children }: AppProviderProps) {
       setUserActivityLogs(allUserActivityLogs);
     };
     fetchUserActivityLogs();
+  }, []);
+
+  useEffect(() => {
+    const fetchFeedback = async () => {
+      const allFeedback = await getFeedback();
+      setFeedback(allFeedback);
+    };
+    fetchFeedback();
   }, []);
 
   const activeQuestions = useMemo(() => {
@@ -444,6 +461,30 @@ export function AppProvider({ children }: AppProviderProps) {
   //   setUserActivityLogs(allUserActivityLogs);
   // }, []);
 
+  const handleAddComment = useCallback(
+    async (field: string, newComment: any) => {
+      await addComment(field, newComment);
+      const allFeedback = await getFeedback();
+      setFeedback(allFeedback);
+    },
+    [],
+  );
+
+  const handleDeleteComment = useCallback(
+    async (field: string, commentId: string) => {
+      await deleteComment(field, commentId);
+      const allFeedback = await getFeedback();
+      setFeedback(allFeedback);
+    },
+    [],
+  );
+
+  const handleDeleteAllComments = useCallback(async (field: string) => {
+    await deleteAllComments(field);
+    const allFeedback = await getFeedback();
+    setFeedback(allFeedback);
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       questions,
@@ -480,6 +521,10 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeleteSyllabusSection,
       userActivityLogs,
       handleAddUserActivityLog,
+      handleAddComment,
+      handleDeleteComment,
+      handleDeleteAllComments,
+      feedback,
     }),
     [
       questions,
@@ -517,6 +562,10 @@ export function AppProvider({ children }: AppProviderProps) {
       handleDeleteSyllabusSection,
       userActivityLogs,
       handleAddUserActivityLog,
+      handleAddComment,
+      handleDeleteComment,
+      handleDeleteAllComments,
+      feedback,
     ],
   );
 

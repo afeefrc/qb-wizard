@@ -76,7 +76,9 @@ function DashBoard() {
           assignment.status.toLowerCase() === 'in progress',
       );
     } else {
-      examinerAssignmentsContents = examinerAssignments;
+      examinerAssignmentsContents = examinerAssignments?.filter(
+        (assignment) => !assignment.isArchived,
+      );
     }
   }
 

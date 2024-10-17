@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState, useCallback } from 'react';
 import {
   Button,
   Table,
@@ -7,16 +7,22 @@ import {
   Popconfirm,
   Typography,
   Switch,
+  Alert,
+  List,
+  Empty,
 } from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
 import {
   EditTwoTone,
   PlusSquareTwoTone,
   DeleteTwoTone,
+  CommentOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import ExpandedRowEditor from './ExpandedRowEditor';
 import AddQuestionModal from './AddQuestionModal';
 import LinkSimilarQuestionsDrawer from './LinkSimilarQuestionsDrawer';
+import QuestionFeedbackSection from '../QuestionFeedbackSection';
 import { renderAnswerKey } from '../utils/tableRenderers';
 import { AppContext } from '../../context/AppContext';
 
@@ -87,15 +93,19 @@ function QuestionBankEditTask({
     pendingChanges,
     linkedQuestions,
     handleAddLinkedQuestions,
-    handleDeleteLinkedQuestions,
+    // handleDeleteLinkedQuestions,
     handleUpdateLinkedQuestions,
     // handleAddQuestion,
-    handleDeleteQuestion,
+    // handleDeleteQuestion,
     handleUpdatePendingChange,
     handleDeletePendingChange,
-    handleApplyPendingChange,
-    handleApplyAllPendingChanges,
+    // handleApplyPendingChange,
+    // handleApplyAllPendingChanges,
     syllabusSections,
+    handleAddComment,
+    handleDeleteComment,
+    feedback,
+    examiners,
   } = appContext || {};
 
   // Filter syllabusSections by unitName
@@ -105,10 +115,57 @@ function QuestionBankEditTask({
     );
   }, [syllabusSections, unitName]);
 
-  console.log('pendingChanges', pendingChanges);
-  console.log('questions', questions);
+  // console.log('pendingChanges', pendingChanges);
+  // console.log('questions', questions);
 
+  // question comments related states and functions
+  const [showQuestionComments, setShowQuestionComments] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+
+  // function to get examiner info
+  const getExaminerInfo = (examinerId: string) => {
+    const examiner = examiners?.find((e) => e.id === examinerId);
+    return examiner
+      ? `${examiner.examinerName}, ${examiner.examinerDesignation} (ATM)`
+      : examinerId;
+  };
+
+  const handleToggleComment = useCallback((record: ColumnDataType) => {
+    // console.log('Toggle comment for:', record.id);
+    setShowQuestionComments((prev) => {
+      const newVisibility = !prev[record.id];
+      setExpandedRowKeys(newVisibility ? [record.id] : []);
+
+      // if (!newVisibility) {
+      //   // Reset form fields when closing the comment form
+      //   form.resetFields();
+      // }
+
+      return { ...prev, [record.id]: newVisibility };
+    });
+  }, []);
+
+  const onDeleteComment = useCallback(
+    (commentId: string) => {
+      // Call the handleDeleteComment function from your context
+      handleDeleteComment('questionComment', commentId);
+    },
+    [handleDeleteComment],
+  );
+
+  const renderQuestionFeedbackSection = useCallback(
+    (record: ColumnDataType) => {
+      return <Text>Here goes the comments list</Text>;
+    },
+    [
+      // form,
+      // handleSubmitComment,
+      // handleToggleComment,
+      // onDeleteComment,
+    ],
+  );
 
   const toggleExpand = (record: ColumnDataType) => {
     setExpandedRowKeys((prevKeys) =>
@@ -158,7 +215,89 @@ function QuestionBankEditTask({
     }));
   }, [groupedQuestions]);
 
-  const expandedRowRender = (record: ColumnDataType) => {
+  const expandedRowRender = (
+    record: ColumnDataType,
+    showQuestionComments: boolean = false,
+  ) => {
+    if (showQuestionComments) {
+      const questionFeedback =
+        feedback?.questionComment?.filter(
+          (comment) => comment.questionId === record.id,
+        ) || [];
+
+      return (
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+          <div
+            style={{
+              width: '50%',
+              backgroundColor: '#f0f2f3',
+              borderRadius: '10px',
+              padding: '0px 100px',
+            }}
+          >
+            <List
+              dataSource={questionFeedback}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={
+                      <span>No feedback available for this question.</span>
+                    }
+                  />
+                ),
+              }}
+              renderItem={(item: any) => (
+                <List.Item
+                  actions={[
+                    <Button
+                      type="primary"
+                      danger
+                      ghost
+                      icon={<DeleteOutlined />}
+                      onClick={() => onDeleteComment(item.id)}
+                      size="small"
+                      style={{ boxShadow: 'none' }}
+                    >
+                      Clear
+                    </Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    description={
+                      <>
+                        <Text style={{ fontSize: '16px', fontWeight: 400 }}>
+                          {item.comment}
+                        </Text>
+                        {item.tags && item.tags.length > 0 && (
+                          <>
+                            <br />
+                            <Text type="secondary">
+                              Tags: {item.tags.join(', ')}
+                            </Text>
+                          </>
+                        )}
+                        <br />
+                        <Text>{getExaminerInfo(item.examinerId)}</Text>
+                        <br />
+                        <Text type="secondary">
+                          {new Date(item.commentTime).toLocaleString('en-IN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                      </>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          </div>
+        </div>
+      );
+    }
+
     const updatedRecord =
       groupedQuestions
         .flatMap((section) => section.questions)
@@ -181,27 +320,38 @@ function QuestionBankEditTask({
     console.log('Prepared record for ExpandedRowEditor:', preparedRecord);
 
     return (
-      <ExpandedRowEditor
-        record={preparedRecord}
-        onSave={(updatedRecord) => {
-          // Update the record using AppContext functions
-          const existingChange = pendingChanges.find(
-            (change) => change.data.id === updatedRecord.id,
-          );
-          if (existingChange) {
-            handleUpdatePendingChange(existingChange.id, {
-              data: updatedRecord,
-            });
-          } else {
-            handleAddPendingChange({
-              type: 'update',
-              data: { ...updatedRecord, isEdited: false },
-            });
-          }
-          toggleExpand(record);
-        }}
-        onCancel={() => toggleExpand(record)}
-      />
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            width: '75%',
+            backgroundColor: '#f0f2f3',
+            borderRadius: '10px',
+            padding: '0px 20px',
+          }}
+        >
+          <ExpandedRowEditor
+            record={preparedRecord}
+            onSave={(updatedRecord) => {
+              // Update the record using AppContext functions
+              const existingChange = pendingChanges.find(
+                (change) => change.data.id === updatedRecord.id,
+              );
+              if (existingChange) {
+                handleUpdatePendingChange(existingChange.id, {
+                  data: updatedRecord,
+                });
+              } else {
+                handleAddPendingChange({
+                  type: 'update',
+                  data: { ...updatedRecord, isEdited: false },
+                });
+              }
+              toggleExpand(record);
+            }}
+            onCancel={() => toggleExpand(record)}
+          />
+        </div>
+      </div>
     );
   };
 
@@ -487,6 +637,44 @@ function QuestionBankEditTask({
               </div>
             </>
           )}
+          {/* question feedback comments section */}
+          <div style={{ textAlign: 'right', marginTop: '0px', padding: 0 }}>
+            {(() => {
+              const commentCount =
+                feedback?.questionComment?.filter(
+                  (comment) => comment.questionId === record.id,
+                ).length || 0;
+              return commentCount > 0 ? (
+                <Alert
+                  message={`${commentCount} comment${commentCount !== 1 ? 's' : ''} available`}
+                  type="warning"
+                  style={{
+                    marginRight: '8px',
+                    padding: '0px 15px',
+                    fontSize: '12px',
+                    display: 'inline-block',
+                  }}
+                />
+              ) : null;
+            })()}
+            <Button
+              type="link"
+              icon={<CommentOutlined />}
+              onClick={() => handleToggleComment(record)}
+              style={{
+                padding: 0,
+                margin: 0,
+                color: 'darkblue',
+                opacity: 0.6,
+                boxShadow: 'none',
+                fontStyle: 'italic',
+              }}
+            >
+              {showQuestionComments[record.id]
+                ? 'Hide Feedback'
+                : 'View/Add Feedback'}
+            </Button>
+          </div>
         </div>
       ),
     },
@@ -714,7 +902,8 @@ function QuestionBankEditTask({
                 size="small"
                 pagination={false}
                 expandable={{
-                  expandedRowRender,
+                  expandedRowRender: (record) =>
+                    expandedRowRender(record, showQuestionComments[record.id]),
                   expandedRowKeys,
                   onExpand: (_, record) => toggleExpand(record),
                   expandIconColumnIndex: -1,

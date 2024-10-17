@@ -72,6 +72,13 @@ export {
 
 export { addUserActivityLog, getAllUserActivityLogs } from './userActivityLog';
 
+export {
+  addComment,
+  deleteAllComments,
+  getFeedback,
+  deleteComment,
+} from './feedback';
+
 // const DB_NAME = 'my-database';
 // const DB_VERSION = 1;
 // const QUESTION_STORE_NAME = 'question-bank';

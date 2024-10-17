@@ -118,7 +118,7 @@ a:hover {
     justify-content: center;
     /* border: 1px solid black; */
     border: none;
-    background-color: rgba(0, 44, 88, 0.25);
+    background-color: rgba(0, 44, 88, 0.251);
     opacity: 0.6;
       /* Default opacity */
     border-radius: 50%;
