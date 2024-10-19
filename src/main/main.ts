@@ -139,7 +139,6 @@ const createWindow = async () => {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
-      webSecurity: false,
     },
   });
 
@@ -198,10 +197,17 @@ app
   })
   .catch(console.log);
 
-app.on('ready', () => {
-  if (process.platform !== 'win32') {
-    const qpdfPath = getQPDFPath();
-    fs.chmodSync(qpdfPath, '755');
-  }
-  createWindow();
-});
+app.on('ready', createWindow);
+
+// app.on('web-contents-created', (event, contents) => {
+//   contents.session.webRequest.onHeadersReceived((details, callback) => {
+//     callback({
+//       responseHeaders: {
+//         ...details.responseHeaders,
+//         'Content-Security-Policy': [
+//           "default-src * 'unsafe-inline' 'unsafe-eval' data: blob: filesystem:;",
+//         ],
+//       },
+//     });
+//   });
+// });

@@ -30,6 +30,16 @@ function Hello() {
     appContext || {};
   const { setUser } = useUser();
 
+  useEffect(() => {
+    if (!window.indexedDB) {
+      console.log(
+        "Your browser doesn't support a stable version of IndexedDB.",
+      );
+    } else {
+      console.log('IndexedDB is supported.');
+    }
+  }, []);
+
   const addItem = () => {
     const newItem = {
       unitName: 'Unit1',

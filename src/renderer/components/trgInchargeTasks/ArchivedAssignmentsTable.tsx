@@ -245,7 +245,7 @@ function ArchivedAssignmentsTable({
         <Space direction="horizontal">
           <QuestionPaperPDF
             examinerAssignmentId={record.id}
-            downloadButtonDisabled
+            downloadButtonDisabled={user?.role !== 'trg-incharge'}
           />
           <Button
             onClick={() => toggleExpand(record.id)}
