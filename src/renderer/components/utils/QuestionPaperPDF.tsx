@@ -647,6 +647,7 @@ function QuestionPaperPDF({
   const [pdfType, setPdfType] = useState<'questionPaper' | 'answerKey'>(
     'questionPaper',
   );
+  const [isPreparingDownload, setIsPreparingDownload] = useState(false);
 
   const examinerAssignment = examinerAssignments?.find(
     (assignment) => assignment.id === examinerAssignmentId,
@@ -779,73 +780,73 @@ function QuestionPaperPDF({
     pdfType,
   ]);
 
+  const downloadButtonStyle = {
+    margin: '10px 0px 10px 10px',
+    backgroundColor: '#f5f8fe',
+    opacity: 0.6,
+    padding: '20px 15px',
+    borderRadius: '10px',
+    border: '0.25px solid #d9d9d9',
+    boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.3s ease',
+  };
+
   return (
     <div>
       <div style={{ margin: '10px 0px' }}>
         <Button
           icon={<FilePdfTwoTone twoToneColor="#eb2f96" />}
           onClick={() => showModal('questionPaper')}
-          style={{
-            margin: '10px 0px',
-            backgroundColor: '#f5f8fe',
-            opacity: 0.6,
-            padding: '20px 15px',
-            borderRadius: '10px',
-            border: '0.25px solid #d9d9d9',
-            boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease',
-          }}
+          style={downloadButtonStyle}
         >
           View PDF
         </Button>
         <Button
           icon={<FilePdfTwoTone twoToneColor="#eb2f96" />}
           onClick={() => showModal('answerKey')}
-          style={{
-            margin: '10px 0px 10px 10px',
-            backgroundColor: '#f5f8fe',
-            opacity: 0.6,
-            padding: '20px 15px',
-            borderRadius: '10px',
-            border: '0.25px solid #d9d9d9',
-            boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s ease',
-          }}
+          style={downloadButtonStyle}
         >
           Answer Key
         </Button>
+
         {!downloadButtonDisabled && (
-          <PDFDownloadLink
-            document={
-              <PDFContent
-                questionPaperBySections={questionPaperBySections}
-                // questionPaper={questionPaper}
-                // syllabusSections={syllabusSections}
-                metaData={metaData}
-                pdfType={pdfType}
-              />
-            }
-            fileName={getFileName()}
-          >
-            {({ blob, url, loading, error }) => (
-              <Button
-                icon={<DownSquareTwoTone twoToneColor="#eb2f96" />}
-                disabled={loading}
-                style={{
-                  margin: '10px 0px',
-                  backgroundColor: '#f5f8fe',
-                  opacity: 0.6,
-                  padding: '20px 15px',
-                  borderRadius: '10px',
-                  border: '0.25px solid #d9d9d9',
-                  boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.1)',
-                  transition: 'all 0.3s ease',
-                }}
+          <>
+            <Button
+              icon={<DownSquareTwoTone twoToneColor="#eb2f96" />}
+              onClick={() => setIsPreparingDownload(true)}
+              style={downloadButtonStyle}
+              disabled={isPreparingDownload}
+            >
+              {isPreparingDownload ? 'Preparing Download...' : 'Download PDF'}
+            </Button>
+
+            {isPreparingDownload && (
+              <PDFDownloadLink
+                document={
+                  <PDFContent
+                    questionPaperBySections={questionPaperBySections}
+                    metaData={metaData}
+                    pdfType={pdfType}
+                  />
+                }
+                fileName={getFileName()}
+                className="hidden-download-link"
               >
-                Download PDF
-              </Button>
+                {({ loading, error, url }) => {
+                  if (!loading && url) {
+                    // Automatically trigger download when PDF is ready
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = getFileName();
+                    link.click();
+                    // Reset the preparing state
+                    setIsPreparingDownload(false);
+                  }
+                  return null; // Don't render anything for the PDFDownloadLink
+                }}
+              </PDFDownloadLink>
             )}
-          </PDFDownloadLink>
+          </>
         )}
       </div>
 

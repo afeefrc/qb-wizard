@@ -47,6 +47,8 @@ interface ArchivedAssignmentsTableProps {
   onRestore: (assignment: ExaminerAssignment) => void;
 }
 
+type ExpandedMode = 'feedback' | 'view';
+
 interface ExpandedRowContentProps {
   record: ExaminerAssignment;
   feedback: any;
@@ -55,6 +57,7 @@ interface ExpandedRowContentProps {
   handleDeleteComment: any;
   user: any;
   closeExpanded: (id: string) => void;
+  mode: ExpandedMode;
 }
 
 function ExpandedRowContent({
@@ -65,6 +68,7 @@ function ExpandedRowContent({
   handleDeleteComment,
   user,
   closeExpanded,
+  mode,
 }: ExpandedRowContentProps) {
   const [form] = Form.useForm();
 
@@ -89,7 +93,7 @@ function ExpandedRowContent({
     }
   };
 
-  return (
+  return mode === 'feedback' ? (
     <Row gutter={16}>
       <Col span={12}>
         <List
@@ -157,7 +161,16 @@ function ExpandedRowContent({
         </Form>
       </Col>
     </Row>
+  ) : (
+    <QuestionPaperPDF
+      examinerAssignmentId={record.id}
+      downloadButtonDisabled={user?.role !== 'trg-incharge'}
+    />
   );
+
+  // return (
+
+  // );
 }
 
 function ArchivedAssignmentsTable({
@@ -166,18 +179,24 @@ function ArchivedAssignmentsTable({
   onRestore,
 }: ArchivedAssignmentsTableProps) {
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const [expandedMode, setExpandedMode] = useState<
+    Record<string, ExpandedMode>
+  >({});
   const appContext = useContext(AppContext);
   const { feedback, examiners, handleAddComment, handleDeleteComment } =
     appContext || {};
   const { user } = useUser();
   const [form] = Form.useForm();
 
-  const toggleExpand = (recordId: string) => {
-    setExpandedRowKeys((prevKeys) =>
-      prevKeys.includes(recordId)
-        ? prevKeys.filter((key) => key !== recordId)
-        : [...prevKeys, recordId],
-    );
+  const toggleExpand = (recordId: string, mode: ExpandedMode) => {
+    setExpandedRowKeys((prevKeys) => {
+      const isExpanded = prevKeys.includes(recordId);
+      if (isExpanded && expandedMode[recordId] === mode) {
+        return [];
+      }
+      return [recordId];
+    });
+    setExpandedMode((prev) => ({ ...prev, [recordId]: mode }));
   };
 
   const closeExpanded = (recordId: string) => {
@@ -240,15 +259,21 @@ function ArchivedAssignmentsTable({
     {
       title: 'Actions',
       key: 'actions',
-      width: '30%',
+      // width: '30%',
       render: (_: any, record: ExaminerAssignment) => (
         <Space direction="horizontal">
-          <QuestionPaperPDF
+          {/* <QuestionPaperPDF
             examinerAssignmentId={record.id}
             downloadButtonDisabled={user?.role !== 'trg-incharge'}
-          />
+          /> */}
           <Button
-            onClick={() => toggleExpand(record.id)}
+            onClick={() => toggleExpand(record.id, 'view')}
+            style={{ padding: '20px', borderRadius: '10px' }}
+          >
+            View Paper
+          </Button>
+          <Button
+            onClick={() => toggleExpand(record.id, 'feedback')}
             style={{ padding: '20px', borderRadius: '10px' }}
           >
             Feedback
@@ -274,6 +299,7 @@ function ArchivedAssignmentsTable({
             handleDeleteComment={handleDeleteComment}
             user={user}
             closeExpanded={closeExpanded}
+            mode={expandedMode[record.id] || 'feedback'}
           />
         ),
         rowExpandable: (record) => true,

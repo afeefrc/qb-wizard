@@ -48,7 +48,7 @@ import {
   addComment,
   deleteAllComments,
   deleteComment,
-} from '../../models';
+} from '../models';
 
 interface AppContextProps {
   questions: any[];

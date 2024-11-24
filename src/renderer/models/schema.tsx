@@ -77,6 +77,31 @@ export const examinerListSchema = {
   examinerName: { type: 'string', default: '' },
   examinerEmpId: { type: 'number', unique: true },
   examinerDesignation: { type: 'string', default: '' },
+
+  // Authentication fields and TOTP field
+  password: { type: 'string', default: null }, // Changed from required: true
+  hasPassword: { type: 'boolean', default: false }, // New field to track if password is set
+  passwordResetRequired: { type: 'boolean', default: false }, // New field
+  role: {
+    type: 'enum',
+    values: ['admin', 'examiner'],
+    default: 'examiner',
+  },
+  isFirstLogin: { type: 'boolean', default: true },
+  loginAttempts: { type: 'number', default: 0 },
+  lockedUntil: { type: 'date', default: null },
+  lastLogin: { type: 'date', default: null },
+  // TOTP fields
+  totpSecret: { type: 'string', default: null },
+  totpEnabled: { type: 'boolean', default: false },
+  totpResetRequired: { type: 'boolean', default: false }, // New field
+  backupCodes: { type: 'array', default: [], items: { type: 'string' } },
+  authMethod: {
+    type: 'enum',
+    values: ['password', 'totp', 'both', 'none'],
+    default: 'none',
+  },
+
   examinerUnits: {
     type: 'array',
     default: [],

@@ -89,6 +89,7 @@ export const addExaminer = async (item) => {
     }
 
     // If examiner doesn't exist, add a new one
+
     const validatedItem = validateAndSetDefaultsForExaminer(item);
     const cloneableItem = removeUncloneableProperties(validatedItem);
     await store.add(cloneableItem);

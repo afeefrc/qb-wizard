@@ -30,16 +30,6 @@ function Hello() {
     appContext || {};
   const { setUser } = useUser();
 
-  useEffect(() => {
-    if (!window.indexedDB) {
-      console.log(
-        "Your browser doesn't support a stable version of IndexedDB.",
-      );
-    } else {
-      console.log('IndexedDB is supported.');
-    }
-  }, []);
-
   const addItem = () => {
     const newItem = {
       unitName: 'Unit1',
@@ -232,6 +222,36 @@ function Hello() {
 }
 
 export default function App() {
+  useEffect(() => {
+    if (!window.indexedDB) {
+      console.log(
+        "Your browser doesn't support a stable version of IndexedDB.",
+      );
+    } else {
+      console.log('IndexedDB is supported.');
+    }
+  }, []);
+
+  useEffect(() => {
+    const closeIndexedDB = () => {
+      if (window.indexedDB) {
+        const dbName = 'YourDatabaseName'; // Replace with your actual database name
+        const request = indexedDB.open(dbName);
+        request.onsuccess = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result;
+          db.close();
+          console.log('IndexedDB connection closed');
+        };
+      }
+    };
+
+    window.addEventListener('beforeunload', closeIndexedDB);
+
+    return () => {
+      window.removeEventListener('beforeunload', closeIndexedDB);
+    };
+  }, []);
+
   return (
     <AppProvider>
       <DemoModeProvider>
