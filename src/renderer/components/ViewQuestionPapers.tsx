@@ -74,7 +74,7 @@ function ViewQuestionPapers({
 
   return (
     <div>
-      {user?.role === 'trg-incharge' && (
+      {user?.role === 'trgIncharge' && (
         <Card
           title={
             <Typography.Title

@@ -192,7 +192,7 @@ function QuestionBankDisplay({
           onCancel={() => handleToggleComment(record)}
           questionId={record.id}
           onDeleteComment={onDeleteComment}
-          canDeleteComment={user?.role === 'trg-incharge'}
+          canDeleteComment={user?.role === 'trgIncharge'}
         />
       );
     },
@@ -370,7 +370,7 @@ function QuestionBankDisplay({
         alignItems: 'center',
       }}
     >
-      {user?.role === 'trg-incharge' && (
+      {user?.role === 'trgIncharge' && (
         <div
           style={{
             display: 'flex',

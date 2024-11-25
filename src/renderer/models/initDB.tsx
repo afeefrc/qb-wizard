@@ -1,10 +1,12 @@
 import { openDB } from 'idb';
+import { v4 as uuidv4 } from 'uuid';
 import {
   sampleSettings,
   sampleExaminers,
   sampleSyllabusSections,
   sampleQuestions,
 } from './dev_populateData';
+import { initialTrgInChargeProfile } from '../StaticData';
 
 export const DB_NAME = 'my-database';
 export const DB_VERSION = 1;
@@ -18,6 +20,29 @@ export const SYLLABUS_SECTIONS_STORE = 'syllabus-sections';
 export const LINKED_QUESTIONS_STORE = 'linked-questions';
 export const USER_ACTIVITY_LOG_STORE = 'user-activity-log';
 export const FEEDBACK_STORE = 'feedback';
+
+// // Create initial admin data
+// const createInitialAdmin = {
+//   id: '1', // Set a fixed ID for admin
+//   examinerName: 'Training Incharge',
+//   examinerEmpId: 1,
+//   examinerDesignation: 'Admin',
+//   examinerUnits: [],
+//   isIncharge: true,
+//   role: 'trgIncharge',
+//   authMethod: 'none',
+//   isFirstLogin: true,
+//   hasPassword: false,
+//   password: null,
+//   totpEnabled: false,
+//   totpSecret: null,
+//   backupCodes: [],
+//   loginAttempts: 0,
+//   lockedUntil: null,
+//   lastLogin: null,
+//   createdAt: new Date(),
+//   updatedAt: new Date(),
+// };
 
 export const initDB = async () => {
   return openDB(DB_NAME, DB_VERSION, {
@@ -70,12 +95,14 @@ export const initDB = async () => {
         examinerStore.createIndex('examinerEmpId', 'examinerEmpId', {
           unique: true,
         });
-        if (process.env.NODE_ENV === 'development') {
-          sampleExaminers.forEach((examiner) => examinerStore.add(examiner));
-          console.log(
-            '[development] Sample examiner list populated successfully',
-          );
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //   sampleExaminers.forEach((examiner) => examinerStore.add(examiner));
+        //   console.log(
+        //     '[development] Sample examiner list populated successfully',
+        //   );
+        // }
+        // Add the initial admin user
+        examinerStore.add(initialTrgInChargeProfile);
       }
       if (!db.objectStoreNames.contains(REVIEW_PANEL_STORE)) {
         db.createObjectStore(REVIEW_PANEL_STORE, {

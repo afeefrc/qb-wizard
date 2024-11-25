@@ -8,3 +8,23 @@ export const removeUncloneableProperties = (item) => {
   });
   return cloneableItem;
 };
+
+// export default function removeUncloneableProperties(obj: any): any {
+//   const cleaned = { ...obj };
+
+//   // Convert Date objects to ISO strings
+//   Object.keys(cleaned).forEach((key) => {
+//     if (cleaned[key] instanceof Date) {
+//       cleaned[key] = cleaned[key].toISOString();
+//     }
+//   });
+
+//   // Remove any functions or non-cloneable objects
+//   Object.keys(cleaned).forEach((key) => {
+//     if (typeof cleaned[key] === 'function') {
+//       delete cleaned[key];
+//     }
+//   });
+
+//   return cleaned;
+// }

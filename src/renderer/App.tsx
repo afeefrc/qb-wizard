@@ -1,11 +1,19 @@
 import React, { useEffect, useContext } from 'react';
-
 import {
   MemoryRouter as Router,
   Routes,
   Route,
   useNavigate,
+  Navigate,
 } from 'react-router-dom';
+// import { useUser } from './context/UserContext';
+import { Dropdown, Button, Space, Avatar, message } from 'antd';
+import {
+  UserOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+} from '@ant-design/icons';
+import { Login } from './Login';
 // import icon from '../../assets/icon.svg';
 import logo from '../../assets/logo.svg';
 import './App.css';
@@ -21,38 +29,65 @@ import Feedbacks from './Feedbacks';
 import ActivityLogs from './ActivityLogsPage';
 import ReviewProcessPage from './components/reviewProcessTasks/ReviewProcessPage';
 import QuestionPaperProcessPage from './components/examinerProcessTasks/QuestionPaperProcessPage';
+import UserSettings from './UserSettings';
+import Layout from './Layout';
+
+// Protected Route Component
+const ProtectedRoute: React.FC<{
+  element: React.ReactElement;
+  allowedRoles?: string[];
+}> = ({ element, allowedRoles }) => {
+  const { user, isAuthenticated } = useUser();
+
+  if (!isAuthenticated) {
+    message.error('Please login to access this page');
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user?.role || '')) {
+    message.error(
+      `Access restricted. This page is only accessible to Training Incharge.`,
+    );
+    return <Navigate to="/" replace />;
+  }
+
+  return element;
+};
 
 function Hello() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useUser();
+  const appContext = useContext(AppContext);
+  const { isDemoMode, toggleDemoMode } = useDemoMode();
+
   // db test button case
 
-  const appContext = useContext(AppContext);
   const { questions, handleAddQuestion, handleDeleteQuestion } =
     appContext || {};
   const { setUser } = useUser();
 
-  const addItem = () => {
-    const newItem = {
-      unitName: 'Unit1',
-      marks: 1,
-      questionType: 'MCQ',
-      questionText: 'Sample Question?',
-      trueAnswer: true,
-      answerText: 'Sample Answer',
-      keyValuePairs: {},
-      image: null,
-      linkedQuestion: [],
-      mandatory: false,
-      difficultyLevel: 'Easy',
-      moduleNumber: 1,
-      comments: '',
-      isReviewed: false,
-    };
-    if (handleAddQuestion) {
-      handleAddQuestion(newItem);
-    }
-  };
+  // const addItem = () => {
+  //   const newItem = {
+  //     unitName: 'Unit1',
+  //     marks: 1,
+  //     questionType: 'MCQ',
+  //     questionText: 'Sample Question?',
+  //     trueAnswer: true,
+  //     answerText: 'Sample Answer',
+  //     keyValuePairs: {},
+  //     image: null,
+  //     linkedQuestion: [],
+  //     mandatory: false,
+  //     difficultyLevel: 'Easy',
+  //     moduleNumber: 1,
+  //     comments: '',
+  //     isReviewed: false,
+  //   };
+  //   if (handleAddQuestion) {
+  //     handleAddQuestion(newItem);
+  //   }
+  // };
 
-  const { isDemoMode, toggleDemoMode } = useDemoMode();
   useEffect(() => {
     if (isDemoMode) {
       document.body.classList.add('demo-mode');
@@ -63,16 +98,87 @@ function Hello() {
   // const handleDemoModeClick = () => {
   //   setIsDemoMode(!isDemoMode);
   // };
-  const navigate = useNavigate();
-  const handleNavigation = (
-    path: string,
-    user: { id: string; name: string; role: string },
-  ) => {
-    setUser(user);
-    navigate(path);
+
+  const handleNavigation = (path: string) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
+      navigate(path);
+    }
   };
+  const handleLogout = () => {
+    // Clear the user from context
+    setUser(null);
+
+    // Clear any stored tokens or session data
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+
+    // Optional: Clear any other user-related data from storage
+    localStorage.removeItem('userData');
+
+    // Redirect to login page
+    navigate('/');
+  };
+
+  const userMenuItems = {
+    items: [
+      {
+        key: 'settings',
+        label: 'User settings',
+        icon: <SettingOutlined />,
+        onClick: () => handleNavigation('/user-settings'),
+      },
+      {
+        key: 'logout',
+        label: 'Logout',
+        icon: <LogoutOutlined />,
+        onClick: handleLogout,
+      },
+    ],
+  };
+
   return (
     <div>
+      {/* Add this new user info box at the top */}
+      {/* {isAuthenticated ? (
+        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+          <Dropdown menu={userMenuItems} placement="bottomRight">
+            <Button
+              type="text"
+              size="large"
+              style={{
+                color: '#002C58',
+                padding: '30px 20px',
+                boxShadow: 'none',
+              }}
+            >
+              <Space size={20}>
+                {user?.name}
+                <Avatar
+                  style={{ backgroundColor: '#002C58' }}
+                  icon={<UserOutlined />}
+                  size={50}
+                />
+              </Space>
+            </Button>
+          </Dropdown>
+        </div>
+      ) : (
+        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => navigate('/login')}
+            style={{
+              backgroundColor: '#002C58',
+              padding: '0 20px',
+            }}
+          >
+            Login
+          </Button>
+        </div>
+      )} */}
       <div className="Hello">
         <img width="100" alt="icon" src={logo} />
       </div>
@@ -160,39 +266,21 @@ function Hello() {
         <button
           type="button"
           className="role-button"
-          onClick={() =>
-            handleNavigation('/examiner', {
-              id: '1',
-              name: 'examiner',
-              role: 'examiner',
-            })
-          }
+          onClick={() => handleNavigation('/examiner')}
         >
           Examiner
         </button>
         <button
           type="button"
           className="role-button"
-          onClick={() =>
-            handleNavigation('/review-panel', {
-              id: '2',
-              name: 'review-panel',
-              role: 'review-panel',
-            })
-          }
+          onClick={() => handleNavigation('/review-panel')}
         >
           Review Panel
         </button>
         <button
           type="button"
           className="role-button"
-          onClick={() =>
-            handleNavigation('/trg-incharge', {
-              id: '3',
-              name: 'trg-incharge',
-              role: 'trg-incharge',
-            })
-          }
+          onClick={() => handleNavigation('/trg-incharge')}
         >
           Trg in-charge
         </button>
@@ -257,21 +345,74 @@ export default function App() {
       <DemoModeProvider>
         <UserProvider>
           <Router>
-            <Routes>
-              <Route path="/" element={<Hello />} />
-              <Route path="/examiner" element={<Examiner />} />
-              <Route path="/review-panel" element={<ReviewPanel />} />
-              <Route path="/trg-incharge" element={<TrgIncharge />} />
-              <Route path="/question-bank" element={<QuestionBank />} />
-              <Route path="/question-papers" element={<QuestionPapers />} />
-              <Route path="/feedbacks" element={<Feedbacks />} />
-              <Route path="/activity-logs" element={<ActivityLogs />} />
-              <Route path="/review-process" element={<ReviewProcessPage />} />
-              <Route
-                path="/examiner-process"
-                element={<QuestionPaperProcessPage />}
-              />
-            </Routes>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Hello />} />
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/examiner"
+                  element={
+                    <ProtectedRoute
+                      element={<Examiner />}
+                      allowedRoles={['examiner', 'trgIncharge', 'admin']}
+                    />
+                  }
+                />
+                <Route
+                  path="/review-panel"
+                  element={
+                    <ProtectedRoute
+                      element={<ReviewPanel />}
+                      allowedRoles={[
+                        'review-panel',
+                        'examiner',
+                        'trgIncharge',
+                        'admin',
+                      ]}
+                    />
+                  }
+                />
+                <Route
+                  path="/trg-incharge"
+                  element={
+                    <ProtectedRoute
+                      element={<TrgIncharge />}
+                      allowedRoles={['trgIncharge', 'admin']}
+                    />
+                  }
+                />
+                <Route
+                  path="/question-bank"
+                  element={<ProtectedRoute element={<QuestionBank />} />}
+                />
+                <Route
+                  path="/question-papers"
+                  element={<ProtectedRoute element={<QuestionPapers />} />}
+                />
+                <Route
+                  path="/feedbacks"
+                  element={<ProtectedRoute element={<Feedbacks />} />}
+                />
+                <Route
+                  path="/activity-logs"
+                  element={<ProtectedRoute element={<ActivityLogs />} />}
+                />
+                <Route
+                  path="/review-process"
+                  element={<ProtectedRoute element={<ReviewProcessPage />} />}
+                />
+                <Route
+                  path="/examiner-process"
+                  element={
+                    <ProtectedRoute element={<QuestionPaperProcessPage />} />
+                  }
+                />
+                <Route
+                  path="/user-settings"
+                  element={<ProtectedRoute element={<UserSettings />} />}
+                />
+              </Routes>
+            </Layout>
           </Router>
         </UserProvider>
       </DemoModeProvider>

@@ -7,7 +7,7 @@ import CustomButton from './CustomButton';
 import {
   trgInchargeMenuContentCopy,
   trgInchargeAccordionTitles,
-} from '../SampleData';
+} from '../StaticData';
 import { AppContext } from '../context/AppContext';
 
 // interface Button {

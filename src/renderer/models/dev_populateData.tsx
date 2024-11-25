@@ -48,7 +48,31 @@ export const sampleSettings = {
   // Add more sample settings as needed
 };
 
-export const sampleExaminers = [];
+export const sampleExaminers = [
+  {
+    id: uuidv4(),
+    examinerName: 'trgincharge',
+    examinerEmpId: 1001,
+    examinerDesignation: 'Admin',
+    examinerUnits: [],
+    isIncharge: true,
+    role: 'admin',
+    // Authentication related fields
+    authMethod: 'password',
+    isFirstLogin: false,
+    hasPassword: true,
+    password: 'admin', // This will be hashed during DB initialization
+    totpEnabled: false,
+    totpSecret: null,
+    backupCodes: [],
+    loginAttempts: 0,
+    lockedUntil: null,
+    lastLogin: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  // You can add more sample examiners here if needed
+];
 // export const sampleExaminers = [
 //   {
 //     id: uuidv4(),

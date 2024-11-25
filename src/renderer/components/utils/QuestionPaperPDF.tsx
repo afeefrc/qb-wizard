@@ -14,7 +14,7 @@ import {
   Image as PDFImage,
 } from '@react-pdf/renderer';
 import { renderAnswerKey } from './tableRenderers';
-import { unitsFullNames } from '../../SampleData';
+import { unitsFullNames } from '../../StaticData';
 import { AppContext } from '../../context/AppContext';
 import logo from '../../../../assets/aai-logo.png';
 import RobotoRegular from '../../../../assets/fonts/Roboto-Regular.ttf';

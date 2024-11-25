@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Button, List, Avatar, Space, Card, Drawer } from 'antd';
+import { Button, List, Avatar, Space, Card, Drawer, Popconfirm } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import _ from 'lodash';
 import dayjs from 'dayjs';
@@ -127,6 +127,29 @@ function ListOfExaminers() {
                   />
                   <List.Item
                     actions={[
+                      <Popconfirm
+                        title="Reset Authentication"
+                        description="Are you sure you want to reset this examiner's password and TOTP settings?"
+                        okText="Yes"
+                        cancelText="No"
+                        onConfirm={() =>
+                          handleUpdateExaminer(item.id, {
+                            ...item,
+                            isFirstLogin: true,
+                            authMethod: 'none' as const,
+                            hasPassword: false,
+                            password: null,
+                            totpEnabled: false,
+                            totpSecret: null,
+                            backupCodes: [],
+                            loginAttempts: 0,
+                          })
+                        }
+                      >
+                        <Button size="small" type="default">
+                          Reset Password and TOTP
+                        </Button>
+                      </Popconfirm>,
                       <Button
                         size="small"
                         type="default"
@@ -134,19 +157,25 @@ function ListOfExaminers() {
                       >
                         Edit
                       </Button>,
-                      <Button
-                        ghost
-                        size="small"
-                        danger
-                        onClick={() =>
-                          handleUpdateExaminer(item.id, {
-                            ...item,
-                            isArchived: true,
-                          })
-                        }
-                      >
-                        Archive
-                      </Button>,
+                      item.examinerEmpId !== 1 &&
+                        item.role !== 'trgInCharge' && (
+                          <Popconfirm
+                            title="Archive Examiner"
+                            description="Are you sure you want to archive this examiner?"
+                            okText="Yes"
+                            cancelText="No"
+                            onConfirm={() =>
+                              handleUpdateExaminer(item.id, {
+                                ...item,
+                                isArchived: true,
+                              })
+                            }
+                          >
+                            <Button ghost size="small" danger>
+                              Archive
+                            </Button>
+                          </Popconfirm>
+                        ),
                     ]}
                   />
                 </List.Item>

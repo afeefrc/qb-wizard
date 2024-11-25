@@ -90,7 +90,7 @@ function EvaluatorFeedbackBtn({
           renderItem={(item: any) => (
             <List.Item
               actions={[
-                user.role === 'trg-incharge' && (
+                user?.role === 'trgIncharge' && (
                   <Button
                     onClick={() =>
                       handleDeleteComment('questionPaperComments', item.id)

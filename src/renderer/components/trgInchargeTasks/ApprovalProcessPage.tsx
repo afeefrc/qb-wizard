@@ -32,6 +32,8 @@ function ApprovalProcessPage({
     handleApplyAllPendingChanges,
     handleDeleteReviewPanel,
     handleAddUserActivityLog,
+    activeQuestions,
+    syllabusSections,
   } = appContext || {};
 
   const [messageApi, contextHolder] = message.useMessage();
@@ -184,11 +186,22 @@ function ApprovalProcessPage({
             <Button
               type="primary"
               onClick={() => {
+                const qbArchived = {
+                  content: (activeQuestions || [])
+                    .filter((q) => q.unitName === content.unit)
+                    .map((q) => q.id),
+                  syllabusSections: (syllabusSections || [])
+                    .filter((s) => s.unitName === content.unit)
+                    .map((s) => s.id),
+                  archivedAt: new Date(),
+                };
+
                 handleApplyAllPendingChanges();
                 // handleDeleteReviewPanel(content.id);
                 handleUpdateReviewPanel(content.id, {
                   status: 'Approved',
                   isArchived: true,
+                  archivedQuestionBank: qbArchived,
                 });
                 handleAddUserActivityLog({
                   user: 'Trg Incharge',

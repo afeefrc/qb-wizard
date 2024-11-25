@@ -1,0 +1,23 @@
+.login-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.backup-codes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.backup-code {
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-family: monospace;
+  text-align: center;
+}
+
+.warning {
+  color: #ff4d4f;
+  margin-top: 16px;
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Divider, Typography, Empty } from 'antd';
 import DashboardCard from './DashBoardCardComponent';
 import ApprovalProcessPage from './trgInchargeTasks/ApprovalProcessPage';
@@ -20,6 +20,8 @@ function DashBoard() {
   const { reviewPanels, examinerAssignments } = appContext || {};
   const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedContent, setSelectedContent] = useState(null);
 
@@ -56,9 +58,14 @@ function DashBoard() {
   );
 
   let renderContents = null;
-  if (user && (user.role === 'review-panel' || user.role === 'trg-incharge')) {
+  if (
+    user &&
+    (currentPath === '/review-panel' || currentPath === '/trg-incharge') &&
+    (user.role === 'examiner' || user.role === 'trgIncharge')
+  ) {
     renderContents =
-      user.role === 'review-panel'
+      // user.role === 'review-panel'
+      user.role === 'examiner'
         ? filteredReviewPanels?.filter(
             (panel) =>
               panel.status.toLowerCase() === 'initiated' ||
@@ -68,7 +75,11 @@ function DashBoard() {
   }
 
   let examinerAssignmentsContents = null;
-  if (user && (user.role === 'examiner' || user.role === 'trg-incharge')) {
+  if (
+    user &&
+    (currentPath === '/examiner' || currentPath === '/trg-incharge') &&
+    (user.role === 'examiner' || user.role === 'trgIncharge')
+  ) {
     if (user.role === 'examiner') {
       examinerAssignmentsContents = examinerAssignments?.filter(
         (assignment) =>
@@ -148,14 +159,19 @@ function DashBoard() {
                       content={renderContent}
                       onClick={() => {
                         console.log(`card clicked ${renderContent.unit}`);
-                        if (user?.role === 'review-panel') {
+                        if (
+                          user?.role === 'review-panel' ||
+                          user?.role === 'examiner'
+                          // user?.role === 'trgIncharge' ||
+                          // user?.role === 'admin'
+                        ) {
                           handleNavigation('/review-process', {
                             unit: renderContent.unit,
                             renderContent,
                           });
                         }
                         if (
-                          user?.role === 'trg-incharge' &&
+                          user?.role === 'trgIncharge' &&
                           renderContent.status.toLowerCase() === 'submitted'
                         ) {
                           setCurrentView('QBapprovalProcess');
@@ -193,7 +209,8 @@ function DashBoard() {
                           });
                         }
                         if (
-                          user?.role === 'trg-incharge' &&
+                          (user?.role === 'trgIncharge' ||
+                            user?.role === 'admin') &&
                           renderContent.status.toLowerCase() === 'submitted'
                         ) {
                           setCurrentView('QPapprovalProcess');

@@ -44,3 +44,25 @@ export const designationList = ['JGM', 'DGM', 'AGM', 'SM', 'MGR', 'AM', 'JE'];
 //     city: 'City Three',
 //   },
 // ];
+
+export const initialTrgInChargeProfile = {
+  id: '1', // Set a fixed ID for admin
+  examinerName: 'Training Incharge',
+  examinerEmpId: 1,
+  examinerDesignation: 'Admin',
+  examinerUnits: [],
+  isIncharge: true,
+  role: 'trgIncharge',
+  authMethod: 'none',
+  isFirstLogin: true,
+  hasPassword: false,
+  password: null,
+  totpEnabled: false,
+  totpSecret: null,
+  backupCodes: [],
+  loginAttempts: 0,
+  lockedUntil: null,
+  lastLogin: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};

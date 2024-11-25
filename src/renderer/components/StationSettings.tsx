@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Card, Form, Input, Button, List, Avatar, Checkbox, Space } from 'antd';
 import { AppContext } from '../context/AppContext';
-import { unitOptions, getUnitNameById } from '../SampleData';
+import { unitOptions, getUnitNameById } from '../StaticData';
 
 interface FormData {
   stationCode: string;

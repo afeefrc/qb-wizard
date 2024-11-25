@@ -13,7 +13,7 @@ import {
 import { FormInstance, FormProps } from 'antd';
 import dayjs from 'dayjs';
 import { AppContext } from '../context/AppContext';
-import { designationList } from '../SampleData';
+import { designationList } from '../StaticData';
 
 interface Unit {
   unit: string;

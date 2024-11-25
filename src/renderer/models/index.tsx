@@ -46,6 +46,11 @@ export {
   getAllExaminers,
   deleteExaminer,
   updateExaminer,
+  setupPasswordAuth,
+  setupTOTPAuth,
+  completeTOTPSetup,
+  authenticateExaminer,
+  setupNewCredentials,
 } from './examiners';
 
 export {

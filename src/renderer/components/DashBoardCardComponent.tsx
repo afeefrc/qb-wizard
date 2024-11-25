@@ -224,7 +224,7 @@ function DashboardCard({ content, onClick, cardType }: CardProps) {
             )}
           </Card>
         </div>
-        {user && user.role === 'trg-incharge' && (
+        {(user?.role === 'trgIncharge' || user?.role === 'admin') && (
           <div style={{}}>
             <Avatar
               size="small"

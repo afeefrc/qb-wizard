@@ -113,6 +113,7 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.6.82",
     "qrcode": "^1.5.4",
+    "qrcode.react": "^4.1.0",
     "rc-virtual-list": "^3.14.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

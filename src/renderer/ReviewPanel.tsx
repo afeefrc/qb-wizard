@@ -6,7 +6,7 @@ import DashBoard from './components/DashBoard';
 import BodyContentCard from './components/BodyContentCard';
 import MenuList from './components/MenuAntd';
 import './RolePage.css'; // Import the CSS file for styling
-import { useUser } from './context/UserContext';
+// import { useUser } from './context/UserContext';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
 import ActivityLogs from './components/trgInchargeTasks/ActivityLogs';
 import ViewQBFeedback from './components/reviewProcessTasks/ViewQBFeedback';
@@ -21,7 +21,7 @@ function ReviewPanel() {
     BtnName?: string;
   }>({ MenuItem: 'dashboard', BtnName: 'dashboard' }); // Initialize the BtnPressed state
 
-  const { user } = useUser();
+  // const { user } = useUser();
 
   const reviewPanelMenuTitles = [
     'View Question Banks',

@@ -105,7 +105,7 @@ function MenuList({
           ]}
         />
       ))}
-      {user?.role === 'trg-incharge' && (
+      {(user?.role === 'trgIncharge' || user?.role === 'admin') && (
         <Menu
           onClick={onClick}
           style={{ border: 'none', marginTop: '10px' }}
@@ -131,7 +131,7 @@ function MenuList({
           ]}
         />
       )}
-      {user?.role === 'trg-incharge' && (
+      {(user?.role === 'trgIncharge' || user?.role === 'admin') && (
         <Menu
           onClick={onClick}
           style={{ border: 'none', marginTop: '10px' }}

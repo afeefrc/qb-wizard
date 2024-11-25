@@ -79,27 +79,26 @@ export const examinerListSchema = {
   examinerDesignation: { type: 'string', default: '' },
 
   // Authentication fields and TOTP field
-  password: { type: 'string', default: null }, // Changed from required: true
-  hasPassword: { type: 'boolean', default: false }, // New field to track if password is set
-  passwordResetRequired: { type: 'boolean', default: false }, // New field
-  role: {
-    type: 'enum',
-    values: ['admin', 'examiner'],
-    default: 'examiner',
-  },
-  isFirstLogin: { type: 'boolean', default: true },
-  loginAttempts: { type: 'number', default: 0 },
-  lockedUntil: { type: 'date', default: null },
-  lastLogin: { type: 'date', default: null },
-  // TOTP fields
+  password: { type: 'string', default: null },
+  hasPassword: { type: 'boolean', default: false },
   totpSecret: { type: 'string', default: null },
   totpEnabled: { type: 'boolean', default: false },
-  totpResetRequired: { type: 'boolean', default: false }, // New field
-  backupCodes: { type: 'array', default: [], items: { type: 'string' } },
   authMethod: {
     type: 'enum',
     values: ['password', 'totp', 'both', 'none'],
     default: 'none',
+  },
+  isFirstLogin: { type: 'boolean', default: true },
+  passwordResetRequired: { type: 'boolean', default: false },
+  totpResetRequired: { type: 'boolean', default: false },
+  backupCodes: { type: 'array', default: [], items: { type: 'string' } },
+  loginAttempts: { type: 'number', default: 0 },
+  lockedUntil: { type: 'date', default: null },
+  lastLogin: { type: 'date', default: null },
+  role: {
+    type: 'enum',
+    values: ['admin', 'examiner'],
+    default: 'examiner',
   },
 
   examinerUnits: {
@@ -133,7 +132,15 @@ export const reviewPanelSchema = {
   },
   status: { type: 'string', default: 'initiated' }, // Possible values: 'initiated', 'in process', 'submitted', 'approved', 'rejected'
   isArchived: { type: 'boolean', default: false },
-  content: { type: 'array', default: [] },
+  archivedQuestionBank: {
+    type: 'object',
+    default: () => ({
+      content: [],
+      syllabusSections: [],
+      archivedAt: null,
+    }),
+  },
+  // content: { type: 'array', default: [] },
   deadline: { type: 'date', default: null },
   comments_initiate: { type: 'string', default: '' },
   comments_submit: { type: 'string', default: '' },

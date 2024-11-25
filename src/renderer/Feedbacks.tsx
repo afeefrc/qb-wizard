@@ -23,7 +23,7 @@ function Feedbacks() {
   const [canDeleteComment, setCanDeleteComment] = useState(false);
 
   useEffect(() => {
-    if (user?.role === 'trg-incharge') {
+    if (user?.role === 'trgIncharge') {
       setCanDeleteComment(true);
     }
   }, [user?.role]);

@@ -105,7 +105,7 @@ function ExpandedRowContent({
           renderItem={(item: any) => (
             <List.Item
               actions={[
-                user.role === 'trg-incharge' && (
+                user?.role === 'trgIncharge' && (
                   <Button
                     onClick={() =>
                       handleDeleteComment('questionPaperComments', item.id)
@@ -164,7 +164,7 @@ function ExpandedRowContent({
   ) : (
     <QuestionPaperPDF
       examinerAssignmentId={record.id}
-      downloadButtonDisabled={user?.role !== 'trg-incharge'}
+      downloadButtonDisabled={user?.role !== 'trgIncharge'}
     />
   );
 
@@ -264,7 +264,7 @@ function ArchivedAssignmentsTable({
         <Space direction="horizontal">
           {/* <QuestionPaperPDF
             examinerAssignmentId={record.id}
-            downloadButtonDisabled={user?.role !== 'trg-incharge'}
+            downloadButtonDisabled={user?.role !== 'trgIncharge'}
           /> */}
           <Button
             onClick={() => toggleExpand(record.id, 'view')}

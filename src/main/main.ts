@@ -20,6 +20,10 @@ import os from 'os';
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
+import { authenticator } from 'otplib';
+import { hash, compare } from 'bcryptjs';
+import * as cryptoUtils from './crypto';
+import * as totp from './totp';
 
 // class AppUpdater {
 //   constructor() {
@@ -268,6 +272,77 @@ const createWindow = async () => {
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   new AppUpdater();
+
+  // Handle auth-related IPC calls
+  ipcMain.handle('auth:generateTOTP', () => {
+    try {
+      return authenticator.generateSecret();
+    } catch (error) {
+      console.error('TOTP secret generation error:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('auth:verifyTOTP', (_, token: string, secret: string) => {
+    try {
+      return authenticator.verify({ token, secret });
+    } catch (error) {
+      console.error('TOTP verification error:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('crypto:hashPassword', async (_, password: string) => {
+    try {
+      console.log('Hashing password...'); // Debug log
+      const hashedPassword = await hash(password, 10);
+      console.log('Password hashed successfully'); // Debug log
+      return hashedPassword;
+    } catch (error) {
+      console.error('Password hashing error:', error);
+      throw error; // Propagate the error back to the renderer
+    }
+  });
+
+  ipcMain.handle(
+    'crypto:verifyPassword',
+    async (_, password: string, hash: string) => {
+      try {
+        return await compare(password, hash);
+      } catch (error) {
+        console.error('Password verification error:', error);
+        throw error;
+      }
+    },
+  );
+
+  ipcMain.handle('crypto:generateRandomString', (_, length: number) => {
+    try {
+      return cryptoUtils.generateRandomString(length);
+    } catch (error) {
+      console.error('Error generating random string:', error);
+      throw error;
+    }
+  });
+
+  // Add IPC listener
+  ipcMain.on('ipc-example', (event, arg) => {
+    console.log('Received in main:', arg);
+    // Send response back to renderer
+    event.reply('ipc-example', 'pong');
+  });
+
+  // Add TOTP handlers
+  ipcMain.handle('totp:generateSecret', async () => {
+    return totp.generateSecret();
+  });
+
+  ipcMain.handle(
+    'totp:verifyToken',
+    async (_event, secret: string, token: string) => {
+      return totp.verifyToken(secret, token);
+    },
+  );
 };
 
 /**
