@@ -44,27 +44,16 @@ function DatabaseBackupRestore() {
       for (const storeName of db.objectStoreNames) {
         const allItems = await db.getAll(storeName);
         if (storeName === QUESTION_STORE_NAME) {
-          console.log(`Processing ${allItems.length} questions for export`);
           exportObject[storeName] = await Promise.all(
-            allItems.map(async (item, index) => {
-              console.log(
-                `Processing question ${index + 1}/${allItems.length}`,
-              );
-              if (item.image && item.image instanceof Blob) {
-                console.log(
-                  `Converting image for question ${item.id || 'unknown'}`,
-                );
-                return {
-                  ...item,
-                  image: await blobToBase64(item.image),
-                };
-              } else if (item.image) {
-                console.log(
-                  `Image for question ${item.id || 'unknown'} is not a Blob:`,
-                  typeof item.image,
-                );
-              } else {
-                console.log(`No image for question ${item.id || 'unknown'}`);
+            allItems.map(async (item) => {
+              if (item.image instanceof Blob) {
+                // Convert Blob to base64 string with proper data URL format
+                const base64 = await new Promise((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result);
+                  reader.readAsDataURL(item.image);
+                });
+                return { ...item, image: base64 };
               }
               return item;
             }),
@@ -72,18 +61,11 @@ function DatabaseBackupRestore() {
         } else {
           exportObject[storeName] = allItems;
         }
-        console.log(`Exported ${allItems.length} items from ${storeName}`);
       }
 
-      const jsonString = JSON.stringify(exportObject);
-      console.log('Export object size:', jsonString.length, 'characters');
-      console.log('Export object structure:', Object.keys(exportObject));
-      console.log(
-        'Question store item count:',
-        exportObject[QUESTION_STORE_NAME]?.length,
-      );
-
-      const blob = new Blob([jsonString], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(exportObject)], {
+        type: 'application/json',
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -105,17 +87,18 @@ function DatabaseBackupRestore() {
     reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
-        console.log('Import file size:', content.length, 'characters');
         const importObject = JSON.parse(content);
-        console.log('Import object structure:', Object.keys(importObject));
-        console.log(
-          'Question store item count:',
-          importObject[QUESTION_STORE_NAME]?.length,
-        );
 
         const db = await openDB<MyDBSchema>(DB_NAME, DB_VERSION);
         await replaceAllData(db, importObject);
-        message.success('Database restored successfully');
+        message.success(
+          'Database restored successfully. Application will restart.',
+        );
+
+        // Add a small delay before relaunch to ensure the message is shown
+        setTimeout(async () => {
+          await window.electron.app.relaunch();
+        }, 1500);
       } catch (error) {
         console.error('Error during database restore:', error);
         if (error instanceof Error) {
@@ -148,108 +131,51 @@ function DatabaseBackupRestore() {
 
         if (Array.isArray(importObject[storeName])) {
           if (storeName === QUESTION_STORE_NAME) {
-            console.log(
-              `Processing ${importObject[storeName].length} questions`,
-            );
-            for (const [index, item] of importObject[storeName].entries()) {
+            for (const item of importObject[storeName]) {
               try {
-                console.log(
-                  `Processing question ${index + 1}/${importObject[storeName].length}`,
-                );
                 if (
                   item.image &&
                   typeof item.image === 'string' &&
                   item.image.startsWith('data:')
                 ) {
-                  console.log(
-                    `Converting image for question ${item.id || 'unknown'}`,
-                  );
-                  item.image = await base64ToBlob(item.image);
-                } else if (item.image) {
-                  console.log(
-                    `Image for question ${item.id || 'unknown'} is not a valid base64 string:`,
-                    typeof item.image,
-                  );
-                  item.image = null;
+                  // Convert base64 string directly to Blob
+                  const base64Response = item.image.split(',')[1]; // Remove the data:image/png;base64, prefix
+                  const byteCharacters = atob(base64Response);
+                  const byteNumbers = new Array(byteCharacters.length);
+
+                  for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                  }
+
+                  const byteArray = new Uint8Array(byteNumbers);
+                  const imageBlob = new Blob([byteArray], {
+                    type: 'image/png',
+                  });
+
+                  await store.add({ ...item, image: imageBlob });
+                } else {
+                  await store.add(item);
                 }
-                await store.add(item);
-                console.log(`Added question ${item.id || 'unknown'}`);
               } catch (itemError) {
-                console.error(
-                  `Error processing question ${item.id || 'unknown'}:`,
-                  itemError,
-                );
-                console.log(
-                  'Problematic item:',
-                  JSON.stringify(
-                    { ...item, image: item.image ? 'BLOB_DATA' : null },
-                    null,
-                    2,
-                  ),
-                );
+                console.error(`Error processing item:`, itemError);
+                console.error('Item that caused error:', {
+                  ...item,
+                  image: item.image
+                    ? `${item.image.substring(0, 100)}...`
+                    : null,
+                });
               }
             }
           } else {
-            for (const item of importObject[storeName]) {
-              await store.add(item);
-            }
+            await Promise.all(
+              importObject[storeName].map((item: any) => store.add(item)),
+            );
           }
-        } else if (typeof importObject[storeName] === 'object') {
-          for (const [key, value] of Object.entries(importObject[storeName])) {
-            await store.put(value, key);
-          }
-        } else {
-          console.warn(
-            `Unexpected data type for store ${storeName}:`,
-            typeof importObject[storeName],
-          );
         }
-
         await tx.done;
-        console.log(`Successfully processed store: ${storeName}`);
       } catch (error) {
         console.error(`Error processing store ${storeName}:`, error);
       }
-    }
-  };
-
-  // Helper function to convert Blob to base64
-  const blobToBase64 = (blob: Blob | string): Promise<string> => {
-    if (typeof blob === 'string') {
-      // If it's already a string, assume it's already in base64 format
-      return Promise.resolve(blob);
-    }
-    if (!(blob instanceof Blob)) {
-      console.warn('Expected Blob, got:', typeof blob);
-      return Promise.resolve('');
-    }
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  // Helper function to convert base64 to Blob
-  const base64ToBlob = async (base64: string): Promise<Blob> => {
-    // Check if the string is actually a base64 data URL
-    if (!base64.startsWith('data:')) {
-      console.warn(
-        'Expected base64 data URL, got:',
-        base64.slice(0, 20) + '...',
-      );
-      return new Blob(); // Return an empty Blob
-    }
-    try {
-      const response = await fetch(base64);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.blob();
-    } catch (error: any) {
-      console.error('Error converting base64 to Blob:', error);
-      throw new Error('Failed to convert base64 to Blob');
     }
   };
 

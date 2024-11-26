@@ -10,7 +10,11 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send(channel, ...args);
     },
     on(channel: string, func: (...args: unknown[]) => void) {
-      const validChannels = ['update-downloaded', 'update-error', 'download-progress'];
+      const validChannels = [
+        'update-downloaded',
+        'update-error',
+        'download-progress',
+      ];
       if (validChannels.includes(channel)) {
         const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
           func(...args);
@@ -33,6 +37,9 @@ contextBridge.exposeInMainWorld('electron', {
     removeAllListeners(channel: string) {
       ipcRenderer.removeAllListeners(channel);
     },
+  },
+  app: {
+    relaunch: () => ipcRenderer.invoke('app:relaunch'),
   },
   // Add authentication-related methods
   auth: {

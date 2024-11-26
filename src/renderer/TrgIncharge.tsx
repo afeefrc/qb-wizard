@@ -15,6 +15,7 @@ import QuestionLogs from './components/trgInchargeTasks/QuestionLogs';
 import QuestionBankDisplay from './components/QuestionBankDisplay';
 import ViewQuestionPapers from './components/ViewQuestionPapers';
 import DatabaseBackupRestore from './models/DatabaseBackupRestore';
+import BackupAndRestore from './components/trgInchargeTasks/BackupAndRestore';
 // import { useUser } from './context/UserContext';
 
 const trgInchargeMenuTitles = [
@@ -87,7 +88,8 @@ function TrgIncharge() {
         }
         if (BtnPressed.BtnName === 'databaseBackupRestore') {
           return {
-            component: <DatabaseBackupRestore />,
+            // component: <DatabaseBackupRestore />,
+            component: <BackupAndRestore />,
             title: 'Database Backup Restore',
           };
         }

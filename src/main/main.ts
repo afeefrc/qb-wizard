@@ -396,6 +396,12 @@ const createWindow = async () => {
       return totp.verifyToken(secret, token);
     },
   );
+
+  // Add this with the other IPC handlers
+  ipcMain.handle('app:relaunch', () => {
+    app.relaunch();
+    app.exit(0);
+  });
 };
 
 /**
