@@ -1,8 +1,8 @@
 {
   "name": "qbms-suite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Question Bank Management System",
-  "license": "MIT",
+  "license": "ISC",
   "author": {
     "name": "Afeef Rahiman C",
     "email": "afeefrahiman@gmail.com",

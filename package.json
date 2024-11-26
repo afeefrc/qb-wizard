@@ -15,10 +15,7 @@
   "bugs": {
     "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
-  },
+  "repository": "https://github.com/afeefrc/qb-wizard",
   "license": "MIT",
   "author": {
     "name": "Electron React Boilerplate Maintainers",
@@ -194,15 +191,22 @@
   },
   "build": {
     "productName": "QBMS Suite",
-    "appId": "org.erb.ElectronReact",
+    "appId": "com.qbms.suite",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "deleteAppDataOnUninstall": true,
+      "deleteAppDataOnUninstall": false,
       "runAfterFinish": true,
-      "uninstallDisplayName": "${productName}"
+      "uninstallDisplayName": "${productName}",
+      "include": "assets/installer.nsh",
+      "perMachine": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "QBMS Suite",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "files": [
       "dist",
@@ -266,8 +270,9 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "electron-react-boilerplate",
-      "repo": "electron-react-boilerplate"
+      "releaseType": "release",
+      "private": false,
+      "publishAutoUpdate": true
     }
   },
   "collective": {

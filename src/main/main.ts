@@ -10,7 +10,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import { autoUpdater, AutoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -33,16 +33,47 @@ import * as totp from './totp';
 //   }
 // }
 
+let mainWindow: BrowserWindow | null = null;
+
 class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
     autoUpdater.logger = log;
 
-    // Add error handling for updates
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    // Add IPC handlers for the Footer component
+    ipcMain.handle('get-app-version', () => {
+      return app.getVersion();
+    });
+
+    ipcMain.handle('check-for-updates', async () => {
+      const result = await autoUpdater.checkForUpdates();
+      return result?.updateInfo.version;
+    });
+
+    ipcMain.handle('start-update', () => {
+      log.info('Starting update download...');
+      return autoUpdater.downloadUpdate();
+    });
+
+    ipcMain.handle('quit-and-install', () => {
+      log.info('Quitting and installing update...');
+      this.prepareForUpdate();
+      autoUpdater.quitAndInstall(false, true);
+    });
+
+    // Notify renderer about update events
+    autoUpdater.on('update-downloaded', () => {
+      mainWindow?.webContents.send('update-downloaded');
+    });
+
     autoUpdater.on('error', (error) => {
       log.error('Auto updater error:', error);
       if (error.message.includes('Failed to uninstall old application files')) {
         this.handleUninstallError();
+        mainWindow?.webContents.send('update-error', 'uninstall-error');
       }
     });
 
@@ -59,23 +90,45 @@ class AppUpdater {
       log.info('Update not available:', info);
     });
 
-    autoUpdater.checkForUpdatesAndNotify();
+    // Check for updates when app starts
+    autoUpdater.checkForUpdates();
+
+    // Add download progress handler
+    autoUpdater.on('download-progress', (progressObj) => {
+      mainWindow?.webContents.send('download-progress', progressObj.percent);
+    });
   }
 
   private handleUninstallError() {
-    // Clean up old update files
-    try {
-      const updatePath = path.join(os.tmpdir(), 'electron-updater');
-      if (fs.existsSync(updatePath)) {
-        fs.rmdirSync(updatePath, { recursive: true });
-      }
-    } catch (err) {
-      log.error('Failed to clean up update files:', err);
+    dialog.showMessageBox({
+      type: 'error',
+      title: 'Update Error',
+      message:
+        'Unable to install the update. Please close all instances of the application and try again.',
+      detail:
+        'If the problem persists, please manually close the application from Task Manager.',
+      buttons: ['OK'],
+    });
+  }
+
+  private prepareForUpdate() {
+    // Force cleanup before update
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.closeDevTools();
+      mainWindow.destroy();
     }
+
+    // Close any other windows or resources
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.close();
+      }
+    });
+
+    // Force garbage collection if available
+    if (global.gc) global.gc();
   }
 }
-
-let mainWindow: BrowserWindow | null = null;
 
 // prevent multiple instance of the app
 const gotTheLock = app.requestSingleInstanceLock();
@@ -351,15 +404,28 @@ const createWindow = async () => {
 
 // Add this function to force cleanup all resources
 function forceCleanup() {
-  if (mainWindow) {
-    if (!mainWindow.isDestroyed()) {
-      mainWindow.webContents.closeDevTools();
-      mainWindow.destroy();
-    }
+  try {
+    // Close all windows
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (!window.isDestroyed()) {
+        window.webContents.closeDevTools();
+        window.destroy();
+      }
+    });
+
+    // Reset mainWindow reference
     mainWindow = null;
+
+    // Force garbage collection
+    if (global.gc) global.gc();
+
+    // Optional: Clear any cached data
+    if (app.isPackaged) {
+      app.clearCache();
+    }
+  } catch (error) {
+    log.error('Error during cleanup:', error);
   }
-  // Force garbage collection
-  if (global.gc) global.gc();
 }
 
 app.on('window-all-closed', () => {
@@ -371,9 +437,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', (event) => {
-  // If you need to do any cleanup in the main process, do it here
-  console.log('App is about to quit');
-  event.preventDefault(); // prevent default quit
+  log.info('App is about to quit');
+  event.preventDefault();
   forceCleanup();
   app.exit(0);
 });
